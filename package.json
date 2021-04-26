@@ -34,7 +34,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:WhiteHatEngineering/ZeroTheft_and_DebateHQ/zerotheft-holon-node.git"
+    "url": "git@github.com:zerotheft/zerotheft-node-utils.git"
   },
   "author": "",
   "license": "ISC",
