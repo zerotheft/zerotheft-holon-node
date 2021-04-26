@@ -1,0 +1,13 @@
+ [Unit]
+ Description=Zerotheft-Holon Daemon service
+ [Service]
+ Restart=on-failure
+ RestartSec=10
+
+ ExecStart=/usr/local/bin/zerotheft-holon --port 40107 --logfile=/var/log/zerotheft-holon.log
+ Environment=NODE_ENV=private
+ SuccessExitStatus=143
+ User=zt-holon
+
+ [Install]
+ WantedBy=multi-user.target

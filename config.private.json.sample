@@ -1,0 +1,23 @@
+{
+  "MODE": "private",
+  "network": "geth",
+  "PORT": 3000,
+  "SHOULD_VALIDATE": false,
+  "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
+  "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
+  "ADDRESS_ENCRYPT_KEY": "zerotheft123",
+  "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
+  "ETHERSCAN_API_KEY": <YOUR_ETHERESCAN_API>,
+  "LINKED_IN_CLIENT_SECRET": "<YOUR_LINKEDIN_SECRET>",
+  "LINKED_IN_CLIENT_ID": "<YOUR_LINKEDIN_ID>",
+  "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
+  "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
+  "BUILD_PATH": "<YOUR_REACT_BUILD_PATH>",
+  "GAS_PRICE": 90,
+  "GAS_LIMIT": 4612388,
+  "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
+  "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
+  "APP_PATH": "/home/zt-holon/.zerotheft",
+  "REPORT_PATH": "zt_report",
+  "REDIS_PORT": 6380
+}

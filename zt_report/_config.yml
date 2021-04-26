@@ -1,0 +1,11 @@
+# Book settings
+title: ZeroTheft Report
+author: ZT
+logo: logo.png
+
+# HTML-specific settings
+html:
+  extra_navbar              : Powered by <a href="https://jupyterbook.org">Jupyter Book</a>  # Will be displayed underneath the left navbar.
+  extra_footer              : "Copyright 2020"  # Will be displayed underneath the footer.
+  home_page_in_navbar       : true  # Whether to include your home page in the left Navigation Bar
+
