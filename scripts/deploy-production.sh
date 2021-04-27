@@ -15,7 +15,7 @@ sed -i "2s/.*/Version: $VERSION/" $DEBIAN_CONFIG
 sed -i "3s/.*/\"version\": \"$VERSION\",/" $REACT_PACKAGE_JSON
 
 echo -e "\033[32mStep 2: Building frontend package...\e[0m"
-yarn --cwd ../zerotheft-holon-react build-prod
+yarn --cwd ../zerotheft-holon-react build-production
 
 echo "setting up the environment as PRODUCTION"
 sed -i -E 's/( Environment=NODE_ENV=)[a-z]+/\1production/g'  $SERVICE_FILE
