@@ -1,3 +1,4 @@
 {
-  "MAIN_PATH": "/home/zt-holon"
+  "MAIN_PATH": "/home/zt-holon",
+  "IS_HOLON": true
 }
