@@ -7,7 +7,6 @@
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
-  "ETHERSCAN_API_KEY": <YOUR_ETHERESCAN_API>,
   "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "BUILD_PATH": "<YOUR_REACT_BUILD_PATH>",
