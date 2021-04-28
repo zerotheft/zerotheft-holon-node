@@ -1,7 +1,7 @@
 {
   "MODE": "private",
   "network": "geth",
-  "PORT": 3000,
+  "PORT": 40107,
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
