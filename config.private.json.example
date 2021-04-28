@@ -1,7 +1,7 @@
 {
   "MODE": "private",
   "network": "geth",
-  "PORT": 40107,
+  "PORT": 8080,
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
