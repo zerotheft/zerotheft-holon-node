@@ -27,3 +27,4 @@ ipns.json
 contracts.*
 integrity-profile/
 pdftk/
+git-release.sh
