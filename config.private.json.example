@@ -1,7 +1,7 @@
 {
   "MODE": "private",
+  "PORT":40107,
   "network": "geth",
-  "PORT": 8080,
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
@@ -9,8 +9,7 @@
   "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
   "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
-  "BUILD_PATH": "<YOUR_REACT_BUILD_PATH>",
-  "GAS_PRICE": 80,
+  "GAS_PRICE": 90,
   "GAS_LIMIT": 4612388,
   "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",

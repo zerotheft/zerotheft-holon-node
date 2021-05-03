@@ -42,8 +42,6 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
       allReportWorker()
     } else if (isGeneratingReports) {
       console.log('Reports in progress!!')
-    } else {
-      console.log('Full report. OK!!')
     }
 
     console.log('*****HEARTBEAT Report*****')
@@ -75,7 +73,7 @@ watcherWorker.on("failed", async (job, returnvalue) => {
  */
 const watcherInit = async () => {
   try {
-    await watcherQueue.add('heartbeat', {}, { removeOnComplete: 1, removeOnFail: 1, repeat: { cron: '* * * * *' } })
+    watcherQueue.add('heartbeat', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '* * * * *' } })
   } catch (e) {
     console.log('watcherWorker', e)
     createLog(MAIN_PATH, `watcherWorker ${e}`)

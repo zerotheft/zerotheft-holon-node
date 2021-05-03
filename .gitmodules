@@ -1,0 +1,3 @@
+[submodule "sub-modules/zerotheft-node-utils"]
+	path = sub-modules/zerotheft-node-utils
+	url = git@gitlab.com:whitehatengineering/zerotheft_and_debatehq/zerotheft-node-utils.git

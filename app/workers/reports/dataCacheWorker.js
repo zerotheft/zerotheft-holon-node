@@ -4,11 +4,11 @@ const { pathsByNation } = require('zerotheft-node-utils').paths
 const { getUmbrellaPaths } = require('zerotheft-node-utils/utils/github')
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
-const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear, checkAllYearDataSynced } = require('../../services/calcEngineServices/calcLogic')
+const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
 const { PUBLIC_PATH, createDir, writeFile } = require('../../common')
 const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/constants')
-const { createLog, MAIN_PATH } = require('../../services/LogInfoServices')
+const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
 
 const connection = new IORedis()
 const scanData = new Queue('ScanData', { connection })
@@ -19,8 +19,12 @@ const allYearDataScheduler = new QueueScheduler('AllYearDataQueue', { connection
  * This worker loops through all  the year and scan them individually by calling another worker
  */
 const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
-    if (!!job.data.resync) cacheServer.del('FULL_REPORT')
-    for (let year = 2001; year <= 2001; year++) {
+    if (!!job.data.reSync) { //if its from cron
+        createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
+        cacheServer.del('FULL_REPORT')
+        cacheServer.del('REPORTS_INPROGRESS')
+    }
+    for (let year = firstPropYear; year <= defaultPropYear; year++) {
         const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
         if (!isYearSynced || !!job.data.reSync)
             await singleYearCaching(job.data.nation, year)
@@ -59,7 +63,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
         umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
         console.log('GHT', year, proposals.length, votes.length)
-        const mainVal = getHierarchyTotals(proposals, votes, nationPaths)
+        const mainVal = await getHierarchyTotals(proposals, votes, nationPaths)
         if (mainVal) {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
@@ -71,7 +75,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
             console.log('SF', year)
             const yearDataDir = `${PUBLIC_PATH}/reports/cached_year_data/${nation}/`
             await createDir(yearDataDir)
-            await writeFile(`${yearDataDir}/${year}.json`, JSON.stringify(yearData))
+            await writeFile(`${yearDataDir}/${year}.json`, yearData)
 
         }
         cacheServer.set(`YEAR_${year}_SYNCED`, true)
@@ -124,7 +128,7 @@ const singleYearCaching = async (nation, year) => {
 const allDataCache = async () => {
     try {
         allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })// executes immediately
-        allYearData.add('allYearDataCachingCron', { nation: "USA", reSync: true }, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 */2 * * *' } })// executes every 2 hrs
+        allYearData.add('allYearDataCachingCron', { nation: "USA", reSync: true }, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 */4 * * *' } })// executes every 4 hrs
     } catch (e) {
         console.log('allDataCache', e)
         throw e
@@ -133,5 +137,6 @@ const allDataCache = async () => {
 
 module.exports = {
     singleYearCaching,
-    allDataCache
+    allDataCache,
+    allYearData
 }

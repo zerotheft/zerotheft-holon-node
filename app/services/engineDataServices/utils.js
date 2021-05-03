@@ -1,6 +1,6 @@
 const fs = require('fs')
 const config = require('zerotheft-node-utils/config')
-const exportsDir = `${config.APP_PATH}/exports`
+const exportsDir = `${config.APP_PATH}/public/exports`
 const voteIDFile = `${exportsDir}/.last_exported_vid`
 const failedVoteIDFile = `${exportsDir}/.export_failed_vids`
 const proposalIdFile = `${exportsDir}/.last_exported_pid`

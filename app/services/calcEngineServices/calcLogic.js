@@ -1,5 +1,6 @@
-
-const { getPathDetail } = require('zerotheft-node-utils').paths
+const { uniq } = require('lodash')
+const PromisePool = require('@supercharge/promise-pool')
+const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
 const { defaultPropYear, firstPropYear } = require('./constants')
@@ -23,77 +24,103 @@ const checkAllYearDataSynced = async () => {
     return true
 }
 
-const getPathProposalYears = (path, proposals) => {
+const getPathProposalYears = async (path, proposals) => {
     createLog(CALC_STATUS_PATH, `Getting Years for Proposals in ${path}`, path)
     let propYears = []
-    proposals.forEach(p => {
-        if (p && p.path) {
-            if (p.path === path) {
-                propYears.push(p['year'])
-            }
-        }
-    })
 
-    return propYears
+    // proposals.forEach(p => {
+    //     if (p && p.path) {
+    //         if (p.path === path) {
+    //             propYears.push(p['year'])
+    //         }
+    //     }
+    // })
+    await PromisePool
+        .withConcurrency(10)
+        .for(proposals)
+        .process(async p => {
+            if (p && p.path) {
+                if (p.path === path) {
+                    propYears.push(p['year'])
+                }
+            }
+        })
+    return uniq(propYears)
 
 }
 
-const getPathYearVotes = (path, year, votes) => {
+const getPathYearVotes = async (path, year, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Votes in ${path}`, path)
     const pathYearVotes = []
-    votes.map(v => {
-        if (v['path'] === path && v['year'] === year) {
-            pathYearVotes.push(v)
-        }
-    })
-    return pathYearVotes
+    const { results, errors } = await PromisePool
+        .withConcurrency(10)
+        .for(votes)
+        .process(async v => {
+
+            if (v['path'] === path && v['year'] === year) {
+                return v
+            }
+        })
+
+    return results
 }
 
-const getPathYearVoteTotals = (path, year, proposals, votes) => {
+const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
-    let vs = getPathYearVotes(path, `${year}`, votes)
-    //TODO  to get detail votes
-    let p = proposals //getProposals() // v
-    let propIds = p.map(x => x['id'])
-    for (let vi = 0; vi < vs.length; vi++) {
-        let v = vs[vi]
-        //TODO work on this v 
-        let voteProposalId = `${v['proposalId']}`
-        let prop
-        if (voteProposalId) {
-            if (propIds.includes(voteProposalId)) {
-                prop = p.filter(x => x.id === voteProposalId)[0]
-                // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
+    let vs = await getPathYearVotes(path, `${year}`, votes)
+
+    // let p = proposals //getProposals() // v
+    let propIds = proposals.map(x => x['id'])
+    await PromisePool
+        .withConcurrency(10)
+        .for(vs)
+        .process(async v => {
+            if (v === undefined) return
+            // for (let vi = 0; vi < vs.length; vi++) {
+            //     let v = vs[vi]
+            //TODO work on this v 
+            let voteProposalId = `${v['proposalId']}`
+            let prop
+            if (voteProposalId) {
+                if (propIds.includes(voteProposalId)) {
+                    prop = proposals.filter(x => parseInt(x.id) === parseInt(voteProposalId))[0]
+                    // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
+                }
             }
-        }
-        if (!voteProposalId || parseInt(prop.theftAmt) <= 0) {
-            tots['against'] += 1
-        } else {
-            tots['for'] += 1
-        }
-        if (!voteProposalId) {
-            continue
-        } else if ('props' in tots && voteProposalId in tots['props']) {
-            tots['props'][voteProposalId]['count'] += 1
-        } else {
-            let theft = parseInt(prop.theftAmt)
-            tots['props'][voteProposalId] = { ...prop, 'proposalid': voteProposalId, 'description': prop['description'], 'theft': theft, 'count': 1 }
-        }
-    }
+            if (!voteProposalId || parseInt(prop.theftAmt) <= 0) {
+                tots['against'] += 1
+            } else {
+                tots['for'] += 1
+            }
+            if (!voteProposalId) {
+                return
+            } else if ('props' in tots && voteProposalId in tots['props']) {
+                tots['props'][voteProposalId]['count'] += 1
+            } else {
+                let theft = parseInt(prop.theftAmt)
+                tots['props'][voteProposalId] = { ...prop, 'proposalid': voteProposalId, 'description': prop['description'], 'theft': theft, 'count': 1 }
+            }
+        })
+
     return tots
 }
 
-const getPathVoteTotals = (path, proposals, votes) => {
+const getPathVoteTotals = async (path, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Vote Total in ${path}`, path)
     let pvt = {}
-    getPathProposalYears(path, proposals).map(y => {
-        pvt[`${y}`] = getPathYearVoteTotals(path, y, proposals, votes)
-    })
+    const years = await getPathProposalYears(path, proposals)
+
+    await PromisePool
+        .withConcurrency(10)
+        .for(years)
+        .process(async y => {
+            pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
+        })
     return pvt
 }
 
-const getHierarchyTotals = (proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
+const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
     if (pathH && pathH.leaf)
         return
     if (pathH && pathH.leaf)
@@ -131,14 +158,13 @@ const getHierarchyTotals = (proposals, votes, pathHierarchy, pathH = null, pathP
         let isLeaf = false
         if (path) {
             // dive into children before doing any processing
-            getHierarchyTotals(proposals, votes, pathHierarchy, path, fullPath, vtby)
+            await getHierarchyTotals(proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
         } else {
             path = {}
             isLeaf = true
         }
         // distribute vote totals into path list
-        let pvt = getPathVoteTotals(fullPath, proposals, votes)
-
+        let pvt = await getPathVoteTotals(fullPath, proposals, votes)
         for (y in pvt) {
             // walk years in the totals for each path
             let pvty = pvt[y]
@@ -150,6 +176,8 @@ const getHierarchyTotals = (proposals, votes, pathHierarchy, pathH = null, pathP
             let vprops = pvty['props'].length
             ytots['votes'] += votes
             ytots['proposals'] += vprops
+            ytots['for'] += votesFor
+            ytots['against'] += votesAgainst
 
             // find winning theft for the year
             let propMax
@@ -333,7 +361,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
                     let details = await getPathDetail(nextPath, proposalContract, voterContract, true, year)
                     if (details.success) {
                         proposals = proposals.concat(details.pathDetails)
-                        votes.concat(details.allVotesInfo)
+                        votes = votes.concat(details.allVotesInfo)
                     }
                     parentPaths.push(nextPath)
                 } catch (e) {

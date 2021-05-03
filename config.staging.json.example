@@ -4,7 +4,6 @@
     "HTTP_PROVIDER": "https://www.ethercluster.com/kotti",
     "WEB_PROVIDER": "wss://www.ethercluster.com/kotti",
     "ADDRESS_ENCRYPT_KEY": "zerotheft123",
-    "ETHERSCAN_API_KEY": <YOUR_ETHERESCAN_API>,
     "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
     "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
     "GAS_PRICE": 10,

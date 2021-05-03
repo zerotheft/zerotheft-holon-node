@@ -4,6 +4,7 @@ const { PUBLIC_PATH } = require('../../common')
 
 const LOG_PATH = PUBLIC_PATH + '/logs'
 let MAIN_PATH = LOG_PATH + '/main.log'
+let CRON_PATH = LOG_PATH + '/cron.log'
 let ERROR_PATH = LOG_PATH + '/error.log'
 let PROPOSAL_PATH = LOG_PATH + '/proposals'
 let VOTES_PATH = LOG_PATH + '/votes'
@@ -64,12 +65,12 @@ const createLog = (location, log, path = '') => {
         })
         location = mainDir + '/main.log'
     }
-    else if(path.length>0){
+    else if (path.length > 0) {
         let pathDir = location + '/' + path
         createNecessaryDir(pathDir)
         location += '/main.log'
     }
-    else if(!location.includes('.log')){
+    else if (!location.includes('.log')) {
         location += '/main.log'
     }
     fs.appendFileSync(location, new Date() + '::' + log + '\n')
@@ -83,6 +84,7 @@ module.exports = {
     createLog,
     readDir,
     MAIN_PATH,
+    CRON_PATH,
     ERROR_PATH,
     PROPOSAL_PATH,
     VOTES_PATH,
