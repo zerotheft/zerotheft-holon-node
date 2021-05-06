@@ -2,10 +2,11 @@ const { getProposalDetails, getProposalTemplate, getPathProposalsByYear } = requ
 
 const proposalWithDetails = async (id) => {
   try {
+    if (id === 0 || isNaN(id)) throw new Error(`Not valid proposal id. i.e ${id}`)
     const proposal = await getProposalDetails(id)
     return proposal
   } catch (e) {
-    return { error: e }
+    return { error: e.message }
   }
 }
 const fetchProposalTemplate = async (path) => {
