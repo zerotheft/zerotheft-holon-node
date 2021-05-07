@@ -15,5 +15,4 @@
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
   "APP_PATH": "/home/zt-holon/.zerotheft",
   "REPORT_PATH": "zt_report",
-  "REDIS_PORT": 6380
 }

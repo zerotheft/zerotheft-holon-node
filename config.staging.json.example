@@ -1,5 +1,6 @@
 {
-    "MODE":"staging"
+    "MODE":"staging",
+    "PORT":8080,
     "SHOULD_VALIDATE": false,    
     "HTTP_PROVIDER": "https://www.ethercluster.com/kotti",
     "WEB_PROVIDER": "wss://www.ethercluster.com/kotti",
@@ -12,5 +13,4 @@
     "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
     "REPORT_PATH": "zt_report",
     "APP_PATH": "/home/zt-holon/.zerotheft",
-    "REDIS_PORT": 6380
 }

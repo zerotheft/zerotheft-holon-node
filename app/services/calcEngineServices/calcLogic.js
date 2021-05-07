@@ -344,7 +344,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
         let nextPath = `${currentPath}/${key}`
         if (nestedValues['leaf']) {
             try {
-                let details = await getPathDetail(nextPath, proposalContract, voterContract, true, year)
+                let details = await getPathDetail(nextPath, year, proposalContract, voterContract, true)
                 if (details.success) {
                     proposals = proposals.concat(details.pathDetails)
                     votes = votes.concat(details.allVotesInfo)
@@ -358,7 +358,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
         else {
             if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
                 try {
-                    let details = await getPathDetail(nextPath, proposalContract, voterContract, true, year)
+                    let details = await getPathDetail(nextPath, year, proposalContract, voterContract, true)
                     if (details.success) {
                         proposals = proposals.concat(details.pathDetails)
                         votes = votes.concat(details.allVotesInfo)
