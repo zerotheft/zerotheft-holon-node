@@ -1,5 +1,6 @@
 {
   "MODE": "production",
+  "PORT":8080,
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "https://www.ethercluster.com/etc",
   "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/2e00c30810a048b582f070d2c732b9a9"
@@ -12,5 +13,4 @@
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
   "REPORT_PATH": "zt_report",
   "APP_PATH": "/home/zt-holon/.zerotheft",
-  "REDIS_PORT": 6380
 }
