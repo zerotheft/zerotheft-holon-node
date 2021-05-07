@@ -27,7 +27,8 @@ const pathsByNation = async (req, res, next) => {
 const getPath = async (req, res, next) => {
   try {
     const { dir } = req.params
-    const response = await pathsService.getPath(decodeURIComponent(dir))
+    const { year } = req.query
+    const response = await pathsService.getPath(decodeURIComponent(dir), year)
     return res.send(response)
   } catch (e) {
     next(e.message)
