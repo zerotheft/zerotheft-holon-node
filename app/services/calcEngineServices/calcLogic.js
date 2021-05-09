@@ -1,4 +1,4 @@
-const { uniq } = require('lodash')
+const { uniq, mean } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
@@ -181,6 +181,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
 
             // find winning theft for the year
             let propMax
+            let yesTheftAmts = []
             if ('props' in pvty) {
                 for (pid in pvty['props']) {
                     let p = pvty['props'][pid]
@@ -189,11 +190,14 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
                     } else if (p['count'] == propMax['count'] && p['theft'] > propMax['theft']) {
                         propMax = p
                     }
+                    // collect all theft amounts that got YES vote
+                    if (p['theft'] > 0) yesTheftAmts.push(p['theft'])
                 }
             }
+
             let theft = 0
             if (propMax) {
-                theft = propMax['theft']
+                theft = (propMax['theft'] > 0) ? propMax['theft'] : mean(yesTheftAmts)
             }
             let legit = (votes >= legitimiateThreshold)
             let need_votes = (legit) ? 0 : legitimiateThreshold - votes;
