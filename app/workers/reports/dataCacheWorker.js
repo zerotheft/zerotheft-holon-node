@@ -1,7 +1,6 @@
 const IORedis = require('ioredis')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
-const { pathsByNation } = require('zerotheft-node-utils').paths
-const { getUmbrellaPaths } = require('zerotheft-node-utils/utils/github')
+const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')

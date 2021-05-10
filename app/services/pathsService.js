@@ -1,5 +1,4 @@
-const { allNations, pathsByNation, getPathDetail } = require('zerotheft-node-utils').paths
-const { getUmbrellaPaths } = require('zerotheft-node-utils/utils/github')
+const { allNations, pathsByNation, getPathDetail, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 module.exports = {
   allNations,
   pathsByNation,
