@@ -197,7 +197,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
 
             let theft = 0
             if (propMax) {
-                theft = (propMax['theft'] > 0) ? propMax['theft'] : mean(yesTheftAmts)
+                theft = ((propMax['theft'] === 0 && votesFor < votesAgainst) || propMax['theft'] > 0) ? propMax['theft'] : mean(yesTheftAmts)
             }
             let legit = (votes >= legitimiateThreshold)
             let need_votes = (legit) ? 0 : legitimiateThreshold - votes;
