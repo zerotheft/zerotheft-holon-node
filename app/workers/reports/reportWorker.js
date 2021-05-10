@@ -1,9 +1,8 @@
 const { Queue, Worker, QueueScheduler } = require('bullmq')
 const PromisePool = require('@supercharge/promise-pool')
 const IORedis = require('ioredis')
-const { allNations } = require('zerotheft-node-utils').paths
+const { allNations, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { cacheServer } = require('../../services/redisService')
-const { getUmbrellaPaths } = require('zerotheft-node-utils/utils/github')
 const { singleIssueReport, multiIssuesReport, nationReport } = require('../../services/calcEngineServices')
 const { createLog, FULL_REPORT_PATH } = require('../../services/LogInfoServices')
 
