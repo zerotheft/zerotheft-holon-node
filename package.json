@@ -23,7 +23,7 @@
     "start-staging": "NODE_ENV=staging yarn fetch-contract  && NODE_ENV=staging nodemon app.js --ignore zt_report",
     "run-production": "NODE_ENV=production yarn fetch-contract && rm -f ./log-production.log && pm2 kill && NODE_ENV=production pm2 start app.js -l ./log-production.log",
     "run-staging": "NODE_ENV=staging yarn fetch-contract && rm -f ./log-staging.log && pm2 kill && NODE_ENV=staging pm2 start app.js -l ./log-staging.log",
-    "run-private": "rm -f ./log-private.log && pm2 kill && NODE_ENV=private pm2 start app.js -l ./log-private.log",
+    "run-private": "rm -f ./log-private.log && pm2 kill && NODE_ENV=private pm2 start app.js --max-old-space-size=4096 -l ./log-private.log",
     "postinstall": "link-module-alias",
     "remove-dir": "rm -rf debinstall/zerotheft-holon/opt/.zerotheft/build && rm -rf debinstall/zerotheft-holon/opt/.zerotheft/zt_report",
     "copy-dir": "cp -R ../zerotheft-holon-react/build debinstall/zerotheft-holon/opt/.zerotheft/ && cp -R zt_report debinstall/zerotheft-holon/opt/.zerotheft/",
