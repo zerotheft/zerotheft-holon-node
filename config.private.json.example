@@ -1,5 +1,6 @@
 {
   "MODE": "private",
+  "DESKTOP_APP": "http://localhost:6549",
   "PORT":40107,
   "network": "geth",
   "SHOULD_VALIDATE": false,
