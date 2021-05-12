@@ -1,11 +1,12 @@
 const pathsService = require('../services/pathsService')
 
 
-const allNations = async(req, res, next) => {
+const allNations = async (req, res, next) => {
   try {
     const nations = await pathsService.allNations()
     res.send(nations)
   } catch (e) {
+    console.log('allNations::', e)
     next(e.message)
   }
 }

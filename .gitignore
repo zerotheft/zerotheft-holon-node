@@ -28,3 +28,5 @@ contracts.*
 integrity-profile/
 pdftk/
 git-release.sh
+Makefile
+scripts
