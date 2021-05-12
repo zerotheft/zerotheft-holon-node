@@ -1,4 +1,4 @@
 {
-  "HOLON_INSTALL_DIR": ".zerotheft",
-  "IS_INSTALLER": true
+  "ZEROTHEFT_DIR": ".zerotheft",
+  "IS_INSTALLER": false
 }

@@ -194,7 +194,6 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
                     if (p['theft'] > 0) yesTheftAmts.push(p['theft'])
                 }
             }
-
             let theft = 0
             if (propMax) {
                 theft = ((propMax['theft'] === 0 && votesFor < votesAgainst) || propMax['theft'] > 0) ? propMax['theft'] : mean(yesTheftAmts)
