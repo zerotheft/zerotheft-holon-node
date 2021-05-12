@@ -1,10 +1,6 @@
 {
   "name": "zerotheft-holon-node",
-<<<<<<< HEAD
-  "version": "1.2.42",
-=======
   "version": "1.2.45",
->>>>>>> 0c7cd0d51bd191cc4c2ee260d77d997ab7474942
   "description": "",
   "main": "app.js",
   "bin": {
