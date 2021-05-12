@@ -138,7 +138,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
                 const gap = idx - lastThIdx
                 step = diff / gap
 
-                for (backIdx = last_th_idx + 1; backIdx < idx; backIdx++) {
+                for (backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
                     lastTh += step
                     yearTh[backIdx]['theft'] = lastTh
                     yearTh[backIdx]['Theft'] = theftAmountAbbr(lastTh)
