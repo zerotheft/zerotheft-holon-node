@@ -31,3 +31,4 @@ pdftk/
 git-release.sh
 Makefile
 scripts
+*.log

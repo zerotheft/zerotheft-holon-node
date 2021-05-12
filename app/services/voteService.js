@@ -2,7 +2,7 @@ const { voteByHolon: voteProposal } = require('zerotheft-node-utils/contracts/pr
 const { userPriorVote } = require('zerotheft-node-utils/contracts/votes')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const scrapedin = require('scrapedin')
-const { get, create } = require('lodash')
+const { get } = require('lodash')
 const { getProxyHolonValues, getVoteValues, updateVoteValues, getLinkedinCookieValues } = require('zerotheft-node-utils/utils/storage')
 const { createLog, VOTERS_PATH, VOTES_PATH, ERROR_PATH } = require('./LogInfoServices')
 

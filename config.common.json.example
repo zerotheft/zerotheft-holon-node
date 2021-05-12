@@ -1,4 +1,4 @@
 {
-  "MAIN_PATH": "/home/zt-holon/.zerotheft",
-  "IS_HOLON": true
+  "HOLON_INSTALL_DIR": ".zerotheft",
+  "IS_INSTALLER": true
 }
