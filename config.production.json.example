@@ -6,11 +6,9 @@
   "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/2e00c30810a048b582f070d2c732b9a9"
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
-  "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
   "GAS_PRICE": 10,
   "GAS_LIMIT": 4612388,
   "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
   "REPORT_PATH": "zt_report",
-  "APP_PATH": "/home/zt-holon/.zerotheft"
 }

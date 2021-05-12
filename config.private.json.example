@@ -11,6 +11,5 @@
   "GAS_LIMIT": 4612388,
   "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
-  "APP_PATH": "/home/ubuntu/.zerotheft",
   "REPORT_PATH": "zt_report"
 }
