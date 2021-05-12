@@ -6,13 +6,11 @@
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
-  "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
-  "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "GAS_PRICE": 90,
   "GAS_LIMIT": 4612388,
   "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
-  "APP_PATH": "/home/zt-holon/.zerotheft",
-  "REPORT_PATH": "zt_report",
+  "APP_PATH": "/home/ubuntu/.zerotheft",
+  "REPORT_PATH": "zt_report"
 }

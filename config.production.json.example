@@ -12,5 +12,5 @@
   "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
   "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
   "REPORT_PATH": "zt_report",
-  "APP_PATH": "/home/zt-holon/.zerotheft",
+  "APP_PATH": "/home/zt-holon/.zerotheft"
 }
