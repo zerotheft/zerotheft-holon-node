@@ -32,3 +32,4 @@ git-release.sh
 Makefile
 scripts
 *.log
+.DS_STORE

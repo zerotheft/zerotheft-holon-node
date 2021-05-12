@@ -1,7 +1,6 @@
 const fs = require("fs")
 const { get, isEmpty } = require('lodash')
-const { getUmbrellaPaths } = require('zerotheft-node-utils/utils/github')
-const { pathsByNation } = require('zerotheft-node-utils').paths
+const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
 const { writeFile } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');

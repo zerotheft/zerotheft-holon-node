@@ -3,7 +3,7 @@ const PORT = config.PORT || 3000;
 const fs = require('fs')
 
 const getReportPath = () => {
-  return `${config.APP_PATH}/${config.REPORT_PATH}/`
+  return `${config.APP_PATH}/.zerotheft/${config.REPORT_PATH}/`
 }
 
 const getAppRoute = () => {

@@ -3,6 +3,7 @@ const { get, min, max, startCase } = require("lodash")
 const latex = require('node-latex')
 const yaml = require('js-yaml')
 const fs = require('fs')
+const homedir = require('os').homedir()
 const { getReportPath } = require('../../../config');
 const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
@@ -233,14 +234,14 @@ const prepareBellCurveData = (propThefts, propVotes) => {
 }
 
 const generateLatexPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${APP_PATH}/app/services/calcEngineServices/templates/report.tex`, 'utf8')
+    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/report.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
     })
 
-    const reportPrepd = `${getReportPath()}/reports/ztReport/${fileName}.tex`
-    const reportPDF = `${getReportPath()}/reports/ztReport/${fileName}.pdf`
+    const reportPrepd = `${getReportPath()}reports/ztReport/${fileName}.tex`
+    const reportPDF = `${getReportPath()}reports/ztReport/${fileName}.pdf`
 
     fs.writeFileSync(reportPrepd, template, function (err) {
         if (err) throw err;
@@ -261,14 +262,14 @@ const generateLatexPDF = (pdfData, fileName) => {
 
 
 const generateLatexMultiPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${APP_PATH}/app/services/calcEngineServices/templates/multiReport.tex`, 'utf8')
+    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/multiReport.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
     })
 
-    const reportPrepd = `${getReportPath()}/reports/multiIssueReport/${fileName}.tex`
-    const reportPDF = `${getReportPath()}/reports/multiIssueReport/${fileName}.pdf`
+    const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
+    const reportPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
 
     fs.writeFileSync(reportPrepd, template, function (err) {
         if (err) throw err;
@@ -510,8 +511,8 @@ const mergePdfLatex = (fileName, pdfsSequence) => {
     })
     mergedLatex += `\\end{document}`
 
-    const mergedLatexTemplate = `${getReportPath()}/reports/multiIssueReport/${fileName}.tex`
-    const mergedLatexPDF = `${getReportPath()}/reports/multiIssueReport/${fileName}.pdf`
+    const mergedLatexTemplate = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
+    const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
     fs.writeFileSync(mergedLatexTemplate, mergedLatex, function (err) {
         if (err) throw err;
         console.log('full report Prepared');
