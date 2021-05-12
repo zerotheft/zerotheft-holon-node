@@ -19,9 +19,9 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
             const nation = leafPath.split('/')[0]
             const nationPaths = await pathsByNation(nation)
 
-            let allYearData = { '2001': '' }
+            // let allYearData = { '2001': '' }
             // TODO: uncomment this
-            // let allYearData = await allYearCachedData(nation)
+            let allYearData = await allYearCachedData(nation)
 
             let lPath = leafPath.split('/').slice(1).join('/')
             if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
@@ -93,9 +93,9 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
             const nationPaths = await pathsByNation(nation)
             const allPaths = get(nationPaths, path.split('/').join('.'))
 
-            let allYearData = { '2001': '' }
+            // let allYearData = { '2001': '' }
             // TODO: uncomment this
-            // let allYearData = await allYearCachedData(nation)
+            let allYearData = await allYearCachedData(nation)
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()

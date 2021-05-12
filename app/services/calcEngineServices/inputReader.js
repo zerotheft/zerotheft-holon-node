@@ -3,9 +3,9 @@ const { get } = require('lodash')
 const { getReportPath } = require('../../../config');
 
 const loadSingleIssue = (fileName) => {
-    const leafContent = fs.readFileSync(`${getReportPath()}input_jsons/corp_tax_evasion.json`)
+    // const leafContent = fs.readFileSync(`${getReportPath()}input_jsons/corp_tax_evasion.json`)
     // TODO: uncomment this
-    // const leafContent = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
+    const leafContent = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
     const leafJson = JSON.parse(leafContent)
 
     return [leafJson.yearData, leafJson.actualPath, leafJson.holon, leafJson.allPaths]
