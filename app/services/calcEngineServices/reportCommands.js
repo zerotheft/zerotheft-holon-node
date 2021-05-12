@@ -32,7 +32,7 @@ const generateReport = async (noteBookName, fileName, year, isPdf = 'false') => 
 }
 
 const generateReportData = (fileName, year) => {
-    const [summaryTotals, path, holon, allPaths] = loadSingleIssue()
+    const [summaryTotals, path, holon, allPaths] = loadSingleIssue(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
