@@ -20,6 +20,7 @@ debinstall/zerotheft-holon/usr/local/bin/*
 debinstall/*.deb
 .idea
 .history
+config.common.json
 config.private.json
 config.staging.json
 config.production.json
