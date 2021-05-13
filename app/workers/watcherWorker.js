@@ -27,9 +27,9 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
     console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)
-    console.log(`5. Last User ID Exported(LAST_EXPORTED_UID): ${cachedUid}`)
-    console.log(`6. Last Proposal ID Exported(LAST_EXPORTED_PID): ${cachedPid}`)
-    console.log(`7. Last Vote ID Exported(LAST_EXPORTED_VID): ${cachedVid}`)
+    console.log(`5. Last User ID Exported: ${cachedUid}`)
+    console.log(`6. Last Proposal ID Exported: ${cachedPid}`)
+    console.log(`7. Last Vote ID Exported: ${cachedVid}`)
     /**
      * If sync is complete 
      * Initiate data caching
