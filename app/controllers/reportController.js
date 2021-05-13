@@ -18,9 +18,9 @@ const getSingleIssueReport = async (req, res, next) => {
         })
     } else if (response.reportFile) {
         return res.send({ report: `${getAppRoute()}/issueReports/${response.reportFile}` })
+    } else {
+        return res.send(response)
     }
-
-    return res.send(response)
 }
 
 const getMultiIssuesReport = async (req, res, next) => {
@@ -38,9 +38,9 @@ const getMultiIssuesReport = async (req, res, next) => {
         })
     } else if (response.reportFile) {
         return res.send({ report: `${getAppRoute()}/pathReports/${response.reportFile}` })
+    } else {
+        return res.send(response)
     }
-
-    return res.send(response)
 }
 
 const getNationReport = async (req, res, next) => {
