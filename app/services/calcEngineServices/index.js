@@ -31,8 +31,8 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
                 // await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
-                generatePDFReport('ztReport', fileName, year)
-                return { report: `${fileName}.pdf` }
+                const pdfResponse = await generatePDFReport('ztReport', fileName, year)
+                return { pdfResponse, reportFile: `${fileName}.pdf` }
 
 
                 // createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
