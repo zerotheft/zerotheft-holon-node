@@ -18,11 +18,17 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
     const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
+    const cachedUid = await cacheServer.getAsync('LAST_EXPORTED_UID')
+    const cachedPid = await cacheServer.getAsync('LAST_EXPORTED_PID')
+    const cachedVid = await cacheServer.getAsync('LAST_EXPORTED_VID')
 
-    console.log(`1. Caching in progress: ${!!isSyncing}`)
-    console.log(`2. Reports in progress: ${!!isGeneratingReports}`)
-    console.log(`3. Full report: ${!!isFullReport}`)
-    console.log(`4. Data in cache: ${!!isDatainCache}`)
+    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing}`)
+    console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
+    console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
+    console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)
+    console.log(`5. Last User ID Exported(LAST_EXPORTED_UID): ${cachedUid}`)
+    console.log(`6. Last Proposal ID Exported(LAST_EXPORTED_PID): ${cachedPid}`)
+    console.log(`7. Last Vote ID Exported(LAST_EXPORTED_VID): ${cachedVid}`)
     /**
      * If sync is complete 
      * Initiate data caching
