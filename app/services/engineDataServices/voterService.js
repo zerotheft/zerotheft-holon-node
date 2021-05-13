@@ -5,10 +5,12 @@ const { getUser, listUserIds } = require('zerotheft-node-utils/contracts/users')
 const { exportsDir, lastExportedUid, failedUserIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
+const { createDir } = require('../../common')
 
 
 const exportAllVoters = async () => {
   try {
+    await createDir(exportsDir)
 
     const userContract = await getUserContract()
 
