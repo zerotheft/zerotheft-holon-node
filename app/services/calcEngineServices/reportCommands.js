@@ -4,6 +4,7 @@ const latex = require('node-latex')
 const yaml = require('js-yaml')
 const fs = require('fs')
 const homedir = require('os').homedir()
+const templates = `${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
@@ -234,7 +235,7 @@ const prepareBellCurveData = (propThefts, propVotes) => {
 }
 
 const generateLatexPDF = async (pdfData, fileName) => {
-    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/report.tex`, 'utf8')
+    let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
@@ -266,7 +267,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
 
 
 const generateLatexMultiPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/multiReport.tex`, 'utf8')
+    let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
@@ -283,13 +284,14 @@ const generateLatexMultiPDF = (pdfData, fileName) => {
     const input = fs.createReadStream(reportPrepd)
     const output = fs.createWriteStream(reportPDF)
     const pdf = latex(input)
+    return { pdf, output, reportPrepd }
 
-    pdf.pipe(output)
-    pdf.on('error', err => console.error(err))
-    pdf.on('finish', () => {
-        console.log('PDF generated!')
-        fs.unlinkSync(reportPrepd)
-    })
+    // pdf.pipe(output)
+    // pdf.on('error', err => console.error(err))
+    // pdf.on('finish', () => {
+    //     console.log('PDF generated!')
+    //     fs.unlinkSync(reportPrepd)
+    // })
 }
 
 const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
@@ -469,7 +471,7 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, pdflinks, 
 
 const generatePDFMultiReport = (noteBookName, fileName, year, isPdf = 'false') => {
     const pdfData = generateMultiReportData(fileName, year)
-    generateLatexMultiPDF(pdfData, fileName)
+    return generateLatexMultiPDF(pdfData, fileName)
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
 

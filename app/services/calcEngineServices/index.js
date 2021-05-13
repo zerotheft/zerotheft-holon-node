@@ -109,8 +109,8 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 // await generateReport('multiIssueReport', fileName, year)
                 // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${filePATH}`, path)
                 // await generatePDF(filePath, 'multiIssueReport')
-                generatePDFMultiReport('multiIssueReport', fileName, year)
-                return { report: `${fileName}.pdf` }
+                const pdfResponse = generatePDFMultiReport('multiIssueReport', fileName, year)
+                return { pdfResponse, reportFile: `${fileName}.pdf` }
                 // if (fromWorker) {
                 //     let tempFilePath = `${getReportPath()}reports/temp_multiIssueReport/`
                 //     // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
