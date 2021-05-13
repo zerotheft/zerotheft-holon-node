@@ -4,6 +4,7 @@ const { allYearData } = require('./reports/dataCacheWorker')
 const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, MAIN_PATH } = require('../services/LogInfoServices')
+const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
 
 const connection = new IORedis()
 
@@ -18,9 +19,9 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
     const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
-    const cachedUid = await cacheServer.getAsync('LAST_EXPORTED_UID')
-    const cachedPid = await cacheServer.getAsync('LAST_EXPORTED_PID')
-    const cachedVid = await cacheServer.getAsync('LAST_EXPORTED_VID')
+    const cachedUid = await lastExportedUid()
+    const cachedPid = await lastExportedPid()
+    const cachedVid = await lastExportedVid()
 
     console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing}`)
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
