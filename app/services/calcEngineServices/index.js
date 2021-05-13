@@ -86,7 +86,7 @@ const allYearCachedData = async (nation) => {
 }
 const multiIssuesReport = async (path, fromWorker = false, year) => {
     // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
-    const fileName = `${year}_${path}`
+    const fileName = `${year}_${path.replace(/\//g, '-')}`
 
     try {
         const filePath = `${getReportPath()}reports/multiIssueReport`
