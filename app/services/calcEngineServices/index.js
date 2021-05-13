@@ -19,15 +19,16 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
             const nation = leafPath.split('/')[0]
             const nationPaths = await pathsByNation(nation)
 
-            // let allYearData = { '2001': '' }
+            let allYearData = { '2001': '' }
             // TODO: uncomment this
-            let allYearData = await allYearCachedData(nation)
+            // let allYearData = await allYearCachedData(nation)
 
             let lPath = leafPath.split('/').slice(1).join('/')
             if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
                 const leafJson = { yearData: allYearData, holon: getAppRoute(), actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
-                await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
+                // TODO: uncomment this
+                // await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
                 generatePDFReport('ztReport', fileName, year)
@@ -64,7 +65,8 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
         return { error: e.message }
     } finally {
         createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
-        await deleteJsonFile(fileName)
+        // TODO: uncomment this
+        // await deleteJsonFile(fileName)
     }
 }
 
@@ -93,15 +95,16 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
             const nationPaths = await pathsByNation(nation)
             const allPaths = get(nationPaths, path.split('/').join('.'))
 
-            // let allYearData = { '2001': '' }
+            let allYearData = { '2001': '' }
             // TODO: uncomment this
-            let allYearData = await allYearCachedData(nation)
+            // let allYearData = await allYearCachedData(nation)
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
                 const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
-                await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
+                // TODO: uncomment this
+                // await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
                 // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
                 // await generateReport('multiIssueReport', fileName, year)
                 // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${filePATH}`, path)
@@ -141,6 +144,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
         return { error: e.message }
     } finally {
         // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
+        // TODO: uncomment this
         // await deleteJsonFile(fileName)
     }
 }
