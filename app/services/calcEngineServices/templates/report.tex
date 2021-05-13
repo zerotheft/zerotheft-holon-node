@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage[a4paper, margin={40px, 40px}]{geometry}
+\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
@@ -18,25 +18,25 @@
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=500px},
-	leftHeaderText/.style={headerText, align=left,text width=290px},
-	rightHeaderText/.style={headerText, align=right,text width=150px},
-	theftBlock/.style={rounded corners=5px, inner sep=10px},
-	theftBlockContent/.style={text=black, text width=100px},
+	fullWidth/.style={text width=480pt},
+	leftHeaderText/.style={headerText, align=left,text width=280pt},
+	rightHeaderText/.style={headerText, align=right,text width=180pt},
+	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
+	theftBlockContent/.style={text=black, text width=100pt},
 }
 
 \begin{document}
 \sffamily
 % header
-\trimbox{0 -15px 0 0}{ 
+\trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
       \node[leftHeaderText] (subtitle) {ZeroTheft Movement: --subtitle--};
-      \node[leftHeaderText, below=of subtitle, below=5px] (title) {\huge \textbf{--title--}};
-      \node[leftHeaderText, below=of title, below=-5px] (belowtitle) {voted theft Ethically, not legally};
+      \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
+      \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
 
-      \node[rightHeaderText, right=of subtitle] (year) {--year--};
-      \node[rightHeaderText, below=of year, below=5px] (country) {for --country--};
-      \node[rightHeaderText, below=of country, below=5px] (holon) {--holonUrl--};
+      \node[rightHeaderText, right=10pt of subtitle] (year) {--year--};
+      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
+      \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
       \begin{scope}[on background layer]
       \node[fill=primary, fit=(subtitle)(title)(belowtitle)(year)(country)(holon)] (header) {};
@@ -44,17 +44,17 @@
   \end{tikzpicture}
 }
 
-\trimbox{-120px -15px 0 0}{ 
+\trimbox{-120pt -15pt 0 0}{ 
   \begin{tikzpicture}
       \node[theftBlockContent] (amount1) {\huge \textbf{\$--theft--}};
-      \node[theftBlockContent, below=0pxof amount1] (year1) {Stolen in --year--\newline};
+      \node[theftBlockContent, below=0ptof amount1] (year1) {Stolen in --year--\newline};
       
       \begin{scope}[on background layer]
       \node[theftBlock, fill=theftBgColor1, fit=(amount1)(year1)] (block1) {};
       \end{scope}
 
-      \node[theftBlockContent, right=30pxof amount1] (amount2) {\huge \textbf{\$--manyYearsTheft--}};
-      \node[theftBlockContent, below=0pxof amount2] (year2) {Stolen in --xYrs-- years\\from --minYear-- to --maxYear--};
+      \node[theftBlockContent, right=30ptof amount1] (amount2) {\huge \textbf{\$--manyYearsTheft--}};
+      \node[theftBlockContent, below=0ptof amount2] (year2) {Stolen in --xYrs-- years\\from --minYear-- to --maxYear--};
       
       \begin{scope}[on background layer]
       \node[theftBlock, fill=theftBgColor2, fit=(amount2)(year2)] (block2) {};
@@ -62,7 +62,7 @@
   \end{tikzpicture}
 }
 
-\trimbox{0 -40px 0 0}{
+\trimbox{0 -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       title style={at={(0.5,1)},anchor=south,text=primary},
@@ -81,11 +81,11 @@
       height = 0.4\textwidth,
       legend cell align = {left},
       % legend pos = north west,
-      legend style={at={(0.5,-25px)},anchor=north},
+      legend style={at={(0.5,-25pt)},anchor=north},
       scatter/classes={
-      voting={theftValueType1Color, /tikz/mark size=3px},%
-      incompletevoting={theftValueType2Color, /tikz/mark size=3px},%
-      estimation={theftValueType3Color, /tikz/mark size=3px}}
+      voting={theftValueType1Color, /tikz/mark size=3pt},%
+      incompletevoting={theftValueType2Color, /tikz/mark size=3pt},%
+      estimation={theftValueType3Color, /tikz/mark size=3pt}}
     ]
     
     \addplot[
@@ -93,7 +93,7 @@
       text=primary,
       scatter src=explicit symbolic,
       nodes near coords*=\scriptsize \textbf{\Theft},
-      every node near coord/.append style={below right, rotate=35, shift={(2px, 8px)}},
+      every node near coord/.append style={below right, rotate=35, shift={(2pt, 8pt)}},
       visualization depends on={value \thisrow{Theft} \as \Theft},
     ] 
     table [meta=DeterminedBy] {
@@ -119,7 +119,7 @@
   \end{tikzpicture}
 }
 
-\trimbox{0 -40px 0 0}{
+\trimbox{0 -40pt 0 0}{
   \begin{tikzpicture}[every label/.style={black}, nodes={white}]
     \pie[
       sum=auto,
@@ -130,12 +130,12 @@
     ]
     {
       % this always need to have data to get the pie chart working
-      % --yesNoPieData--
-      50/No,30/Yes
+      --yesNoPieData--
+      % 50/No,30/Yes
     }
   \end{tikzpicture}
 }
-\trimbox{-30px -40px 0 0}{
+\trimbox{-30pt -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       ybar interval,
@@ -163,11 +163,11 @@
 }
 
 \newpage 
-\trimbox{0 -15px 0 0}{ 
+\trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
     \node[fullWidth, text=primary] (leadingProposal) {\huge \textbf{Leading Proposals}};
-    \node[fullWidth, below =0pxof leadingProposal] (viewProposalTextLink) {\hypertarget{http://holon7.zerotheft.net/path/USA/issue/corp_tax_evasion}{View Full Proposal Text}};
-    \node[fullWidth, below =0pxof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal ID --leadingProposalID-- by --leadingProposalAuthor-- on --leadingProposalDate--}};
+    \node[fullWidth, below =0ptof leadingProposal] (viewProposalTextLink) {\href{http://holon7.zerotheft.net/path/USA/issue/corp_tax_evasion}{\color{blue}View Full Proposal Text}};
+    \node[fullWidth, below =0ptof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal ID --leadingProposalID-- by --leadingProposalAuthor-- on --leadingProposalDate--}};
   \end{tikzpicture}
 }
   
