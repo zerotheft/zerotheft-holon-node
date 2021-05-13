@@ -54,7 +54,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
                 return { message: 'Issue not present' }
             }
         } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-            return { report: `${fileName}.pdf` }
+            return { reportFile: `${fileName}.pdf` }
         } else {
             return { message: 'Issue not present' }
         }
@@ -133,7 +133,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 return { message: 'No Issues for the path' }
             }
         } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-            return { report: `${fileName}.pdf` }
+            return { reportFile: `${fileName}.pdf` }
         } else {
             return { message: 'No Issues for the path' }
         }
