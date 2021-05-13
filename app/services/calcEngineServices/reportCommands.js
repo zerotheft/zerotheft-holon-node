@@ -233,7 +233,7 @@ const prepareBellCurveData = (propThefts, propVotes) => {
     return { bellCurveThefts: axTh, bellCurveVotes: axVt }
 }
 
-const generateLatexPDF = (pdfData, fileName) => {
+const generateLatexPDF = async (pdfData, fileName) => {
     let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/report.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
@@ -251,13 +251,17 @@ const generateLatexPDF = (pdfData, fileName) => {
     const input = fs.createReadStream(reportPrepd)
     const output = fs.createWriteStream(reportPDF)
     const pdf = latex(input)
-
-    pdf.pipe(output)
-    pdf.on('error', err => console.error(err))
-    pdf.on('finish', () => {
-        console.log('PDF generated!')
-        fs.unlinkSync(reportPrepd)
-    })
+    return { pdf, output, reportPrepd }
+    // pdf.pipe(output)
+    // pdf.on('error', err => {
+    //     console.error('generateLatexPDF::', err)
+    //     // return { message: err, success: false }
+    // })
+    // pdf.on('finish', () => {
+    //     console.log('PDF generated!')
+    //     fs.unlinkSync(reportPrepd)
+    //     // return { message: 'pdf generated sucessfully', success: true }
+    // })
 }
 
 
@@ -288,10 +292,11 @@ const generateLatexMultiPDF = (pdfData, fileName) => {
     })
 }
 
-const generatePDFReport = (noteBookName, fileName, year, isPdf = 'false') => {
+const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
     createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
     const pdfData = generateReportData(fileName, year)
-    generateLatexPDF(pdfData, fileName)
+    return await generateLatexPDF(pdfData, fileName)
+
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
 
