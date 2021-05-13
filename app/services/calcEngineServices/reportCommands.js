@@ -321,7 +321,7 @@ const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') 
 }
 
 const generateMultiReportData = (fileName, year) => {
-    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues()
+    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
@@ -335,10 +335,10 @@ const generateMultiReportData = (fileName, year) => {
     const population = usaPopulation(year)
     const pdfReportPath = `${holon}/pathReports/${fileName}.pdf`
 
-    const nation = actualPath.split('/')[0]
+    const nation = fileName.match(/\d{4}_([^-]+)/)[1]
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? 'USA' : actualPath.split('/').slice(1).join('/')
+    const path = actualPath == nation ? 'USA' : actualPath
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
@@ -439,14 +439,14 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon) => {
     const filename = pdflinks //if path == nation else json_file
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${votepct * 100}\\%} &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${(votepct * 100).toFixed(2)}\\%} &
     \\href{${holon}/pathReports/${filename}.pdf#page=${page}}{Page ${page}} &
     ${notes} \\\\ \n`
 }
 
 const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, pdflinks, holon) => {
     let disp = ''
-    if (!paths) return
+    if (!paths) return disp
 
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return

@@ -28,8 +28,10 @@ const getPathVoteTotals = (yearTotals, path) => {
     return get(yearTotals, `paths.${path}`, {})
 }
 
-const loadAllIssues = (jsonFilename) => {
-    const dataString = fs.readFileSync(`${getReportPath()}input_jsons/multireport.json`)
+const loadAllIssues = (fileName) => {
+    // const dataString = fs.readFileSync(`${getReportPath()}input_jsons/multireport.json`)
+    // TODO: uncomment this
+    const dataString = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
     const allData = JSON.parse(dataString)
     summaryTotals = allData['yearData']
     actualPath = allData['actualPath']
