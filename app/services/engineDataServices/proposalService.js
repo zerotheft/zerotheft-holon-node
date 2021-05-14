@@ -8,6 +8,7 @@ const { fetchProposalYaml, listProposalIds } = require('zerotheft-node-utils/con
 const { createDir } = require('../../common')
 const { exportsDir, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
+const { writeCsv } = require('./readWriteCsv')
 
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
@@ -31,6 +32,17 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             const proposalDir = `${exportsDir}/proposals/${file.summary_country || 'USA'}/${file.hierarchy}/${file.summary_year}`
             await createDir(proposalDir)
             fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
+
+            //save every proposal in csv
+            writeCsv([{
+              "id": pid,
+              "name": proposal.name,
+              "country": `${file.summary_country || 'USA'}`,
+              "path": file.hierarchy,
+              "theft_amount": proposal.theftAmt,
+              "year": proposal.year,
+              "date": proposal.date
+            }], `${exportsDir}/proposals/proposals.csv`)
 
             for (let index = 0; index < outputFiles.length; index++) {
               if (fs.existsSync(outputFiles[index])) { fs.unlinkSync(outputFiles[index]); }
