@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# Stop the appserver:
-echo 'stopping holon server ..........'
-systemctl stop zerotheft-holon || true
-
-echo 'removing cron..................'
-(crontab -l | grep -v "/home/zt-holon/.zerotheft/update.sh >> /home/zt-holon/cron.log 2>&1") | crontab -

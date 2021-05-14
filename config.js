@@ -6,13 +6,13 @@ const getReportPath = () => {
   return `${config.APP_PATH}/${config.REPORT_PATH}/`
 }
 
-const getAppRoute = () => {
+const getAppRoute = (baseUrl = true) => {
   try {
     if (config.MODE === 'development') {
       return `http://localhost:${PORT}`
     } else {
       const appconfig = fs.readFileSync(`${config.APP_PATH}/config.json`)
-      return `${JSON.parse(appconfig).BASE_URL}`
+      return `${baseUrl ? JSON.parse(appconfig).BASE_URL : JSON.parse(appconfig).APP_URL}`
     }
   } catch {
     return null
