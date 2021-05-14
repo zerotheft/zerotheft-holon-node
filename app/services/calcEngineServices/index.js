@@ -159,7 +159,6 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
 const nationReport = async (year, fromWorker = false, nation = 'USA') => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
     try {
-        const fileName = `${year}_${nation}`
         const fullFileName = `full_${year}_${nation}`
         const filePath = `${getReportPath()}reports/multiIssueReport`
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
@@ -167,38 +166,10 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
             // createLog(FULL_REPORT_PATH, `Nation Report initiated for ${nation}(${year})`)
             // createLog(FULL_REPORT_PATH, `Fetching Multi Issue Report for ${nation}`)
             const response = await multiIssuesReport(nation, fromWorker, year)
-            // return { report: `${fileName}.pdf` }
-            if (response.report) {
-                const nationPaths = await pathsByNation(nation)
-                delete (nationPaths['Alias'])
-                let nationTocReportName = `${year}_${nation}`
-                // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
-                let umbrellaPaths = await getUmbrellaPaths()
-                umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
-                let pdfsSequence = await pdfPathTraverse(nationPaths[nation], nation, [], year, umbrellaPaths)
-                if (pdfsSequence.length > 0) {
-                    pdfsSequence.unshift(`${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`)
-                    mergePdfLatex(fullFileName, pdfsSequence)
-                    return { report: `${fullFileName}.pdf` }
-                    // const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
-                    // // createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
-                    // await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))
-                    // if (fs.existsSync(`${filePath}/${fileWithoutFooter}.pdf`)) {
-                    //     // createLog(FULL_REPORT_PATH, `Generaing Page Number footer for ${filePath}`)
-                    //     await generatePageNumberFooter(filePath, fileWithoutFooter, fileName)
-                    //     return { report: `${fileName}.pdf` }
-                    // } else {
-                    //     return { message: 'Error generating PDF report' }
-                    // }
-                } else {
-                    return { message: 'Report not present' }
-                }
-            } else {
-                return { message: response.error }
-            }
-
+            await createNationReport(response)
+            return await createNationFullReport(year, nation, fullFileName)
         } else if (reportExists) {
-            return { report: `${fullFileName}.pdf` }
+            return { reportFile: `${fullFileName}.pdf` }
         } else {
             return { message: 'Full Country Report Generation will take time. Come back later.' }
         }
@@ -206,6 +177,57 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
         // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
         // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
         return { error: e.message }
+    }
+}
+
+const createNationReport = async (response) => {
+    return new Promise((resolve, reject) => {
+        if (response.pdfResponse) {
+            response.pdfResponse.pdf.pipe(response.pdfResponse.output)
+            response.pdfResponse.pdf.on('error', err => {
+                console.error('generateLatexPDF::', err)
+                reject({ message: err })
+            })
+            response.pdfResponse.pdf.on('finish', () => {
+                console.log('Nation PDF generated!')
+                fs.unlinkSync(response.pdfResponse.reportPrepd)
+                resolve()
+            })
+        } else if (response.reportFile) {
+            resolve()
+        } else {
+            reject({ message: response.error })
+        }
+    })
+}
+
+const createNationFullReport = async (year, nation, fullFileName) => {
+    const nationPaths = await pathsByNation(nation)
+    delete (nationPaths['Alias'])
+    let nationTocReportName = `${year}_${nation}`
+    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
+    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
+    let umbrellaPaths = await getUmbrellaPaths()
+    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+
+    let pdfsSequence = await pdfPathTraverse(nationPaths[nation], nation, [], year, umbrellaPaths)
+
+    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
+        pdfsSequence.unshift(reportPath)
+        const pdfResponse = mergePdfLatex(fullFileName, pdfsSequence)
+        return { pdfResponse, reportFile: `${fullFileName}.pdf` }
+        // const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
+        // // createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
+        // await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))
+        // if (fs.existsSync(`${filePath}/${fileWithoutFooter}.pdf`)) {
+        //     // createLog(FULL_REPORT_PATH, `Generaing Page Number footer for ${filePath}`)
+        //     await generatePageNumberFooter(filePath, fileWithoutFooter, fileName)
+        //     return { report: `${fileName}.pdf` }
+        // } else {
+        //     return { message: 'Error generating PDF report' }
+        // }
+    } else {
+        return { message: 'Report not present' }
     }
 }
 

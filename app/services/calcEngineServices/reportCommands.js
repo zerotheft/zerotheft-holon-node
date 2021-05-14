@@ -518,22 +518,23 @@ const mergePdfLatex = (fileName, pdfsSequence) => {
     })
     mergedLatex += `\\end{document}`
 
-    const mergedLatexTemplate = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
+    const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
     const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
-    fs.writeFileSync(mergedLatexTemplate, mergedLatex, function (err) {
+    fs.writeFileSync(reportPrepd, mergedLatex, function (err) {
         if (err) throw err;
         console.log('full report Prepared');
     });
 
-    const input = fs.createReadStream(mergedLatexTemplate)
+    const input = fs.createReadStream(reportPrepd)
     const output = fs.createWriteStream(mergedLatexPDF)
     const pdf = latex(input)
+    return { pdf, output, reportPrepd }
 
     pdf.pipe(output)
     pdf.on('error', err => console.error(err))
     pdf.on('finish', () => {
         console.log('PDF generated!')
-        fs.unlinkSync(mergedLatexTemplate)
+        fs.unlinkSync(reportPrepd)
     })
 }
 
