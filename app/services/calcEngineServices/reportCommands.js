@@ -335,10 +335,10 @@ const generateMultiReportData = (fileName, year) => {
     const population = usaPopulation(year)
     const pdfReportPath = `${holon}/pathReports/${fileName}.pdf`
 
-    const nation = fileName.match(/\d{4}_([^-]+)/)[1]
+    const nation = actualPath.split('/')[0]
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? 'USA' : actualPath
+    const path = actualPath == nation ? 'USA' : actualPath.split('/').slice(1).join('/')
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
@@ -347,9 +347,9 @@ const generateMultiReportData = (fileName, year) => {
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals[year]['_totals']
 
-    const subPathsFlat = []
+    let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
-    const pageNo = 7
+    let pageNo = 7
     if (path === nation) {
         subPathsFlat = flatPaths
         pageNo = 7
