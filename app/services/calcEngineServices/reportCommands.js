@@ -4,6 +4,7 @@ const latex = require('node-latex')
 const yaml = require('js-yaml')
 const fs = require('fs')
 const homedir = require('os').homedir()
+const templates = `${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
@@ -233,8 +234,8 @@ const prepareBellCurveData = (propThefts, propVotes) => {
     return { bellCurveThefts: axTh, bellCurveVotes: axVt }
 }
 
-const generateLatexPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/report.tex`, 'utf8')
+const generateLatexPDF = async (pdfData, fileName) => {
+    let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
@@ -251,18 +252,22 @@ const generateLatexPDF = (pdfData, fileName) => {
     const input = fs.createReadStream(reportPrepd)
     const output = fs.createWriteStream(reportPDF)
     const pdf = latex(input)
-
-    pdf.pipe(output)
-    pdf.on('error', err => console.error(err))
-    pdf.on('finish', () => {
-        console.log('PDF generated!')
-        fs.unlinkSync(reportPrepd)
-    })
+    return { pdf, output, reportPrepd }
+    // pdf.pipe(output)
+    // pdf.on('error', err => {
+    //     console.error('generateLatexPDF::', err)
+    //     // return { message: err, success: false }
+    // })
+    // pdf.on('finish', () => {
+    //     console.log('PDF generated!')
+    //     fs.unlinkSync(reportPrepd)
+    //     // return { message: 'pdf generated sucessfully', success: true }
+    // })
 }
 
 
 const generateLatexMultiPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates/multiReport.tex`, 'utf8')
+    let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
     Object.keys(pdfData).forEach((key) => {
         const regex = new RegExp(`--${key}--`, 'g')
         template = template.replace(regex, pdfData[key])
@@ -279,19 +284,21 @@ const generateLatexMultiPDF = (pdfData, fileName) => {
     const input = fs.createReadStream(reportPrepd)
     const output = fs.createWriteStream(reportPDF)
     const pdf = latex(input)
+    return { pdf, output, reportPrepd }
 
-    pdf.pipe(output)
-    pdf.on('error', err => console.error(err))
-    pdf.on('finish', () => {
-        console.log('PDF generated!')
-        fs.unlinkSync(reportPrepd)
-    })
+    // pdf.pipe(output)
+    // pdf.on('error', err => console.error(err))
+    // pdf.on('finish', () => {
+    //     console.log('PDF generated!')
+    //     fs.unlinkSync(reportPrepd)
+    // })
 }
 
-const generatePDFReport = (noteBookName, fileName, year, isPdf = 'false') => {
+const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
     createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
     const pdfData = generateReportData(fileName, year)
-    generateLatexPDF(pdfData, fileName)
+    return await generateLatexPDF(pdfData, fileName)
+
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
 
@@ -314,7 +321,7 @@ const generatePDFReport = (noteBookName, fileName, year, isPdf = 'false') => {
 }
 
 const generateMultiReportData = (fileName, year) => {
-    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues()
+    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
@@ -328,10 +335,10 @@ const generateMultiReportData = (fileName, year) => {
     const population = usaPopulation(year)
     const pdfReportPath = `${holon}/pathReports/${fileName}.pdf`
 
-    const nation = actualPath.split('/')[0]
+    const nation = fileName.match(/\d{4}_([^-]+)/)[1]
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? 'USA' : actualPath.split('/').slice(1).join('/')
+    const path = actualPath == nation ? 'USA' : actualPath
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
@@ -432,14 +439,14 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon) => {
     const filename = pdflinks //if path == nation else json_file
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${votepct * 100}\\%} &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${(votepct * 100).toFixed(2)}\\%} &
     \\href{${holon}/pathReports/${filename}.pdf#page=${page}}{Page ${page}} &
     ${notes} \\\\ \n`
 }
 
 const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, pdflinks, holon) => {
     let disp = ''
-    if (!paths) return
+    if (!paths) return disp
 
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
@@ -464,7 +471,7 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, pdflinks, 
 
 const generatePDFMultiReport = (noteBookName, fileName, year, isPdf = 'false') => {
     const pdfData = generateMultiReportData(fileName, year)
-    generateLatexMultiPDF(pdfData, fileName)
+    return generateLatexMultiPDF(pdfData, fileName)
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
 
