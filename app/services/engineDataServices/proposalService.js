@@ -37,7 +37,7 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             writeCsv([{
               "id": pid,
               "name": proposal.name,
-              "country": file.summary_country,
+              "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
               "theft_amount": proposal.theftAmt,
               "year": proposal.year,
