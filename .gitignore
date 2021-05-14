@@ -32,3 +32,4 @@ Makefile
 scripts
 *.log
 .DS_STORE
+debinstall
