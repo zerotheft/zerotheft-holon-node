@@ -25,7 +25,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 
             let lPath = leafPath.split('/').slice(1).join('/')
             if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
-                const leafJson = { yearData: allYearData, holon: getAppRoute(), actualPath: lPath, allPaths: nationPaths }
+                const leafJson = { yearData: allYearData, holon: getAppRoute(false), actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
@@ -101,7 +101,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
-                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
+                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
