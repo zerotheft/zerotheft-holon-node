@@ -31,3 +31,4 @@ git-release.sh
 Makefile
 scripts
 *.log
+debinstall
