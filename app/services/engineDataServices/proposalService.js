@@ -1,4 +1,5 @@
 const fs = require('fs')
+const csv = require('csvtojson');
 const { uniq } = require('lodash')
 const yaml = require('js-yaml')
 const splitFile = require('split-file');
@@ -9,7 +10,7 @@ const { createDir } = require('../../common')
 const { exportsDir, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { writeCsv } = require('./readWriteCsv')
-
+const proposalCsv = `${exportsDir}/proposals/proposals.csv`
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
   let lastPid = await lastExportedPid()
@@ -49,7 +50,7 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             }
           }
         }
-        await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
+        // await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
 
       } catch (e) {
         fs.appendFileSync(failedProposalIDFile, `${parseInt(pid)}\n`);
@@ -101,7 +102,15 @@ const exportFailedProposals = async () => {
 
 }
 
+/*convert csv file to json*/
+const allProposalsJSON = async () => {
+  const json = await csv().fromFile(proposalCsv);
+  return json
+}
+
+
 module.exports = {
   exportAllProposals,
-  exportFailedProposals
+  exportFailedProposals,
+  allProposalsJSON
 }

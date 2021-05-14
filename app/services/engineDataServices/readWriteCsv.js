@@ -3,7 +3,7 @@ const ObjectsToCsv = require('objects-to-csv');
 
 const createCsv = (path, keys) => {
   if (!fs.existsSync(path))
-    fs.writeFileSync(path, keys + "\r\n")
+    fs.writeFileSync(path, keys + "\n", 'utf8')
 }
 
 const writeCsv = async (data, path, reWrite = false) => {

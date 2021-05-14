@@ -4,6 +4,7 @@ const proposalService = require('../services/engineDataServices/proposalService'
 const reportService = require('../services/engineDataServices/reportService')
 const holonService = require('../services/engineDataServices/holonService')
 const voterService = require('../services/engineDataServices/voterService')
+const { proposals } = require('zerotheft-node-utils')
 
 const exportVoteData = async (req, res, next) => {
   try {
@@ -64,11 +65,23 @@ const exportVoterData = async (req, res, next) => {
     res.status(400) && next(e.message)
   }
 }
+
+/* Returns all exported proposals from csv*/
+const exportedProposals = async (req, res, next) => {
+  try {
+    const content = await proposalService.allProposalsJSON()
+    res.send({ content, message: 'voter export is in  progress' })
+  } catch (e) {
+    res.status(400) && next(e.message)
+  }
+}
+
 module.exports = {
   exportVoteData,
   exportReportData,
   exportProposalData,
   exportFailedProposalData,
   exportHolonData,
-  exportVoterData
+  exportVoterData,
+  exportedProposals
 }
