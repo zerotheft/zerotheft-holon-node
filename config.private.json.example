@@ -5,6 +5,7 @@
   "network": "geth",
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
+  "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
