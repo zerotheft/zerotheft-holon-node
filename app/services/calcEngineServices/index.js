@@ -31,8 +31,8 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
-                const pdfResponse = await generatePDFReport('ztReport', fileName, year)
-                return { pdfResponse, reportFile: `${fileName}.pdf` }
+                await generatePDFReport('ztReport', fileName, year)
+                return { report: `${fileName}.pdf` }
 
 
                 // createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
@@ -54,7 +54,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
                 return { message: 'Issue not present' }
             }
         } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-            return { reportFile: `${fileName}.pdf` }
+            return { report: `${fileName}.pdf` }
         } else {
             return { message: 'Issue not present' }
         }
@@ -109,8 +109,8 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 // await generateReport('multiIssueReport', fileName, year)
                 // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${filePATH}`, path)
                 // await generatePDF(filePath, 'multiIssueReport')
-                const pdfResponse = generatePDFMultiReport('multiIssueReport', fileName, year)
-                return { pdfResponse, reportFile: `${fileName}.pdf` }
+                await generatePDFMultiReport('multiIssueReport', fileName, year)
+                return { report: `${fileName}.pdf` }
                 // if (fromWorker) {
                 //     let tempFilePath = `${getReportPath()}reports/temp_multiIssueReport/`
                 //     // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
@@ -133,7 +133,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 return { message: 'No Issues for the path' }
             }
         } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-            return { reportFile: `${fileName}.pdf` }
+            return { report: `${fileName}.pdf` }
         } else {
             return { message: 'No Issues for the path' }
         }
@@ -165,11 +165,11 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
         if (fromWorker || !reportExists) {
             // createLog(FULL_REPORT_PATH, `Nation Report initiated for ${nation}(${year})`)
             // createLog(FULL_REPORT_PATH, `Fetching Multi Issue Report for ${nation}`)
-            const response = await multiIssuesReport(nation, fromWorker, year)
-            await createNationReport(response)
-            return await createNationFullReport(year, nation, fullFileName)
+            await multiIssuesReport(nation, fromWorker, year)
+            await createNationFullReport(year, nation, fullFileName)
+            return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
-            return { reportFile: `${fullFileName}.pdf` }
+            return { report: `${fullFileName}.pdf` }
         } else {
             return { message: 'Full Country Report Generation will take time. Come back later.' }
         }
@@ -178,27 +178,6 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
         // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
         return { error: e.message }
     }
-}
-
-const createNationReport = async (response) => {
-    return new Promise((resolve, reject) => {
-        if (response.pdfResponse) {
-            response.pdfResponse.pdf.pipe(response.pdfResponse.output)
-            response.pdfResponse.pdf.on('error', err => {
-                console.error('generateLatexPDF::', err)
-                reject({ message: err })
-            })
-            response.pdfResponse.pdf.on('finish', () => {
-                console.log('Nation PDF generated!')
-                fs.unlinkSync(response.pdfResponse.reportPrepd)
-                resolve()
-            })
-        } else if (response.reportFile) {
-            resolve()
-        } else {
-            reject({ message: response.error })
-        }
-    })
 }
 
 const createNationFullReport = async (year, nation, fullFileName) => {
@@ -214,8 +193,7 @@ const createNationFullReport = async (year, nation, fullFileName) => {
 
     if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
         pdfsSequence.unshift(reportPath)
-        const pdfResponse = mergePdfLatex(fullFileName, pdfsSequence)
-        return { pdfResponse, reportFile: `${fullFileName}.pdf` }
+        await mergePdfLatex(fullFileName, pdfsSequence)
         // const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
         // // createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
         // await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))

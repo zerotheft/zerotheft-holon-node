@@ -5,19 +5,8 @@ const { allReportWorker } = require('../workers/reports/reportWorker');
 
 const getSingleIssueReport = async (req, res, next) => {
     const response = await singleIssueReport(req.params.path, false, req.params.year)
-    if (response.pdfResponse) {
-        response.pdfResponse.pdf.pipe(response.pdfResponse.output)
-        response.pdfResponse.pdf.on('error', err => {
-            console.error('generateLatexPDF::', err)
-            return res.send(err)
-        })
-        response.pdfResponse.pdf.on('finish', () => {
-            console.log('Single PDF generated!')
-            fs.unlinkSync(response.pdfResponse.reportPrepd)
-            return res.send({ report: `${getAppRoute()}/issueReports/${response.reportFile}` })
-        })
-    } else if (response.reportFile) {
-        return res.send({ report: `${getAppRoute()}/issueReports/${response.reportFile}` })
+    if (response.report) {
+        return res.send({ report: `${getAppRoute()}/issueReports/${response.report}` })
     } else {
         return res.send(response)
     }
@@ -25,19 +14,8 @@ const getSingleIssueReport = async (req, res, next) => {
 
 const getMultiIssuesReport = async (req, res, next) => {
     const response = await multiIssuesReport(req.params.path, false, req.params.year)
-    if (response.pdfResponse) {
-        response.pdfResponse.pdf.pipe(response.pdfResponse.output)
-        response.pdfResponse.pdf.on('error', err => {
-            console.error('generateLatexPDF::', err)
-            return res.send(err)
-        })
-        response.pdfResponse.pdf.on('finish', () => {
-            console.log('Multi PDF generated!')
-            fs.unlinkSync(response.pdfResponse.reportPrepd)
-            return res.send({ report: `${getAppRoute()}/pathReports/${response.reportFile}` })
-        })
-    } else if (response.reportFile) {
-        return res.send({ report: `${getAppRoute()}/pathReports/${response.reportFile}` })
+    if (response.report) {
+        return res.send({ report: `${getAppRoute()}/pathReports/${response.report}` })
     } else {
         return res.send(response)
     }
@@ -45,20 +23,8 @@ const getMultiIssuesReport = async (req, res, next) => {
 
 const getNationReport = async (req, res, next) => {
     const response = await nationReport(req.params.year, false, req.params.path)
-
-    if (response.pdfResponse) {
-        response.pdfResponse.pdf.pipe(response.pdfResponse.output)
-        response.pdfResponse.pdf.on('error', err => {
-            console.error('generateLatexPDF::', err)
-            return res.send(err)
-        })
-        response.pdfResponse.pdf.on('finish', () => {
-            console.log('Full PDF generated!')
-            fs.unlinkSync(response.pdfResponse.reportPrepd)
-            return res.send({ report: `${getAppRoute()}/pathReports/${response.reportFile}` })
-        })
-    } else if (response.reportFile) {
-        return res.send({ report: `${getAppRoute()}/pathReports/${response.reportFile}` })
+    if (response.report) {
+        return res.send({ report: `${getAppRoute()}/pathReports/${response.report}` })
     } else {
         return res.send(response)
     }

@@ -146,7 +146,6 @@ function latexSpecialChars(detail) {
 
     Object.keys(characterToSkip).forEach((key) => {
         const regex = new RegExp(key, 'g')
-        console.log('=========', regex)
         detail = detail.replace(regex, characterToSkip[key])
     })
 
@@ -235,63 +234,76 @@ const prepareBellCurveData = (propThefts, propVotes) => {
 }
 
 const generateLatexPDF = async (pdfData, fileName) => {
-    let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
-    Object.keys(pdfData).forEach((key) => {
-        const regex = new RegExp(`--${key}--`, 'g')
-        template = template.replace(regex, pdfData[key])
+    return new Promise((resolve, reject) => {
+        let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
+        Object.keys(pdfData).forEach((key) => {
+            const regex = new RegExp(`--${key}--`, 'g')
+            template = template.replace(regex, pdfData[key])
+        })
+
+        const reportPrepd = `${getReportPath()}reports/ztReport/${fileName}.tex`
+        const reportPDF = `${getReportPath()}reports/ztReport/${fileName}.pdf`
+
+        fs.writeFileSync(reportPrepd, template, function (err) {
+            if (err) {
+                console.error('generateLatexPDF::', err)
+                reject({ message: err })
+            }
+            console.log('report Prepared');
+        });
+
+        const input = fs.createReadStream(reportPrepd)
+        const output = fs.createWriteStream(reportPDF)
+        const pdf = latex(input)
+
+        pdf.pipe(output)
+        pdf.on('error', err => {
+            console.error('generateLatexPDF::', err)
+            reject({ message: err })
+        })
+        pdf.on('finish', () => {
+            console.log('PDF generated!')
+            fs.unlinkSync(reportPrepd)
+            resolve()
+        })
     })
-
-    const reportPrepd = `${getReportPath()}reports/ztReport/${fileName}.tex`
-    const reportPDF = `${getReportPath()}reports/ztReport/${fileName}.pdf`
-
-    fs.writeFileSync(reportPrepd, template, function (err) {
-        if (err) throw err;
-        console.log('report Prepared');
-    });
-
-    const input = fs.createReadStream(reportPrepd)
-    const output = fs.createWriteStream(reportPDF)
-    const pdf = latex(input)
-    return { pdf, output, reportPrepd }
-    // pdf.pipe(output)
-    // pdf.on('error', err => {
-    //     console.error('generateLatexPDF::', err)
-    //     // return { message: err, success: false }
-    // })
-    // pdf.on('finish', () => {
-    //     console.log('PDF generated!')
-    //     fs.unlinkSync(reportPrepd)
-    //     // return { message: 'pdf generated sucessfully', success: true }
-    // })
 }
 
 
-const generateLatexMultiPDF = (pdfData, fileName) => {
-    let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
-    Object.keys(pdfData).forEach((key) => {
-        const regex = new RegExp(`--${key}--`, 'g')
-        template = template.replace(regex, pdfData[key])
+const generateLatexMultiPDF = async (pdfData, fileName) => {
+    return new Promise((resolve, reject) => {
+        let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
+        Object.keys(pdfData).forEach((key) => {
+            const regex = new RegExp(`--${key}--`, 'g')
+            template = template.replace(regex, pdfData[key])
+        })
+
+        const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
+        const reportPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
+
+        fs.writeFileSync(reportPrepd, template, function (err) {
+            if (err) {
+                console.error('generateLatexPDF::', err)
+                reject({ message: err })
+            }
+            console.log('multi report Prepared');
+        });
+
+        const input = fs.createReadStream(reportPrepd)
+        const output = fs.createWriteStream(reportPDF)
+        const pdf = latex(input)
+
+        pdf.pipe(output)
+        pdf.on('error', err => {
+            console.error('generateLatexPDF::', err)
+            reject({ message: err })
+        })
+        pdf.on('finish', () => {
+            console.log('PDF generated!')
+            fs.unlinkSync(reportPrepd)
+            resolve()
+        })
     })
-
-    const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
-    const reportPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
-
-    fs.writeFileSync(reportPrepd, template, function (err) {
-        if (err) throw err;
-        console.log('multi report Prepared');
-    });
-
-    const input = fs.createReadStream(reportPrepd)
-    const output = fs.createWriteStream(reportPDF)
-    const pdf = latex(input)
-    return { pdf, output, reportPrepd }
-
-    // pdf.pipe(output)
-    // pdf.on('error', err => console.error(err))
-    // pdf.on('finish', () => {
-    //     console.log('PDF generated!')
-    //     fs.unlinkSync(reportPrepd)
-    // })
 }
 
 const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
@@ -469,9 +481,9 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, pdflinks, 
     return disp
 }
 
-const generatePDFMultiReport = (noteBookName, fileName, year, isPdf = 'false') => {
+const generatePDFMultiReport = async (noteBookName, fileName, year, isPdf = 'false') => {
     const pdfData = generateMultiReportData(fileName, year)
-    return generateLatexMultiPDF(pdfData, fileName)
+    return await generateLatexMultiPDF(pdfData, fileName)
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
 
@@ -507,34 +519,42 @@ const generatePDF = async (folder, pdfReportName) => {
     })
 }
 
-const mergePdfLatex = (fileName, pdfsSequence) => {
-    let mergedLatex = `\\documentclass{article}
-    \\usepackage{pdfpages}
-    \\begin{document}
-    `
-    pdfsSequence.forEach((pdf) => {
-        mergedLatex += `\\includepdf[pages=-]{${pdf}}
+const mergePdfLatex = async (fileName, pdfsSequence) => {
+    return new Promise((resolve, reject) => {
+        let mergedLatex = `\\documentclass{article}
+        \\usepackage{pdfpages}
+        \\begin{document}
         `
-    })
-    mergedLatex += `\\end{document}`
+        pdfsSequence.forEach((pdf) => {
+            mergedLatex += `\\includepdf[pages=-]{${pdf}}
+            `
+        })
+        mergedLatex += `\\end{document}`
 
-    const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
-    const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
-    fs.writeFileSync(reportPrepd, mergedLatex, function (err) {
-        if (err) throw err;
-        console.log('full report Prepared');
-    });
+        const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
+        const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
+        fs.writeFileSync(reportPrepd, mergedLatex, function (err) {
+            if (err) {
+                console.error('generateLatexPDF::', err)
+                reject({ message: err })
+            }
+            console.log('full report Prepared');
+        });
 
-    const input = fs.createReadStream(reportPrepd)
-    const output = fs.createWriteStream(mergedLatexPDF)
-    const pdf = latex(input)
-    return { pdf, output, reportPrepd }
+        const input = fs.createReadStream(reportPrepd)
+        const output = fs.createWriteStream(mergedLatexPDF)
+        const pdf = latex(input)
 
-    pdf.pipe(output)
-    pdf.on('error', err => console.error(err))
-    pdf.on('finish', () => {
-        console.log('PDF generated!')
-        fs.unlinkSync(reportPrepd)
+        pdf.pipe(output)
+        pdf.on('error', err => {
+            console.error('generateLatexPDF::', err)
+            reject({ message: err })
+        })
+        pdf.on('finish', () => {
+            console.log('PDF generated!')
+            fs.unlinkSync(reportPrepd)
+            resolve()
+        })
     })
 }
 
