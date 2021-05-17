@@ -6,55 +6,66 @@ const { writeFile } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
 const { cacheServer } = require('../redisService');
 const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
-const { generateReport, generatePDF, mergePdfForNation, generatePageNumberFooter, renameHTMLFile, renamePDFFile, deleteJsonFile } = require('./reportCommands')
+const { generateReport, generatePDFReport, generatePDFMultiReport, generatePDF, mergePdfForNation, generatePageNumberFooter, renameHTMLFile, renamePDFFile, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
 const { defaultPropYear, firstPropYear, population } = require('./constants')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
 const singleIssueReport = async (leafPath, fromWorker = false, year) => {
     createLog(SINGLE_REPORT_PATH, 'Single report generation initiation......', leafPath)
-    const fileName = convertStringToHash(`${leafPath}_${year}`)
+    const fileName = `${year}_${leafPath.replace(/\//g, '-')}`
     try {
         const filePath = `${getReportPath()}reports/ztReport`
-        if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.html`)) {
+        if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
             const nation = leafPath.split('/')[0]
             const nationPaths = await pathsByNation(nation)
 
+            // let allYearData = { '2001': '' }
+            // TODO: uncomment this
             let allYearData = await allYearCachedData(nation)
 
             let lPath = leafPath.split('/').slice(1).join('/')
-            if (!isEmpty(allYearData) && allYearData[`${year}`] && !get(allYearData[`${year}`]['paths'][lPath], 'missing')) {
-                const leafJson = { yearData: allYearData, holon: getAppRoute(), actualPath: lPath, allPaths: nationPaths }
+            if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
+                const leafJson = { yearData: allYearData, holon: getAppRoute(false), actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
+                // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
+
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
-                await generateReport('ztReport', fileName, year)
-                createLog(SINGLE_REPORT_PATH, `Generating PDF for => ${fileName}`, leafPath)
-                await generatePDF(filePath, 'ztReport')
-                if (fs.existsSync(`${filePath}/ztReport.html`)) {
-                    createLog(SINGLE_REPORT_PATH, `Renaming file => ${fileName}`, leafPath)
-                    await renameHTMLFile('ztReport', fileName)
-                    createLog(SINGLE_REPORT_PATH, `Generating page number footer for  => ${fileName}`, leafPath)
-                    await generatePageNumberFooter(filePath, 'ztReport', fileName, `ZeroTheft Theft in ${leafPath} Report `)
-                    // createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
-                    // await deleteJsonFile(fileName)
-                    return { report: `${fileName}.html` }
-                } else {
-                    return { message: 'Error generating file' }
-                }
+                const pdfResponse = await generatePDFReport('ztReport', fileName, year)
+                return { pdfResponse, reportFile: `${fileName}.pdf` }
+
+
+                // createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
+                // await generateReport('ztReport', fileName, year)
+                // createLog(SINGLE_REPORT_PATH, `Generating PDF for => ${fileName}`, leafPath)
+                // await generatePDF(filePath, 'ztReport')
+                // if (fs.existsSync(`${filePath}/ztReport.html`)) {
+                //     createLog(SINGLE_REPORT_PATH, `Renaming file => ${fileName}`, leafPath)
+                //     await renameHTMLFile('ztReport', fileName)
+                //     createLog(SINGLE_REPORT_PATH, `Generating page number footer for  => ${fileName}`, leafPath)
+                //     await generatePageNumbwerFooter(filePath, 'ztReport', fileName, `ZeroTheft Theft in ${leafPath} Report `)
+                //     // createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
+                //     // await deleteJsonFile(fileName)
+                //     return { report: `${fileName}.html` }
+                // } else {
+                //     return { message: 'Error generating file' }
+                // }
             } else {
                 return { message: 'Issue not present' }
             }
-        } else if (fs.existsSync(`${filePath}/${fileName}.html`)) {
-            return { report: `${fileName}.html` }
+        } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
+            return { reportFile: `${fileName}.pdf` }
         } else {
             return { message: 'Issue not present' }
         }
     } catch (e) {
+        console.log(e)
         createLog(SINGLE_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, leafPath)
         createLog(ERROR_PATH, `calcEngineServices=>singleIssueReport()::Exceptions in single report generation for ${leafPath} with Exception: ${e.message}`)
         return { error: e.message }
     } finally {
         createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
+        // TODO: uncomment this
         await deleteJsonFile(fileName)
     }
 }
@@ -74,59 +85,66 @@ const allYearCachedData = async (nation) => {
     return allYearData
 }
 const multiIssuesReport = async (path, fromWorker = false, year) => {
-    createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
-    const fileName = convertStringToHash(`${path}_${year}`)
+    // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
+    const fileName = `${year}_${path.replace(/\//g, '-')}`
+
     try {
         const filePath = `${getReportPath()}reports/multiIssueReport`
-        if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.html`)) {
+        if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
             const nation = path.split('/')[0]
             const nationPaths = await pathsByNation(nation)
             const allPaths = get(nationPaths, path.split('/').join('.'))
 
+            // let allYearData = { '2001': '' }
+            // TODO: uncomment this
             let allYearData = await allYearCachedData(nation)
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
-                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
-                createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
+                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
+                // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
+                // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
-                createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
-                await generateReport('multiIssueReport', fileName, year)
-                createLog(MULTI_REPORT_PATH, `Generating PDF for => ${fileName}`, path)
-                await generatePDF(filePath, 'multiIssueReport')
-                if (fromWorker) {
-                    let tempFilePath = `${getReportPath()}reports/temp_multiIssueReport/`
-                    createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
-                    await generateReport('multiIssueReport', fileName, year, 'true')
-                    createLog(MULTI_REPORT_PATH, `Generating PDF for => ${tempFilePath}`, path)
-                    await generatePDF(tempFilePath, 'multiIssueReport')
-                    createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
-                    await renamePDFFile('multiIssueReport', fileName, tempFilePath)
-                }
-                if (fs.existsSync(`${filePath}/multiIssueReport.html`)) {
-                    createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
-                    await renameHTMLFile('multiIssueReport', fileName)
-                    createLog(MULTI_REPORT_PATH, `Generating page number footer for  => ${fileName}`, path)
-                    await generatePageNumberFooter(filePath, 'multiIssueReport', fileName, `ZeroTheft Theft in ${path} Report `)
-                    return { report: `${fileName}.html` }
-                } else {
-                    return { message: 'Error generating file' }
-                }
+                // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
+                // await generateReport('multiIssueReport', fileName, year)
+                // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${filePATH}`, path)
+                // await generatePDF(filePath, 'multiIssueReport')
+                const pdfResponse = generatePDFMultiReport('multiIssueReport', fileName, year)
+                return { pdfResponse, reportFile: `${fileName}.pdf` }
+                // if (fromWorker) {
+                //     let tempFilePath = `${getReportPath()}reports/temp_multiIssueReport/`
+                //     // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
+                //     await generateReport('multiIssueReport', fileName, year, 'true')
+                //     // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${tempFilePath}`, path)
+                //     await generatePDF(tempFilePath, 'multiIssueReport')
+                //     // createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
+                //     await renamePDFFile('multiIssueReport', fileName, tempFilePath)
+                // }
+                // if (fs.existsSync(`${filePath}/multiIssueReport.html`)) {
+                //     // createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
+                //     await renameHTMLFile('multiIssueReport', fileName)
+                //     // createLog(MULTI_REPORT_PATH, `Generating page number footer for  => ${fileName}`, path)
+                //     await generatePageNumberFooter(filePath, 'multiIssueReport', fileName, `ZeroTheft Theft in ${path} Report `)
+                //     return { report: `${fileName}.html` }
+                // } else {
+                //     return { message: 'Error generating file' }
+                // }
             } else {
                 return { message: 'No Issues for the path' }
             }
-        } else if (fs.existsSync(`${filePath}/${fileName}.html`)) {
-            return { report: `${fileName}.html` }
+        } else if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
+            return { reportFile: `${fileName}.pdf` }
         } else {
             return { message: 'No Issues for the path' }
         }
     } catch (e) {
-        createLog(MULTI_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, path)
-        createLog(ERROR_PATH, `calcEngineServices=>multiIssuesReport()::Exceptions in single report generation for ${path} with Exception: ${e.message}`)
-
+        // createLog(MULTI_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, path)
+        // createLog(ERROR_PATH, `calcEngineServices=>multiIssuesReport()::Exceptions in single report generation for ${path} with Exception: ${e.message}`)
+        console.log(e)
         return { error: e.message }
     } finally {
-        createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
+        // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
+        // TODO: uncomment this
         await deleteJsonFile(fileName)
     }
 }
@@ -139,50 +157,77 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
  * @returns JSON will full report url
  */
 const nationReport = async (year, fromWorker = false, nation = 'USA') => {
+    // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
     try {
-        const fileName = convertStringToHash(`full_${nation}_${year}`)
+        const fullFileName = `full_${year}_${nation}`
         const filePath = `${getReportPath()}reports/multiIssueReport`
-        const reportExists = fs.existsSync(`${filePath}/${fileName}.pdf`)
-        if (fromWorker) {
-            createLog(FULL_REPORT_PATH, `Nation Report initiated for ${nation}(${year})`)
-            createLog(FULL_REPORT_PATH, `Fetching Multi Issue Report for ${nation}`)
+        const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
+        if (fromWorker || !reportExists) {
+            // createLog(FULL_REPORT_PATH, `Nation Report initiated for ${nation}(${year})`)
+            // createLog(FULL_REPORT_PATH, `Fetching Multi Issue Report for ${nation}`)
             const response = await multiIssuesReport(nation, fromWorker, year)
-            if (response.report) {
-                const nationPaths = await pathsByNation(nation)
-                delete (nationPaths['Alias'])
-                let nationTocReportName = convertStringToHash(`${nation}_${year}`)
-                createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
-                let umbrellaPaths = await getUmbrellaPaths()
-                umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
-                let pdfsSequence = await pdfPathTraverse(nationPaths[nation], nation, [], year, umbrellaPaths)
-                if (pdfsSequence.length > 0) {
-                    pdfsSequence.unshift(`${getReportPath()}reports/temp_multiIssueReport/${nationTocReportName}.pdf`)
-                    const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
-                    createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
-                    await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))
-                    if (fs.existsSync(`${filePath}/${fileWithoutFooter}.pdf`)) {
-                        createLog(FULL_REPORT_PATH, `Generaing Page Number footer for ${filePath}`)
-                        await generatePageNumberFooter(filePath, fileWithoutFooter, fileName)
-                        return { report: `${fileName}.pdf` }
-                    } else {
-                        return { message: 'Error generating PDF report' }
-                    }
-                } else {
-                    return { message: 'Report not present' }
-                }
-            } else {
-                return { message: response.error }
-            }
-
+            await createNationReport(response)
+            return await createNationFullReport(year, nation, fullFileName)
         } else if (reportExists) {
-            return { report: `${fileName}.pdf` }
+            return { reportFile: `${fullFileName}.pdf` }
         } else {
             return { message: 'Full Country Report Generation will take time. Come back later.' }
         }
     } catch (e) {
-        createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
-        createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
+        // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
+        // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
         return { error: e.message }
+    }
+}
+
+const createNationReport = async (response) => {
+    return new Promise((resolve, reject) => {
+        if (response.pdfResponse) {
+            response.pdfResponse.pdf.pipe(response.pdfResponse.output)
+            response.pdfResponse.pdf.on('error', err => {
+                console.error('generateLatexPDF::', err)
+                reject({ message: err })
+            })
+            response.pdfResponse.pdf.on('finish', () => {
+                console.log('Nation PDF generated!')
+                fs.unlinkSync(response.pdfResponse.reportPrepd)
+                resolve()
+            })
+        } else if (response.reportFile) {
+            resolve()
+        } else {
+            reject({ message: response.error })
+        }
+    })
+}
+
+const createNationFullReport = async (year, nation, fullFileName) => {
+    const nationPaths = await pathsByNation(nation)
+    delete (nationPaths['Alias'])
+    let nationTocReportName = `${year}_${nation}`
+    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
+    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
+    let umbrellaPaths = await getUmbrellaPaths()
+    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+
+    let pdfsSequence = await pdfPathTraverse(nationPaths[nation], nation, [], year, umbrellaPaths)
+
+    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
+        pdfsSequence.unshift(reportPath)
+        const pdfResponse = mergePdfLatex(fullFileName, pdfsSequence)
+        return { pdfResponse, reportFile: `${fullFileName}.pdf` }
+        // const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
+        // // createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
+        // await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))
+        // if (fs.existsSync(`${filePath}/${fileWithoutFooter}.pdf`)) {
+        //     // createLog(FULL_REPORT_PATH, `Generaing Page Number footer for ${filePath}`)
+        //     await generatePageNumberFooter(filePath, fileWithoutFooter, fileName)
+        //     return { report: `${fileName}.pdf` }
+        // } else {
+        //     return { message: 'Error generating PDF report' }
+        // }
+    } else {
+        return { message: 'Report not present' }
     }
 }
 
@@ -202,8 +247,8 @@ const pdfPathTraverse = async (path, currPath, pdfsSequence, year, umbrellaPaths
         for (let i = 0; i < nestedKeys.length; i++) {
             let key = nestedKeys[i]
             let nestedValues = path[key]
-            let nextPath = `${currPath}/${key}`
-            let fileName = convertStringToHash(`${nextPath}_${year}`)
+            let nextPath = `${currPath}/${key}`.replace(/\//g, '-')
+            let fileName = `${year}_${nextPath}`
             if (pathClone[key]['leaf']) {
                 let filePath = `${getReportPath()}reports/ztReport`
                 if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {

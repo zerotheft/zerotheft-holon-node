@@ -8,6 +8,8 @@ zt_report/__pycache__
 zt_report/.ipynb_checkpoints
 zt_report/reports/multiIssueReport/*.*
 zt_report/reports/ztReport/*.*
+!zt_report/reports/multiIssueReport/.keep
+!zt_report/reports/ztReport/.keep
 zt_report/reports/temp_multiIssueReport/*.*
 # exception to the rule
 !zt_report/input_jsons/.gitkeep 
@@ -31,4 +33,5 @@ git-release.sh
 Makefile
 scripts
 *.log
+.DS_STORE
 debinstall
