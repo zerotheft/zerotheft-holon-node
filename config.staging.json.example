@@ -1,0 +1,15 @@
+{
+    "MODE":"staging",
+    "DESKTOP_APP": "http://localhost:6549",
+    "PORT":40107,
+    "SHOULD_VALIDATE": false,    
+    "HTTP_PROVIDER": "https://www.ethercluster.com/kotti",
+    "WEB_PROVIDER": "wss://www.ethercluster.com/kotti",
+    "ADDRESS_ENCRYPT_KEY": "zerotheft123",
+    "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
+    "GAS_PRICE": 10,
+    "GAS_LIMIT": 4612388,
+    "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
+    "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
+    "REPORT_PATH": "zt_report"
+}

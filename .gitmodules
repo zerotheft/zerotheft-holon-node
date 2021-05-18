@@ -1,0 +1,3 @@
+[submodule "sub-modules/zerotheft-node-utils"]
+	path = sub-modules/zerotheft-node-utils
+	url = https://github.com/zerotheft/zerotheft-node-utils.git 
