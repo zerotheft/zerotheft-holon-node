@@ -1,3 +1,4 @@
+const fs = require('fs')
 const { singleIssueReport, multiIssuesReport, theftInfo, nationReport } = require('../services/calcEngineServices');
 const { getAppRoute } = require('../../config');
 const { allReportWorker } = require('../workers/reports/reportWorker');
