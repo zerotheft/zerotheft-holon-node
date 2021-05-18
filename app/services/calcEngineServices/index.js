@@ -25,7 +25,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 
             let lPath = leafPath.split('/').slice(1).join('/')
             if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
-                const leafJson = { yearData: allYearData, holon: getAppRoute(false), actualPath: lPath, allPaths: nationPaths }
+                const leafJson = { yearData: allYearData, holon: getAppRoute(false), leafPath, actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
