@@ -4,7 +4,7 @@ const latex = require('node-latex')
 const yaml = require('js-yaml')
 const fs = require('fs')
 const homedir = require('os').homedir()
-const templates = `${homedir}/zerotheft-holon-node/app/services/calcEngineServices/templates`
+const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
@@ -33,7 +33,7 @@ const generateReport = async (noteBookName, fileName, year, isPdf = 'false') => 
 }
 
 const generateReportData = (fileName, year) => {
-    const [summaryTotals, path, holon, allPaths] = loadSingleIssue(fileName)
+    const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
@@ -56,6 +56,12 @@ const generateReportData = (fileName, year) => {
     const { pathTitle, pathPrefix } = splitPath(path)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
+
+    let pathData = leafPath.split('/')
+    const leafSlug = pathData.pop()
+    const pathSlug = pathData.join('%2F')
+    pdfData.leafSlug = leafSlug
+    pdfData.pathSlug = pathSlug
 
     const { yesNo, yesNoLabels } = yesNoVoteTotalsSummary(voteTotals)
     const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
@@ -107,8 +113,8 @@ const generateReportData = (fileName, year) => {
 
     // console.log('yesnosfasfasdf', yesNo, yesNoLabels)
 
-    pdfData.yesNoPieData = '300/No,968/Yes'
-    // pdfData.yesNoPieData = yesNoPieData.join(',')
+    // pdfData.yesNoPieData = '300/No,968/Yes'
+    pdfData.yesNoPieData = yesNoPieData.join(',')
 
     const { bellCurveThefts, bellCurveVotes } = prepareBellCurveData(propThefts, propVotes)
 
@@ -446,7 +452,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon) => {
     const theftAbbr = theftAmountAbbr(theft)
     const theftpct = totalTheft > 0 ? (tots['theft'] / totalTheft * 100).toFixed() : 0
 
-    const notes = 'need_votes' in tots && tots['need_votes'] > 0 ? 'Needs ' + tots['need_votes'] + ' more votes for High Confidence' : theft ? theftAbbr : ''
+    const notes = 'need_votes' in tots && tots['need_votes'] > 0 ? 'Needs ' + tots['need_votes'] + ' more votes for High Confidence' : theft ? '\\$' + theftAbbr : ''
 
     const filename = pdflinks //if path == nation else json_file
 

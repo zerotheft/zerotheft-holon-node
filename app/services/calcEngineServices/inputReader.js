@@ -8,7 +8,8 @@ const loadSingleIssue = (fileName) => {
     const leafContent = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
     const leafJson = JSON.parse(leafContent)
 
-    return [leafJson.yearData, leafJson.actualPath, leafJson.holon, leafJson.allPaths]
+    // keys: yearData, actualPath, leafPath, holon, allPaths
+    return leafJson;
 }
 
 const getPathYearProposals = (summaryTotals, path, year) => {

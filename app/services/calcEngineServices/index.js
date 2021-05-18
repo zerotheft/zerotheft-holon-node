@@ -25,7 +25,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 
             let lPath = leafPath.split('/').slice(1).join('/')
             if (!isEmpty(allYearData) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
-                const leafJson = { yearData: allYearData, holon: getAppRoute(false), actualPath: lPath, allPaths: nationPaths }
+                const leafJson = { yearData: allYearData, holon: getAppRoute(false), leafPath, actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
@@ -33,23 +33,6 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
                 await generatePDFReport('ztReport', fileName, year)
                 return { report: `${fileName}.pdf` }
-
-
-                // createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
-                // await generateReport('ztReport', fileName, year)
-                // createLog(SINGLE_REPORT_PATH, `Generating PDF for => ${fileName}`, leafPath)
-                // await generatePDF(filePath, 'ztReport')
-                // if (fs.existsSync(`${filePath}/ztReport.html`)) {
-                //     createLog(SINGLE_REPORT_PATH, `Renaming file => ${fileName}`, leafPath)
-                //     await renameHTMLFile('ztReport', fileName)
-                //     createLog(SINGLE_REPORT_PATH, `Generating page number footer for  => ${fileName}`, leafPath)
-                //     await generatePageNumbwerFooter(filePath, 'ztReport', fileName, `ZeroTheft Theft in ${leafPath} Report `)
-                //     // createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
-                //     // await deleteJsonFile(fileName)
-                //     return { report: `${fileName}.html` }
-                // } else {
-                //     return { message: 'Error generating file' }
-                // }
             } else {
                 return { message: 'Issue not present' }
             }
@@ -105,30 +88,9 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
-                // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
-                // await generateReport('multiIssueReport', fileName, year)
-                // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${filePATH}`, path)
-                // await generatePDF(filePath, 'multiIssueReport')
+
                 await generatePDFMultiReport('multiIssueReport', fileName, year)
                 return { report: `${fileName}.pdf` }
-                // if (fromWorker) {
-                //     let tempFilePath = `${getReportPath()}reports/temp_multiIssueReport/`
-                //     // createLog(MULTI_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, path)
-                //     await generateReport('multiIssueReport', fileName, year, 'true')
-                //     // createLog(MULTI_REPORT_PATH, `Generating PDF for => ${tempFilePath}`, path)
-                //     await generatePDF(tempFilePath, 'multiIssueReport')
-                //     // createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
-                //     await renamePDFFile('multiIssueReport', fileName, tempFilePath)
-                // }
-                // if (fs.existsSync(`${filePath}/multiIssueReport.html`)) {
-                //     // createLog(MULTI_REPORT_PATH, `Renaming file => ${fileName}`, path)
-                //     await renameHTMLFile('multiIssueReport', fileName)
-                //     // createLog(MULTI_REPORT_PATH, `Generating page number footer for  => ${fileName}`, path)
-                //     await generatePageNumberFooter(filePath, 'multiIssueReport', fileName, `ZeroTheft Theft in ${path} Report `)
-                //     return { report: `${fileName}.html` }
-                // } else {
-                //     return { message: 'Error generating file' }
-                // }
             } else {
                 return { message: 'No Issues for the path' }
             }
@@ -163,8 +125,6 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
         const filePath = `${getReportPath()}reports/multiIssueReport`
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            // createLog(FULL_REPORT_PATH, `Nation Report initiated for ${nation}(${year})`)
-            // createLog(FULL_REPORT_PATH, `Fetching Multi Issue Report for ${nation}`)
             await multiIssuesReport(nation, fromWorker, year)
             await createNationFullReport(year, nation, fullFileName)
             return { report: `${fullFileName}.pdf` }
@@ -194,16 +154,6 @@ const createNationFullReport = async (year, nation, fullFileName) => {
     if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
         pdfsSequence.unshift(reportPath)
         await mergePdfLatex(fullFileName, pdfsSequence)
-        // const fileWithoutFooter = convertStringToHash(`nofoot_full_${nation}_${year}`)
-        // // createLog(FULL_REPORT_PATH, `Merging pdf for nation with filepath ${filePath}`)
-        // await mergePdfForNation(filePath, fileWithoutFooter, pdfsSequence.join(' '))
-        // if (fs.existsSync(`${filePath}/${fileWithoutFooter}.pdf`)) {
-        //     // createLog(FULL_REPORT_PATH, `Generaing Page Number footer for ${filePath}`)
-        //     await generatePageNumberFooter(filePath, fileWithoutFooter, fileName)
-        //     return { report: `${fileName}.pdf` }
-        // } else {
-        //     return { message: 'Error generating PDF report' }
-        // }
     } else {
         return { message: 'Report not present' }
     }

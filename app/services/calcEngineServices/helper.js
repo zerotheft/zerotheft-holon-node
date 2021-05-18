@@ -69,7 +69,7 @@ const theftAmountAbbr = (amt, pos) => {
         suffix = 'K'
     }
 
-    return amt.toFixed(2) + suffix
+    return amt.toFixed(2).replace(/\.00$/, '') + suffix
 }
 
 const realTheftAmount = (dollar) => {
