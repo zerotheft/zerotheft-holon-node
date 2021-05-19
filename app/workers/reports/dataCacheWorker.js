@@ -30,16 +30,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
     }
 }, { connection })
 
-// generate report if all path year data cached
-// allYearDataWorker.on("completed", async (job, returnvalue) => {
-//     const isDataCached = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
-//     const isSyncing = await cacheServer.getAsync(`SYNC_INPROGRESS`)
-//     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
-//     if (isDataCached && !isSyncing && (!isFullReport || !!job.data.reSync)) {
-//         createLog(FULL_REPORT_PATH, `report generation including full report initiated`)
-//         reportQueue.add('pathReports', {}, { removeOnComplete: true, removeOnFail: true })
-//     }
-// }, { connection });
+
 /**
  * This worker data scanning for specific year
  */
