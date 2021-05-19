@@ -1,8 +1,6 @@
-const config = require('zerotheft-node-utils/config')
 const { allNations } = require('zerotheft-node-utils').paths
 const { allYearCachedData } = require('../calcEngineServices')
-const { createDir, writeFile } = require('../../common')
-const exportsDir = `${config.APP_PATH}/exports`
+const { createDir, writeFile, exportsDir } = require('../../common')
 
 /* get cached report information  and export in JSON file*/
 const exportCachedReport = async () => {

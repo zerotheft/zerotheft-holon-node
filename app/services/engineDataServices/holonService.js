@@ -1,7 +1,7 @@
 const { getHolonContract } = require('zerotheft-node-utils').contracts
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { writeCsv } = require('./readWriteCsv')
-const { exportsDir } = require('./utils')
+const { exportsDir } = require('../../common')
 
 /* get all Holons*/
 const exportAllHolons = async () => {

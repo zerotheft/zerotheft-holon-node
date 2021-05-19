@@ -2,10 +2,10 @@ const PromisePool = require('@supercharge/promise-pool')
 
 const { getUserContract } = require('zerotheft-node-utils').contracts
 const { getUser, listUserIds } = require('zerotheft-node-utils/contracts/users')
-const { exportsDir, lastExportedUid, failedUserIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
+const { lastExportedUid, failedUserIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
-const { createDir } = require('../../common')
+const { createDir, exportsDir } = require('../../common')
 
 
 const exportAllVoters = async () => {

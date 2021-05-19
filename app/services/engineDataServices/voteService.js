@@ -7,7 +7,7 @@ const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals'
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const { createDir } = require('../../common')
-const { exportsDir, lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
+const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 
@@ -53,7 +53,7 @@ const exportAllVotes = async (req) => {
             const hierarchy = file.match(/hierarchy: ("|')?([^("|'|\n)]+)("|')?/i)[2]
 
             //Start writing it in the file
-            const voteDir = `${exportsDir}/proposals/${summaryCountry}/${hierarchy}/${year}/votes`
+            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/${year}/votes`
             await createDir(voteDir)
             writeCsv([{
               "id": voteID,

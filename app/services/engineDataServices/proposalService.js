@@ -6,11 +6,11 @@ const splitFile = require('split-file');
 const PromisePool = require('@supercharge/promise-pool')
 const { getProposalContract } = require('zerotheft-node-utils').contracts
 const { fetchProposalYaml, listProposalIds } = require('zerotheft-node-utils/contracts/proposals')
-const { createDir } = require('../../common')
-const { exportsDir, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
+const { createDir, exportsDir } = require('../../common')
+const { exportsDirNation, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { writeCsv } = require('./readWriteCsv')
-const proposalCsv = `${exportsDir}/proposals/proposals.csv`
+const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
   let lastPid = await lastExportedPid()
@@ -30,7 +30,7 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             outputFiles = await fetchProposalYaml(proposalContract, proposal.yamlBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
             file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
-            const proposalDir = `${exportsDir}/proposals/${file.summary_country || 'USA'}/${file.hierarchy}/${file.summary_year}`
+            const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/${file.summary_year}/proposals`
             await createDir(proposalDir)
             fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
 
@@ -43,14 +43,14 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
               "theft_amount": proposal.theftAmt,
               "year": proposal.year,
               "date": proposal.date
-            }], `${exportsDir}/proposals/proposals.csv`)
+            }], proposalsCsv)
 
             for (let index = 0; index < outputFiles.length; index++) {
               if (fs.existsSync(outputFiles[index])) { fs.unlinkSync(outputFiles[index]); }
             }
           }
         }
-        // await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
+        await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
 
       } catch (e) {
         fs.appendFileSync(failedProposalIDFile, `${parseInt(pid)}\n`);
@@ -104,7 +104,7 @@ const exportFailedProposals = async () => {
 
 /*convert csv file to json*/
 const allProposalsJSON = async () => {
-  const json = await csv().fromFile(proposalCsv);
+  const json = await csv().fromFile(proposalsCsv);
   return json
 }
 
