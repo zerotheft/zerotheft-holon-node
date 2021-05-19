@@ -4,7 +4,6 @@ const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
 const { defaultPropYear, firstPropYear } = require('./constants')
-
 // let proposals = []
 // let votes = []
 let yearCacheData = []
@@ -17,7 +16,6 @@ for (let yr = firstPropYear; yr <= defaultPropYear; yr++) {
 const checkAllYearDataSynced = async () => {
     for (var j = 0; j < yearCacheData.length; j++) {
         const synced = await cacheServer.getAsync(yearCacheData[j])
-        console.log('i', j, synced)
         if (synced !== "true")
             return false
     }
@@ -168,12 +166,13 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
         for (y in pvt) {
             // walk years in the totals for each path
             let pvty = pvt[y]
+
             let ytots = vtby[y]['_totals']
 
             let votesFor = pvty['for']
             let votesAgainst = pvty['against']
             let votes = votesFor + votesAgainst
-            let vprops = pvty['props'].length
+            let vprops = Object.keys(pvty['props']).length
             ytots['votes'] += votes
             ytots['proposals'] += vprops
             ytots['for'] += votesFor
@@ -195,16 +194,23 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
                 }
             }
             let theft = 0
+            let avgData = {}
             if (propMax) {
-                theft = ((propMax['theft'] === 0 && votesFor < votesAgainst) || propMax['theft'] > 0) ? propMax['theft'] : mean(yesTheftAmts)
+                if ((propMax['theft'] === 0 && votesFor < votesAgainst) || propMax['theft'] > 0)
+                    theft = propMax['theft']
+                else {
+                    theft = mean(yesTheftAmts)
+                    avgData = { 'is_theft_avg': true, 'avg_from': yesTheftAmts, '_actual_leading_prop': { 'prop_id': propMax['id'], 'actual_theft': propMax['theft'], 'votes': propMax['count'] } }
+                }
             }
             let legit = (votes >= legitimiateThreshold)
             let need_votes = (legit) ? 0 : legitimiateThreshold - votes;
             vtby[y]['paths'][fullPath] = {
-                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'need_votes': need_votes },
+                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'need_votes': need_votes, ...avgData },
                 'props': pvty['props']
             }
             ytots['theft'] += theft
+
         }
     }
     return vtby
@@ -241,10 +247,11 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
 
         // depth-first - make sure we've done the work for all children before doing parents
         if (path) {
-            doPathRollUpsForYear(yearData, umbrellaPaths, pathHierarchy, path, fullPath)
+            yearData = doPathRollUpsForYear(yearData, umbrellaPaths, pathHierarchy, path, fullPath)
         } else {
             isLeaf = true
         }
+
         let pathData = get(yearData['paths'], fullPath)
 
         if (!pathData) {
@@ -309,6 +316,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
                 secondaryData = totalsData
                 totalsData = {
                     'method': 'Umbrella Totals',
+                    'reason': `roll-up and umbrella thefts are legit and roll-up theft (${childrenSum['theft']}) is greater than umbrella theft (${totalsData['theft']})`,
                     'legit': true,
                     'votes': childrenSum['votes'],
                     'for': childrenSum['for'],
@@ -319,6 +327,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
             } else if (!totalsData['legit'] && childrenSum['legit']) { // if umbrella is not legit and roll-up is legit, use roll-up data
                 secondaryData = totalsData
                 totalsData = childrenSum
+                totalsData['reason'] = `umbrella is not legit and roll-up is legit`
             } else { // otherwise, use the umbrella total, and store the children sum as secondary
                 secondaryData = childrenSum
             }
@@ -333,8 +342,14 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
     }
     yearData['_totals']['legit'] = allLegit
+
+
+
     return yearData
 }
+
+
+
 const manipulatePaths = async (paths, proposalContract, voterContract, currentPath, theftVotesSum = {}, umbrellaPaths, parentPaths = [], year, proposals = [], votes = []) => {
     createLog(CALC_STATUS_PATH, `Manipulating Path for ${currentPath}`, currentPath)
     let nestedKeys = Object.keys(paths)
@@ -351,7 +366,9 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
                 if (details.success) {
                     proposals = proposals.concat(details.pathDetails)
                     votes = votes.concat(details.allVotesInfo)
+
                 }
+
             } catch (e) {
                 createLog(ERROR_PATH, `calcLogic=>manipulatePaths()::Error while manipulating Path for ${nextPath} for leaf item with exception ${e.message}`)
                 console.log("Path:", nextPath)
@@ -365,6 +382,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
                     if (details.success) {
                         proposals = proposals.concat(details.pathDetails)
                         votes = votes.concat(details.allVotesInfo)
+
                     }
                     parentPaths.push(nextPath)
                 } catch (e) {

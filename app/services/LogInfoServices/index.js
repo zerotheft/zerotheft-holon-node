@@ -1,6 +1,5 @@
 const fs = require("fs")
-const { exportsDir } = require('../engineDataServices/utils.js')
-const { PUBLIC_PATH } = require('../../common')
+const { PUBLIC_PATH, exportsDir } = require('../../common')
 
 const LOG_PATH = PUBLIC_PATH + '/logs'
 let MAIN_PATH = LOG_PATH + '/main.log'
