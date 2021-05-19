@@ -3,9 +3,9 @@ const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
+const { exportsDir, createDir, writeFile, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-const { PUBLIC_PATH, createDir, writeFile } = require('../../common')
 const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/constants')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
 
@@ -30,16 +30,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
     }
 }, { connection })
 
-// generate report if all path year data cached
-// allYearDataWorker.on("completed", async (job, returnvalue) => {
-//     const isDataCached = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
-//     const isSyncing = await cacheServer.getAsync(`SYNC_INPROGRESS`)
-//     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
-//     if (isDataCached && !isSyncing && (!isFullReport || !!job.data.reSync)) {
-//         createLog(FULL_REPORT_PATH, `report generation including full report initiated`)
-//         reportQueue.add('pathReports', {}, { removeOnComplete: true, removeOnFail: true })
-//     }
-// }, { connection });
+
 /**
  * This worker data scanning for specific year
  */
@@ -62,6 +53,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
         umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
         console.log('GHT', year, proposals.length, votes.length)
+
         const mainVal = await getHierarchyTotals(proposals, votes, nationPaths)
         if (mainVal) {
             let yearData = mainVal[`${year}`]
@@ -72,9 +64,16 @@ const scanDataWorker = new Worker('ScanData', async job => {
 
             // Save yearData in files
             console.log('SF', year)
-            const yearDataDir = `${PUBLIC_PATH}/reports/cached_year_data/${nation}/`
-            await createDir(yearDataDir)
-            await writeFile(`${yearDataDir}/${year}.json`, yearData)
+            const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
+
+            // export full data with proposals
+            await exportData(yearDataDir, `${year}.json`, yearData)
+
+            //JSON with proposals data is huge so removing proposals from every path and then export it seperately
+            Object.keys(yearData['paths']).forEach((path) => {
+                delete yearData['paths'][path]['props']
+            })
+            await exportData(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
 
         }
         cacheServer.set(`YEAR_${year}_SYNCED`, true)
@@ -83,7 +82,17 @@ const scanDataWorker = new Worker('ScanData', async job => {
         throw e
     }
 }, { connection })
-
+/**
+ * Saves the calculation data in the export directory
+ * @param {string} dir 
+ * @param {string} file 
+ * @param {object} value 
+ */
+const exportData = async (dir, file, value) => {
+    // export the interim data in exports dir per path
+    await createDir(dir)
+    await writeFile(`${dir}/${file}`, value)
+}
 // raise flag when scanning and saving is completed
 scanDataWorker.on("completed", async (job, returnvalue) => {
     cacheServer.set('PATH_SYNCHRONIZED', true)

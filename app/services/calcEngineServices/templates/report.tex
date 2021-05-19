@@ -93,7 +93,7 @@
       text=primary,
       scatter src=explicit symbolic,
       nodes near coords*=\scriptsize \textbf{\Theft},
-      every node near coord/.append style={below right, rotate=35, shift={(2pt, 8pt)}},
+      every node near coord/.append style={below right, rotate=90, shift={(0, 6pt)}},
       visualization depends on={value \thisrow{Theft} \as \Theft},
     ] 
     table [meta=DeterminedBy] {
@@ -166,7 +166,7 @@
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
     \node[fullWidth, text=primary] (leadingProposal) {\huge \textbf{Leading Proposals}};
-    \node[fullWidth, below =0ptof leadingProposal] (viewProposalTextLink) {\href{http://holon7.zerotheft.net/path/USA/issue/corp_tax_evasion}{\color{blue}View Full Proposal Text}};
+    \node[fullWidth, below =0ptof leadingProposal] (viewProposalTextLink) {\href{--holonUrl--/path/--pathSlug--/issue/--leafSlug--}{\color{blue}View Full Proposal Text}};
     \node[fullWidth, below =0ptof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal ID --leadingProposalID-- by --leadingProposalAuthor-- on --leadingProposalDate--}};
   \end{tikzpicture}
 }

@@ -3,6 +3,8 @@ const yaml = require('js-yaml');
 const https = require('https');
 const config = require('zerotheft-node-utils/config')
 const PUBLIC_PATH = `${config.APP_PATH}/public`
+const cacheDir = `${config.APP_PATH}/.cache`
+const exportsDir = `${PUBLIC_PATH}/exports`
 
 const writeFile = async (filePath, input) => {
     const jsonString = JSON.stringify(input)
@@ -65,6 +67,8 @@ const convertUnixValToDate = (unixVal) => {
 
 module.exports = {
     PUBLIC_PATH,
+    cacheDir,
+    exportsDir,
     writeFile,
     createDir,
     respondWithPDF,

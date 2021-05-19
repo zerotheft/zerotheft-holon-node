@@ -1,6 +1,5 @@
 const fs = require('fs')
-const config = require('zerotheft-node-utils/config')
-const exportsDir = `${config.APP_PATH}/public/exports`
+const { writeFile, exportsDir } = require('../../common')
 const voteIDFile = `${exportsDir}/.last_exported_vid`
 const failedVoteIDFile = `${exportsDir}/.export_failed_vids`
 const proposalIdFile = `${exportsDir}/.last_exported_pid`
@@ -9,8 +8,8 @@ const holonIdFile = `${exportsDir}/.last_exported_hid`
 const failedHolonIDFile = `${exportsDir}/.export_failed_hids`
 const userIdFile = `${exportsDir}/.last_exported_uid`
 const failedUserIDFile = `${exportsDir}/.export_failed_uids`
+const exportsDirNation = `${exportsDir}/nation_data`
 const { cacheServer } = require('../redisService')
-const { writeFile } = require('../../common')
 
 
 //get the last exported vote ID
@@ -87,7 +86,7 @@ const cacheToFileRecord = async (key, entity) => {
 }
 
 module.exports = {
-  exportsDir,
+  exportsDirNation,
   voteIDFile,
   failedVoteIDFile,
   lastExportedVid,
