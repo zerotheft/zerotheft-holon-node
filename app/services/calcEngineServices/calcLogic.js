@@ -342,13 +342,8 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
     }
     yearData['_totals']['legit'] = allLegit
-
-
-
     return yearData
 }
-
-
 
 const manipulatePaths = async (paths, proposalContract, voterContract, currentPath, theftVotesSum = {}, umbrellaPaths, parentPaths = [], year, proposals = [], votes = []) => {
     createLog(CALC_STATUS_PATH, `Manipulating Path for ${currentPath}`, currentPath)
