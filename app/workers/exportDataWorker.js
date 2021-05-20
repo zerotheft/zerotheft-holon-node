@@ -80,23 +80,20 @@ exportWorker.on("failed", async (job, returnvalue) => {
 
 
 const allDataExport = async () => {
-  const isPkg = typeof process.pkg !== 'undefined'
-  if (isPkg) {
-    try {
-      const proposalExport = await cacheServer.getAsync('PROPOSALS_EXPORT_INPROGRESS')
-      const votersExport = await cacheServer.getAsync('VOTERS_EXPORT_INPROGRESS')
-      const votesExport = await cacheServer.getAsync('VOTES_EXPORT_INPROGRESS')
-      if (!proposalExport)
-        await exportDataQueue.add('proposalsExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
-      if (!votersExport)
-        await exportDataQueue.add('votersExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
-      if (!votesExport)
-        await exportDataQueue.add('votesExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
-    } catch (e) {
-      console.log(e)
-      createLog(EXPORT_LOG_PATH, `===>allDataExport ${e}`)
-      throw e
-    }
+  try {
+    const proposalExport = await cacheServer.getAsync('PROPOSALS_EXPORT_INPROGRESS')
+    const votersExport = await cacheServer.getAsync('VOTERS_EXPORT_INPROGRESS')
+    const votesExport = await cacheServer.getAsync('VOTES_EXPORT_INPROGRESS')
+    if (!proposalExport)
+      await exportDataQueue.add('proposalsExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+    if (!votersExport)
+      await exportDataQueue.add('votersExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+    if (!votesExport)
+      await exportDataQueue.add('votesExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+  } catch (e) {
+    console.log(e)
+    createLog(EXPORT_LOG_PATH, `===>allDataExport ${e}`)
+    throw e
   }
 }
 
