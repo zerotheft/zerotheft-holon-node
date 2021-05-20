@@ -48,7 +48,7 @@ app.get('/healthcheck', (req, res, next) => {
   return res.send({
     "status": "GOOD",
     "success": true,
-    "message": "holon is active and running"
+    "message": "holon is running fine"
   })
 })
 app.get('*', function (req, res) {
