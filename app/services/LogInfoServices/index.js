@@ -13,6 +13,7 @@ let FULL_REPORT_PATH = LOG_PATH + '/full_report'
 let SINGLE_REPORT_PATH = LOG_PATH + '/single_report'
 let MULTI_REPORT_PATH = LOG_PATH + '/multi_report'
 let EXPORT_LOG_PATH = exportsDir + '/main.log'
+let WATCHER_LOG_PATH = LOG_PATH + '/watcher.log'
 
 const createDirIfNotExist = () => {
     if (!fs.existsSync(PUBLIC_PATH)) {
@@ -92,5 +93,6 @@ module.exports = {
     FULL_REPORT_PATH,
     SINGLE_REPORT_PATH,
     MULTI_REPORT_PATH,
-    EXPORT_LOG_PATH
+    EXPORT_LOG_PATH,
+    WATCHER_LOG_PATH
 }

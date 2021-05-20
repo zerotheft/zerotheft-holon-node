@@ -22,6 +22,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
+        cacheServer.del('SYNC_INPROGRESS')
     }
     for (let year = firstPropYear; year <= defaultPropYear; year++) {
         const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)

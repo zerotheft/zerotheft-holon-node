@@ -3,7 +3,7 @@ const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { allYearData } = require('./reports/dataCacheWorker')
 const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
-const { createLog, MAIN_PATH } = require('../services/LogInfoServices')
+const { createLog, MAIN_PATH, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
 
 const connection = new IORedis()
@@ -53,9 +53,13 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
 
     console.log('*****HEARTBEAT Report*****')
 
+    // Print heatbeat in log file
+    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}`
+    createLog(WATCHER_LOG_PATH, logContent)
+
   } catch (e) {
     console.log("watcherWorker ", e)
-    createLog(MAIN_PATH, `watcherWorker ${e}`)
+    createLog(WATCHER_LOG_PATH, `watcherWorker ${e}`)
     throw e
   }
 }, { connection })
@@ -83,7 +87,7 @@ const watcherInit = async () => {
     watcherQueue.add('heartbeat', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '* * * * *' } })
   } catch (e) {
     console.log('watcherWorker', e)
-    createLog(MAIN_PATH, `watcherWorker ${e}`)
+    createLog(WATCHER_LOG_PATH, `watcherWorker ${e}`)
     throw e
   }
 
