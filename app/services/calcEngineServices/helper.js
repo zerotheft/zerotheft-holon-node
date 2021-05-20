@@ -51,7 +51,7 @@ citizenCounts = [
 
 const theftAmountAbbr = (amt, pos) => {
     if (amt < Math.pow(10, 3)) {
-        return amt
+        return amt + ''
     }
 
     let suffix = ''
