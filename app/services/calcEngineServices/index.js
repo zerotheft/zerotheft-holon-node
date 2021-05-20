@@ -67,6 +67,7 @@ const allYearCachedData = async (nation) => {
     }
     return allYearData
 }
+
 const multiIssuesReport = async (path, fromWorker = false, year) => {
     // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
     const fileName = `${year}_${path.replace(/\//g, '-')}`
@@ -108,6 +109,48 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
         // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
         // TODO: uncomment this
         await deleteJsonFile(fileName)
+    }
+}
+const multiIssuesFullReport = async (path, fromWorker = false, year) => {
+    // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
+    try {
+        const fullFileName = `full_${year}_${path.replace(/\//g, '-')}`
+        const filePath = `${getReportPath()}reports/multiIssueReport`
+        const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
+        if (fromWorker || !reportExists) {
+            await multiIssuesReport(path, fromWorker, year)
+            await createUmbrellaFullReport(year, path, fullFileName)
+            return { report: `${fullFileName}.pdf` }
+        } else if (reportExists) {
+            return { report: `${fullFileName}.pdf` }
+        } else {
+            return { message: 'Full Umbrella Report Generation will take time. Come back later.' }
+        }
+    } catch (e) {
+        // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${path} with Exception: ${e.message}`)
+        // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${path} with Exception: ${e.message}`)
+        return { error: e.message }
+    }
+}
+
+const createUmbrellaFullReport = async (year, path, fullFileName) => {
+    const nation = path.split('/')[0]
+    const nationPaths = await pathsByNation(nation)
+    delete (nationPaths['Alias'])
+
+    let nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
+    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
+    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
+    let umbrellaPaths = await getUmbrellaPaths()
+    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+
+    let pdfsSequence = await pdfPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
+
+    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
+        pdfsSequence.unshift(reportPath)
+        await mergePdfLatex(fullFileName, pdfsSequence)
+    } else {
+        return { message: 'Report not present' }
     }
 }
 
@@ -372,4 +415,5 @@ module.exports = {
     multiIssuesReport,
     theftInfo,
     nationReport,
+    multiIssuesFullReport,
 }

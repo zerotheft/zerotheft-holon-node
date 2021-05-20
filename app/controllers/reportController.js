@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { singleIssueReport, multiIssuesReport, theftInfo, nationReport } = require('../services/calcEngineServices');
+const { singleIssueReport, multiIssuesFullReport, theftInfo, nationReport } = require('../services/calcEngineServices');
 const { getAppRoute } = require('../../config');
 const { allReportWorker } = require('../workers/reports/reportWorker');
 
@@ -13,7 +13,7 @@ const getSingleIssueReport = async (req, res, next) => {
 }
 
 const getMultiIssuesReport = async (req, res, next) => {
-    const response = await multiIssuesReport(req.params.path, false, req.params.year)
+    const response = await multiIssuesFullReport(req.params.path, false, req.params.year)
     if (response.report) {
         return res.send({ report: `${getAppRoute()}/pathReports/${response.report}` })
     } else {
