@@ -266,6 +266,8 @@ const generateLatexPDF = async (pdfData, fileName) => {
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
             reject({ message: err })
+            fs.unlinkSync(reportPDF)
+            fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
@@ -303,6 +305,8 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
             reject({ message: err })
+            fs.unlinkSync(reportPDF)
+            fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
@@ -555,6 +559,8 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
             reject({ message: err })
+            fs.unlinkSync(reportPDF)
+            fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
