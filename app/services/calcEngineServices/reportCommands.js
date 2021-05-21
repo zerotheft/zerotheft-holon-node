@@ -271,7 +271,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            // fs.unlinkSync(reportPrepd)
+            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
