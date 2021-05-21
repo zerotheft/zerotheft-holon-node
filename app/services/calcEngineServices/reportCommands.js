@@ -130,7 +130,7 @@ const generateReportData = (fileName, year) => {
     const leadingProp = get(pathSummary, 'leading_proposal')
 
     if (!leadingProp) {
-        console.log('============vt', vt)
+        console.log(`============vt, path: ${path}, year: ${year}`, vt)
     }
 
 
