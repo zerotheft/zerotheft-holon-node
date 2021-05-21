@@ -121,7 +121,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
     } finally {
         // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
         // TODO: uncomment this
-        // await deleteJsonFile(fileName)
+        await deleteJsonFile(fileName)
     }
 }
 const multiIssuesFullReport = async (path, fromWorker = false, year) => {
