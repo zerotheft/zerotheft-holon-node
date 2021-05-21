@@ -138,16 +138,16 @@ const generateReportData = (fileName, year) => {
 
 function latexSpecialChars(detail) {
     const characterToSkip = {
+        "{": "\\{",
+        "}": "\\}",
         "#": "\\#",
         "\\$": "\\$",
         "%": "\\%",
         "&": "\\&",
         "~": "\\~{}",
         "_": "\\_",
-        "^": "\\^{}",
-        "{": "\\{",
-        "}": "\\}",
-        "\n": "\n\\break{}",
+        "\\^": "\\^{}",
+        "\n": "\n\\newline{}",
     };
 
     Object.keys(characterToSkip).forEach((key) => {
