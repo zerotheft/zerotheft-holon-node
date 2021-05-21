@@ -45,6 +45,8 @@ const generateReportData = (fileName, year) => {
     const props = getPathYearProposals(summaryTotals, path, year)
     const votes = getPathYearVotes(props)
     const vt = getPathVoteTotals(summaryTotals[year], path)
+    if (vt['missing']) throw new Error(`generateReportData: Proposals not available for path: ${path} and year ${year}`);
+
     const voteTotals = {
         'for': get(vt, '_totals.for', 0),
         'against': get(vt, '_totals.against', 0),
@@ -559,7 +561,7 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
             reject({ message: err })
-            fs.unlinkSync(reportPDF)
+            fs.unlinkSync(mergedLatexPDF)
             fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {

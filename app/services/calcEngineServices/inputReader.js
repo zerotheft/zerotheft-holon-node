@@ -34,13 +34,13 @@ const loadAllIssues = (fileName) => {
     // TODO: uncomment this
     const dataString = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
     const allData = JSON.parse(dataString)
-    summaryTotals = allData['yearData']
-    actualPath = allData['actualPath']
-    holon = allData['holon']
-    subPaths = allData['subPaths']
-    allPaths = allData['allPaths']
-    pdflinks = allData['pageLink']
-    umbrellaPaths = allData['umbrellaPaths']
+    const summaryTotals = allData['yearData']
+    const actualPath = allData['actualPath']
+    const holon = allData['holon']
+    const subPaths = allData['subPaths']
+    const allPaths = allData['allPaths']
+    const pdflinks = allData['pageLink']
+    const umbrellaPaths = allData['umbrellaPaths']
     return { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths }
 }
 
