@@ -138,16 +138,16 @@ const generateReportData = (fileName, year) => {
 
 function latexSpecialChars(detail) {
     const characterToSkip = {
+        "{": "\\{",
+        "}": "\\}",
         "#": "\\#",
         "\\$": "\\$",
         "%": "\\%",
         "&": "\\&",
         "~": "\\~{}",
         "_": "\\_",
-        "^": "\\^{}",
-        "{": "\\{",
-        "}": "\\}",
-        "\n": "\n\\break{}",
+        "\\^": "\\^{}",
+        "\n": "\n\\newline{}",
     };
 
     Object.keys(characterToSkip).forEach((key) => {
@@ -271,7 +271,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
+            // fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
