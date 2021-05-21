@@ -26,7 +26,7 @@ const getPathYearVotes = (proposals) => {
 }
 
 const getPathVoteTotals = (yearTotals, path) => {
-    return get(yearTotals, `paths.${path}`, {})
+    return get(yearTotals, `paths.${path}`, { missing: true })
 }
 
 const loadAllIssues = (fileName) => {
