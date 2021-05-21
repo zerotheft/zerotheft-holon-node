@@ -370,6 +370,7 @@ const generateMultiReportData = (fileName, year) => {
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
+    console.log('==============singleYearDataInside', singleYearData)
     const yearPaths = singleYearData['paths']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']

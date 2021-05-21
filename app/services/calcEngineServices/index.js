@@ -97,7 +97,9 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
-                const pathsJson = { yearData: allYearData, singleYearData: singleYearCachedData(nation, year), actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
+                const singleYearData = await singleYearCachedData(nation, year)
+                console.log('==============singleYearData', singleYearData)
+                const pathsJson = { yearData: allYearData, singleYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
