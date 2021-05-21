@@ -265,7 +265,12 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
                     agg[`${nation}/${path}`] = totals
                 }
             })
-            let yearTh = await getPastYearThefts(nation)
+            // check cache for past 
+            let yearTh = []
+            const pastThefts = await cacheServer.hgetallAsync('PAST_THEFTS')
+            if (pastThefts) yearTh = JSON.parse(pastThefts[nation])
+            if (yearTh.length == 0) throw new Error('no past thefts data in cache')
+
             let minYr, maxYr
             let totalTh = 0
             for (i = 0; i < yearTh.length; i++) {
@@ -315,119 +320,7 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
 }
 
 
-const getPastYearThefts = async (nation) => {
-    let yearTh = []
-    // check cache first
-    const result = await cacheServer.hgetallAsync('PAST_THEFTS')
-    if (result) yearTh = JSON.parse(result[nation])
-    if (yearTh.length) return yearTh
 
-    let sumTotals = {}
-    for (i = defaultPropYear; i >= firstPropYear; i--) {
-        let tempValue = await cacheServer.hgetallAsync(`${i}`)
-        if (get(tempValue, nation)) {
-            sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
-        }
-    }
-    // simple estimator - use the prior theft until it changes
-    let priorTheft
-    let firstTheft
-    for (year in sumTotals) {
-        let p = sumTotals[year]
-
-        let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
-        if (!p || get(p, 'missing')) {
-            yearTh.push(yd)
-            continue
-        } else if (p['_totals']['legit']) {
-            yd['Determined By'] = 'voting'
-            yd['theft'] = p['_totals']['theft']
-        } else { // not legit
-            yd['Determined By'] = 'incomplete voting'
-            yd['theft'] = p['_totals']['theft']
-        }
-
-        if (!firstTheft) {
-            firstTheft = yd['theft']
-        }
-        priorTheft = yd['theft']
-
-        yearTh.push(yd)
-    }
-
-    // second pass - back-fill any early years with firstTheft estimate
-    for (yd in yearTh) {
-        if (!yd['theft']) {
-            yd['theft'] = firstTheft
-        }
-    }
-
-    // third pass - step-estimate any theft between two legit/incomplete years
-    let lastTh
-    let lastThIdx = -1
-    let preStep
-    let preIdx
-    let postStep
-    let postIdx
-    yearTh.forEach((yd, idx) => {
-        if (yd['Determined By'] === 'voting' || yd['Determined By'] === 'incomplete voting') {
-            // if we had a legit in the past, back-fill all estimation cases between
-            let step
-            if (lastTh && lastThIdx < (idx - 1)) {
-                let diff = yd['theft'] - lastTh
-                let gap = idx - lastThIdx
-                step = diff / gap
-
-                for (let backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
-                    lastTh += step
-                    yearTh[backIdx]['theft'] = lastTh
-                }
-            } else if (lastTh && lastThIdx == (idx - 1)) {
-                step = yd['theft'] - lastTh
-            }
-            // prepare for fourth/fifth passes
-            if (step) {
-                if (!preStep && idx > 0) {
-                    preStep = step
-                    preIdx = idx
-                }
-                postStep = step
-                postIdx = idx
-            }
-            lastTh = yd['theft']
-            lastThIdx = idx
-        }
-    })
-    // fourth pass - apply preStep to years before first not missing
-    if (preIdx) {
-        lastTh = yearTh[preIdx]['theft']
-        for (let pi = preIdx - 1; pi < -1; pi--) {
-            lastTh -= preStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-            } else {
-                yearTh[pi]['theft'] = lastTh
-            }
-        }
-    }
-    // fifth pass - apply postStep to years after last not missing
-    if (postIdx && postIdx < yearTh.length - 1) {
-        lastTh = yearTh[postIdx]['theft']
-        for (let pi = postIdx + 1; pi < yearTh.length; pi++) {
-            lastTh += postStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-            } else {
-                yearTh[pi]['theft'] = lastTh
-            }
-        }
-    }
-    // save in cache
-    cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
-    await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
-
-    return yearTh
-}
 
 module.exports = {
     allYearCachedData,
