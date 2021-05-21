@@ -83,6 +83,7 @@ const readDir = (location) => {
 module.exports = {
     createLog,
     readDir,
+    LOG_PATH,
     MAIN_PATH,
     CRON_PATH,
     ERROR_PATH,
