@@ -2,11 +2,11 @@ const fs = require("fs")
 const { get, isEmpty } = require('lodash')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
-const { writeFile } = require('../../common')
+const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
 const { cacheServer } = require('../redisService');
 const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
-const { generateReport, generatePDFReport, generatePDFMultiReport, generatePDF, mergePdfForNation, generatePageNumberFooter, renameHTMLFile, renamePDFFile, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
+const { generatePDFReport, generatePDFMultiReport, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
 const { defaultPropYear, firstPropYear, population } = require('./constants')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
@@ -285,8 +285,21 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
             agg['info']['each_year'] = nationData['_totals']['theft'] / population(year)
+            agg['info']['population'] = population(year)
             agg['info']['many_years'] = totalTh
+            agg['info']['max_year'] = maxYr
+            agg['info']['min_year'] = minYr
             agg['info']['between_years'] = (maxYr - minYr) + 1
+
+            //log the aggregated data in file inside exports directory
+            const exportFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
+            let exportFileData = {}
+            if (fs.existsSync(exportFile)) {
+                exportFileData = JSON.parse(fs.readFileSync(exportFile))
+            }
+            exportFileData['info'] = agg['info']
+            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, exportFileData)
+
             return agg;
         }
         else {
@@ -303,14 +316,19 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
 
 
 const getPastYearThefts = async (nation) => {
+    let yearTh = []
+    // check cache first
+    const result = await cacheServer.hgetallAsync('PAST_THEFTS')
+    if (result) yearTh = JSON.parse(result[nation])
+    if (yearTh.length) return yearTh
+
     let sumTotals = {}
-    for (i = defaultPropYear; i > firstPropYear; i--) {
+    for (i = defaultPropYear; i >= firstPropYear; i--) {
         let tempValue = await cacheServer.hgetallAsync(`${i}`)
         if (get(tempValue, nation)) {
             sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
         }
     }
-    let yearTh = []
     // simple estimator - use the prior theft until it changes
     let priorTheft
     let firstTheft
@@ -331,8 +349,6 @@ const getPastYearThefts = async (nation) => {
 
         if (!firstTheft) {
             firstTheft = yd['theft']
-        } else {
-            firstTheft = firstTheft
         }
         priorTheft = yd['theft']
 
@@ -406,6 +422,10 @@ const getPastYearThefts = async (nation) => {
             }
         }
     }
+    // save in cache
+    cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
+    await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
+
     return yearTh
 }
 
