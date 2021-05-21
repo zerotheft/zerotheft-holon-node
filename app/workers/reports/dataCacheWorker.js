@@ -30,8 +30,8 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         if (!isYearSynced || !!job.data.reSync)
             await singleYearCaching(job.data.nation, year)
     }
-}, { connection })
 
+}, { connection })
 
 /**
  * This worker data scanning for specific year
@@ -61,13 +61,10 @@ const scanDataWorker = new Worker('ScanData', async job => {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
             doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
-            console.log('SC', year)
+
             cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
-
             // Save yearData in files
-            console.log('SF', year)
             const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
-
             // export full data with proposals
             await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
