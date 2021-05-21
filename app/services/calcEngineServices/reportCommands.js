@@ -129,6 +129,10 @@ const generateReportData = (fileName, year) => {
 
     const leadingProp = get(pathSummary, 'leading_proposal')
 
+    if (!leadingProp) {
+        console.log('============vt', vt)
+    }
+
 
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
