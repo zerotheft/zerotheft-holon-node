@@ -59,13 +59,25 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 const allYearCachedData = async (nation) => {
     createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
     let allYearData = {}
-    for (i = defaultPropYear; i > firstPropYear; i--) {
+    for (i = defaultPropYear; i >= firstPropYear; i--) {
         let tempValue = await cacheServer.hgetallAsync(`${i}`)
         if (get(tempValue, nation)) {
             allYearData[`${i}`] = JSON.parse(get(tempValue, nation))
         }
     }
     return allYearData
+}
+
+/*
+* fetch single year data from cache
+*/
+const singleYearCachedData = async (nation, year) => {
+    let tempValue = await cacheServer.hgetallAsync(year)
+    if (get(tempValue, nation)) {
+        return JSON.parse(get(tempValue, nation))
+    }
+
+    throw new Error(`Cached data not found for year ${year}`)
 }
 
 const multiIssuesReport = async (path, fromWorker = false, year) => {
@@ -85,7 +97,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
-                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
+                const pathsJson = { yearData: allYearData, singleYearData: singleYearCachedData(nation, year), actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)

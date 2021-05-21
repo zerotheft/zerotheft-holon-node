@@ -36,13 +36,14 @@ const loadAllIssues = (fileName) => {
     console.log('=============filename', fileName)
     const allData = JSON.parse(dataString)
     const summaryTotals = allData['yearData']
+    const singleYearData = allData['singleYearData']
     const actualPath = allData['actualPath']
     const holon = allData['holon']
     const subPaths = allData['subPaths']
     const allPaths = allData['allPaths']
     const pdflinks = allData['pageLink']
     const umbrellaPaths = allData['umbrellaPaths']
-    return { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths }
+    return { summaryTotals, singleYearData, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths }
 }
 
 const getLeafPaths = (paths, prePath = '') => {

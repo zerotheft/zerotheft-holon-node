@@ -349,7 +349,7 @@ const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') 
 }
 
 const generateMultiReportData = (fileName, year) => {
-    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
+    const { summaryTotals, singleYearData, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
@@ -370,10 +370,10 @@ const generateMultiReportData = (fileName, year) => {
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
-    const yearPaths = summaryTotals[year]['paths']
+    const yearPaths = singleYearData['paths']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
-    else if (path === nation) sumTotals = summaryTotals[year]['_totals']
+    else if (path === nation) sumTotals = singleYearData['_totals']
 
     let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
@@ -388,12 +388,12 @@ const generateMultiReportData = (fileName, year) => {
         })
     }
 
-    const { pageNo: resultPageNo, summaryTotalsPaths } = assignPageNumbers(summaryTotals[year]['paths'], paths, '', pageNo)
-    summaryTotals[year]['paths'] = summaryTotalsPaths
+    const { pageNo: resultPageNo, summaryTotalsPaths } = assignPageNumbers(singleYearData['paths'], paths, '', pageNo)
+    singleYearData['paths'] = summaryTotalsPaths
 
     const subPathTotals = {}
     subPathsFlat.forEach((p) => {
-        if (p in summaryTotals[year]['paths']) subPathTotals[p] = summaryTotals[year]['paths'][p]['_totals']
+        if (p in singleYearData['paths']) subPathTotals[p] = singleYearData['paths'][p]['_totals']
     })
 
     const pathSummary = analyticsPathSummary(sumTotals, true)
