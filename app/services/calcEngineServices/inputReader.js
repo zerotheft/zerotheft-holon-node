@@ -33,7 +33,6 @@ const loadAllIssues = (fileName) => {
     // const dataString = fs.readFileSync(`${getReportPath()}input_jsons/multireport.json`)
     // TODO: uncomment this
     const dataString = fs.readFileSync(`${getReportPath()}input_jsons/${fileName}.json`)
-    console.log('=============filename', fileName)
     const allData = JSON.parse(dataString)
     const summaryTotals = allData['yearData']
     const singleYearData = allData['singleYearData']

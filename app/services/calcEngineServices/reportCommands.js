@@ -126,13 +126,7 @@ const generateReportData = (fileName, year) => {
     })
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
-
     const leadingProp = get(pathSummary, 'leading_proposal')
-
-    if (!leadingProp) {
-        console.log(`============vt, path: ${path}, year: ${year}`, vt)
-    }
-
 
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
@@ -370,7 +364,6 @@ const generateMultiReportData = (fileName, year) => {
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
-    console.log('==============singleYearDataInside', singleYearData)
     const yearPaths = singleYearData['paths']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
