@@ -3,7 +3,7 @@ const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
-const { exportsDir, createDir, writeFile, cacheDir } = require('../../common')
+const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
 const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/constants')
@@ -23,6 +23,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
         cacheServer.del('SYNC_INPROGRESS')
+        cacheServer.del('PAST_THEFTS')
     }
     for (let year = firstPropYear; year <= defaultPropYear; year++) {
         const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
@@ -68,13 +69,13 @@ const scanDataWorker = new Worker('ScanData', async job => {
             const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
 
             // export full data with proposals
-            await exportData(yearDataDir, `${year}.json`, yearData)
+            await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
             //JSON with proposals data is huge so removing proposals from every path and then export it seperately
             Object.keys(yearData['paths']).forEach((path) => {
                 delete yearData['paths'][path]['props']
             })
-            await exportData(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
+            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
 
         }
         cacheServer.set(`YEAR_${year}_SYNCED`, true)
@@ -83,17 +84,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
         throw e
     }
 }, { connection })
-/**
- * Saves the calculation data in the export directory
- * @param {string} dir 
- * @param {string} file 
- * @param {object} value 
- */
-const exportData = async (dir, file, value) => {
-    // export the interim data in exports dir per path
-    await createDir(dir)
-    await writeFile(`${dir}/${file}`, value)
-}
+
 // raise flag when scanning and saving is completed
 scanDataWorker.on("completed", async (job, returnvalue) => {
     cacheServer.set('PATH_SYNCHRONIZED', true)
