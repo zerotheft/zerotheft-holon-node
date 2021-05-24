@@ -56,7 +56,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
         console.log('GHT', year, proposals.length, votes.length)
 
-        const mainVal = await getHierarchyTotals(proposals, votes, nationPaths)
+        const mainVal = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
         if (mainVal) {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
