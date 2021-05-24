@@ -1,3 +1,4 @@
+const fs = require('fs')
 const { uniq, mean } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
@@ -395,7 +396,21 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
     }
     return { proposals, votes }
 }
+
+/**
+ * Get the all year thefts
+ * @param {string} nation 
+ */
 const getPastYearThefts = async (nation = 'USA') => {
+    const theftFile = `${exportsDir}/calc_year_data/${nation}/past_year_thefts.json`
+    const syncInprogress = await cacheServer.getAsync('SYNC_INPROGRESS')
+    if (fs.existsSync(theftFile) && !syncInprogress) {
+        return JSON.parse(fs.readFileSync(theftFile));
+    }
+    return await calculatePastYearThefts(nation)
+}
+
+const calculatePastYearThefts = async (nation = 'USA') => {
     let yearTh = []
 
 
@@ -502,11 +517,12 @@ const getPastYearThefts = async (nation = 'USA') => {
     // save in cache
     cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
     await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
-
+    return yearTh
 }
 
 module.exports = {
     getPastYearThefts,
+    calculatePastYearThefts,
     manipulatePaths,
     getHierarchyTotals,
     doPathRollUpsForYear,
