@@ -5,7 +5,7 @@ const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
-const { getPastYearThefts } = require('../services/calcEngineServices/calcLogic')
+const { calculatePastYearThefts } = require('../services/calcEngineServices/calcLogic')
 
 const connection = new IORedis()
 
@@ -25,7 +25,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const cachedPid = await lastExportedPid()
     const cachedVid = await lastExportedVid()
 
-    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing}`)
+    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing} (${isSyncing})`)
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
     console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)
@@ -50,7 +50,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     if (isDatainCache && !isSyncing && !pastThefts) {
       console.log('Past year thefts missing. Initiated...')
       // when all year data got sycned get past year thefts
-      await getPastYearThefts()
+      await calculatePastYearThefts()
     }
     /**
      * If sync is complete and full report is not present.
@@ -66,7 +66,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log('*****HEARTBEAT Report*****')
 
     // Print heatbeat in log file
-    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
+    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
     createLog(WATCHER_LOG_PATH, logContent)
 
   } catch (e) {

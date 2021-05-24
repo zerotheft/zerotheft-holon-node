@@ -2,6 +2,7 @@ const fs = require("fs")
 const { get, isEmpty } = require('lodash')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
+const { getPastYearThefts } = require('./calcLogic')
 const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
 const { cacheServer } = require('../redisService');
@@ -288,11 +289,8 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
                 }
             })
             // check cache for past 
-            let yearTh = []
-            const pastThefts = await cacheServer.hgetallAsync('PAST_THEFTS')
-            if (pastThefts) yearTh = JSON.parse(pastThefts[nation])
+            let yearTh = await getPastYearThefts(nation)
             if (yearTh.length == 0) throw new Error('no past thefts data in cache')
-
             let minYr, maxYr
             let totalTh = 0
             for (i = 0; i < yearTh.length; i++) {

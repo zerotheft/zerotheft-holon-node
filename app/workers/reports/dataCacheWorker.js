@@ -25,7 +25,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('PAST_THEFTS')
     }
-    for (let year = firstPropYear; year <= defaultPropYear; year++) {
+    for (let year = defaultPropYear; year >= firstPropYear; year--) {
         const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
         if (!isYearSynced || !!job.data.reSync)
             await singleYearCaching(job.data.nation, year)
@@ -56,7 +56,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
         console.log('GHT', year, proposals.length, votes.length)
 
-        const mainVal = await getHierarchyTotals(proposals, votes, nationPaths)
+        const mainVal = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
         if (mainVal) {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
