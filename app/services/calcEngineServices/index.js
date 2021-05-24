@@ -2,11 +2,12 @@ const fs = require("fs")
 const { get, isEmpty } = require('lodash')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
-const { writeFile } = require('../../common')
+const { getPastYearThefts } = require('./calcLogic')
+const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
 const { cacheServer } = require('../redisService');
 const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
-const { generateReport, generatePDFReport, generatePDFMultiReport, generatePDF, mergePdfForNation, generatePageNumberFooter, renameHTMLFile, renamePDFFile, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
+const { generatePDFReport, generatePDFMultiReport, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
 const { defaultPropYear, firstPropYear, population } = require('./constants')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
@@ -67,6 +68,7 @@ const allYearCachedData = async (nation) => {
     }
     return allYearData
 }
+
 const multiIssuesReport = async (path, fromWorker = false, year) => {
     // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
     const fileName = `${year}_${path.replace(/\//g, '-')}`
@@ -108,6 +110,48 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
         // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
         // TODO: uncomment this
         await deleteJsonFile(fileName)
+    }
+}
+const multiIssuesFullReport = async (path, fromWorker = false, year) => {
+    // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
+    try {
+        const fullFileName = `full_${year}_${path.replace(/\//g, '-')}`
+        const filePath = `${getReportPath()}reports/multiIssueReport`
+        const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
+        if (fromWorker || !reportExists) {
+            await multiIssuesReport(path, fromWorker, year)
+            await createUmbrellaFullReport(year, path, fullFileName)
+            return { report: `${fullFileName}.pdf` }
+        } else if (reportExists) {
+            return { report: `${fullFileName}.pdf` }
+        } else {
+            return { message: 'Full Umbrella Report Generation will take time. Come back later.' }
+        }
+    } catch (e) {
+        // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${path} with Exception: ${e.message}`)
+        // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${path} with Exception: ${e.message}`)
+        return { error: e.message }
+    }
+}
+
+const createUmbrellaFullReport = async (year, path, fullFileName) => {
+    const nation = path.split('/')[0]
+    const nationPaths = await pathsByNation(nation)
+    delete (nationPaths['Alias'])
+
+    let nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
+    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
+    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
+    let umbrellaPaths = await getUmbrellaPaths()
+    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+
+    let pdfsSequence = await pdfPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
+
+    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
+        pdfsSequence.unshift(reportPath)
+        await mergePdfLatex(fullFileName, pdfsSequence)
+    } else {
+        return { message: 'Report not present' }
     }
 }
 
@@ -222,7 +266,9 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
                     agg[`${nation}/${path}`] = totals
                 }
             })
+            // check cache for past 
             let yearTh = await getPastYearThefts(nation)
+            if (yearTh.length == 0) throw new Error('no past thefts data in cache')
             let minYr, maxYr
             let totalTh = 0
             for (i = 0; i < yearTh.length; i++) {
@@ -242,8 +288,21 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
             agg['info']['each_year'] = nationData['_totals']['theft'] / population(year)
+            agg['info']['population'] = population(year)
             agg['info']['many_years'] = totalTh
+            agg['info']['max_year'] = maxYr
+            agg['info']['min_year'] = minYr
             agg['info']['between_years'] = (maxYr - minYr) + 1
+
+            //log the aggregated data in file inside exports directory
+            const exportFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
+            let exportFileData = {}
+            if (fs.existsSync(exportFile)) {
+                exportFileData = JSON.parse(fs.readFileSync(exportFile))
+            }
+            exportFileData['info'] = agg['info']
+            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, exportFileData)
+
             return agg;
         }
         else {
@@ -259,112 +318,7 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
 }
 
 
-const getPastYearThefts = async (nation) => {
-    let sumTotals = {}
-    for (i = defaultPropYear; i > firstPropYear; i--) {
-        let tempValue = await cacheServer.hgetallAsync(`${i}`)
-        if (get(tempValue, nation)) {
-            sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
-        }
-    }
-    let yearTh = []
-    // simple estimator - use the prior theft until it changes
-    let priorTheft
-    let firstTheft
-    for (year in sumTotals) {
-        let p = sumTotals[year]
 
-        let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
-        if (!p || get(p, 'missing')) {
-            yearTh.push(yd)
-            continue
-        } else if (p['_totals']['legit']) {
-            yd['Determined By'] = 'voting'
-            yd['theft'] = p['_totals']['theft']
-        } else { // not legit
-            yd['Determined By'] = 'incomplete voting'
-            yd['theft'] = p['_totals']['theft']
-        }
-
-        if (!firstTheft) {
-            firstTheft = yd['theft']
-        } else {
-            firstTheft = firstTheft
-        }
-        priorTheft = yd['theft']
-
-        yearTh.push(yd)
-    }
-
-    // second pass - back-fill any early years with firstTheft estimate
-    for (yd in yearTh) {
-        if (!yd['theft']) {
-            yd['theft'] = firstTheft
-        }
-    }
-
-    // third pass - step-estimate any theft between two legit/incomplete years
-    let lastTh
-    let lastThIdx = -1
-    let preStep
-    let preIdx
-    let postStep
-    let postIdx
-    yearTh.forEach((yd, idx) => {
-        if (yd['Determined By'] === 'voting' || yd['Determined By'] === 'incomplete voting') {
-            // if we had a legit in the past, back-fill all estimation cases between
-            let step
-            if (lastTh && lastThIdx < (idx - 1)) {
-                let diff = yd['theft'] - lastTh
-                let gap = idx - lastThIdx
-                step = diff / gap
-
-                for (let backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
-                    lastTh += step
-                    yearTh[backIdx]['theft'] = lastTh
-                }
-            } else if (lastTh && lastThIdx == (idx - 1)) {
-                step = yd['theft'] - lastTh
-            }
-            // prepare for fourth/fifth passes
-            if (step) {
-                if (!preStep && idx > 0) {
-                    preStep = step
-                    preIdx = idx
-                }
-                postStep = step
-                postIdx = idx
-            }
-            lastTh = yd['theft']
-            lastThIdx = idx
-        }
-    })
-    // fourth pass - apply preStep to years before first not missing
-    if (preIdx) {
-        lastTh = yearTh[preIdx]['theft']
-        for (let pi = preIdx - 1; pi < -1; pi--) {
-            lastTh -= preStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-            } else {
-                yearTh[pi]['theft'] = lastTh
-            }
-        }
-    }
-    // fifth pass - apply postStep to years after last not missing
-    if (postIdx && postIdx < yearTh.length - 1) {
-        lastTh = yearTh[postIdx]['theft']
-        for (let pi = postIdx + 1; pi < yearTh.length; pi++) {
-            lastTh += postStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-            } else {
-                yearTh[pi]['theft'] = lastTh
-            }
-        }
-    }
-    return yearTh
-}
 
 module.exports = {
     allYearCachedData,
@@ -372,4 +326,5 @@ module.exports = {
     multiIssuesReport,
     theftInfo,
     nationReport,
+    multiIssuesFullReport,
 }

@@ -3,7 +3,7 @@ const PromisePool = require('@supercharge/promise-pool')
 const IORedis = require('ioredis')
 const { allNations, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { cacheServer } = require('../../services/redisService')
-const { singleIssueReport, multiIssuesReport, nationReport } = require('../../services/calcEngineServices')
+const { singleIssueReport, multiIssuesFullReport, nationReport } = require('../../services/calcEngineServices')
 const { createLog, FULL_REPORT_PATH } = require('../../services/LogInfoServices')
 
 const connection = new IORedis()
@@ -99,8 +99,8 @@ const runPathReport = async (path, currPath, umbrellaPaths, parentPaths = []) =>
                         parentPaths.push(nextPath)
                     } else {
                         for (let year = lastYear; year > lastYear - 20; year--) {
-                            // console.log(`multiIssuesReport onging for ${nextPath}(year ${year})`)
-                            await multiIssuesReport(nextPath, true, year)
+                            // console.log(`multiIssuesFullReport onging for ${nextPath}(year ${year})`)
+                            await multiIssuesFullReport(nextPath, true, year)
                         }
                     }
                     await runPathReport(path[key], nextPath, umbrellaPaths, parentPaths)

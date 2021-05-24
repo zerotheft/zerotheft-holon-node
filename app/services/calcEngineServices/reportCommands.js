@@ -46,9 +46,9 @@ const generateReportData = (fileName, year) => {
     const votes = getPathYearVotes(props)
     const vt = getPathVoteTotals(summaryTotals[year], path)
     const voteTotals = {
-        'for': vt['_totals']['for'],
-        'against': vt['_totals']['against'],
-        'props': vt['props']
+        'for': get(vt, '_totals.for', 0),
+        'against': get(vt, '_totals.against', 0),
+        'props': get(vt, 'props', {})
     }
 
     const pathSummary = analyticsPathSummary(voteTotals)
@@ -138,16 +138,16 @@ const generateReportData = (fileName, year) => {
 
 function latexSpecialChars(detail) {
     const characterToSkip = {
+        "{": "\\{",
+        "}": "\\}",
         "#": "\\#",
         "\\$": "\\$",
         "%": "\\%",
         "&": "\\&",
         "~": "\\~{}",
         "_": "\\_",
-        "^": "\\^{}",
-        "{": "\\{",
-        "}": "\\}",
-        "\n": "\n\\break{}",
+        "\\^": "\\^{}",
+        "\n": "\n\\newline{}",
     };
 
     Object.keys(characterToSkip).forEach((key) => {
