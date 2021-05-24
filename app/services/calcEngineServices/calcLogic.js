@@ -213,13 +213,6 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
                 'props': pvty['props']
             }
             ytots['theft'] += theft
-            ytots['all_theft_amts']['_total'] += theft
-            ytots['all_theft_amts']['_amts'].push(theft)
-            if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
-                ytots['umbrella_theft_amts']['_total'] += theft
-                ytots['umbrella_theft_amts']['_amts'].push(theft)
-            }
-
         }
     }
     return vtby
@@ -339,6 +332,14 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
                 totalsData['reason'] = `umbrella is not legit and roll-up is legit`
             } else { // otherwise, use the umbrella total, and store the children sum as secondary
                 secondaryData = childrenSum
+            }
+        }
+        if (totalsData['theft'] > 0) {
+            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+            if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
+                yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
+                yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
             }
         }
 
