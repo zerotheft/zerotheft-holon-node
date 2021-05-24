@@ -352,6 +352,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
     }
     yearData['_totals']['legit'] = allLegit
+    yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
     return yearData
 }
 

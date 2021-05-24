@@ -66,7 +66,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log('*****HEARTBEAT Report*****')
 
     // Print heatbeat in log file
-    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
+    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
     createLog(WATCHER_LOG_PATH, logContent)
 
   } catch (e) {
