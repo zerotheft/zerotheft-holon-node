@@ -25,7 +25,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const cachedPid = await lastExportedPid()
     const cachedVid = await lastExportedVid()
 
-    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing}`)
+    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing} (${isSyncing})`)
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
     console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)

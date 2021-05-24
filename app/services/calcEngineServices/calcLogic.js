@@ -15,6 +15,7 @@ for (let yr = firstPropYear; yr <= defaultPropYear; yr++) {
     yearCacheData.push(`YEAR_${yr}_SYNCED`)
 }
 
+
 const checkAllYearDataSynced = async () => {
     for (var j = 0; j < yearCacheData.length; j++) {
         const synced = await cacheServer.getAsync(yearCacheData[j])
@@ -120,7 +121,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
     return pvt
 }
 
-const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
+const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
     if (pathH && pathH.leaf)
         return
     if (pathH && pathH.leaf)
@@ -142,7 +143,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
         vtby = {}
         // set up yearly totals
         for (let year = firstPropYear; year < defaultPropYear + 1; year++) {
-            vtby[`${year}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0 }, 'paths': {} }
+            vtby[`${year}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         }
 
     }
@@ -158,7 +159,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
         let isLeaf = false
         if (path) {
             // dive into children before doing any processing
-            await getHierarchyTotals(proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
+            await getHierarchyTotals(umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
         } else {
             path = {}
             isLeaf = true
@@ -212,7 +213,6 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
                 'props': pvty['props']
             }
             ytots['theft'] += theft
-
         }
     }
     return vtby
@@ -332,6 +332,14 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
                 totalsData['reason'] = `umbrella is not legit and roll-up is legit`
             } else { // otherwise, use the umbrella total, and store the children sum as secondary
                 secondaryData = childrenSum
+            }
+        }
+        if (totalsData['theft'] > 0) {
+            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+            if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
+                yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
+                yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
             }
         }
 
