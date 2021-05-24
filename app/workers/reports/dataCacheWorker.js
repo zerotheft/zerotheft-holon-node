@@ -25,7 +25,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('PAST_THEFTS')
     }
-    for (let year = firstPropYear; year <= defaultPropYear; year++) {
+    for (let year = defaultPropYear; year >= firstPropYear; year--) {
         const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
         if (!isYearSynced || !!job.data.reSync)
             await singleYearCaching(job.data.nation, year)

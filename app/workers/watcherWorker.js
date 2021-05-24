@@ -5,7 +5,7 @@ const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
-const { getPastYearThefts } = require('../services/calcEngineServices/calcLogic')
+const { calculatePastYearThefts } = require('../services/calcEngineServices/calcLogic')
 
 const connection = new IORedis()
 
@@ -50,7 +50,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     if (isDatainCache && !isSyncing && !pastThefts) {
       console.log('Past year thefts missing. Initiated...')
       // when all year data got sycned get past year thefts
-      await getPastYearThefts()
+      await calculatePastYearThefts()
     }
     /**
      * If sync is complete and full report is not present.
