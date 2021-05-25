@@ -61,7 +61,6 @@ const scanDataWorker = new Worker('ScanData', async job => {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
             doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
-
             cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
             // Save yearData in files
             const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
