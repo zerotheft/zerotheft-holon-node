@@ -129,7 +129,7 @@ const generateReportData = (fileName, year) => {
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = yaml.safeDump(leadingProp['detail'], { skipInvalid: true })
+    pdfData.leadingProposalDetail = yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |')
     return pdfData
 }
 
