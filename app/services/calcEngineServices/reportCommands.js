@@ -131,31 +131,8 @@ const generateReportData = (fileName, year) => {
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = latexSpecialChars(yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |'))
-
+    pdfData.leadingProposalDetail = yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |')
     return pdfData
-}
-
-function latexSpecialChars(detail) {
-    const characterToSkip = {
-        "{": "\\{",
-        "}": "\\}",
-        "#": "\\#",
-        "\\$": "\\$",
-        "%": "\\%",
-        "&": "\\&",
-        "~": "\\~{}",
-        "_": "\\_",
-        "\\^": "\\^{}",
-        "\n": "\n\\newline{}",
-    };
-
-    Object.keys(characterToSkip).forEach((key) => {
-        const regex = new RegExp(key, 'g')
-        detail = detail.replace(regex, characterToSkip[key])
-    })
-
-    return detail
 }
 
 const prepareBellCurveData = (propThefts, propVotes) => {
@@ -260,8 +237,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(reportPDF)
-        const pdf = latex(input)
-
+        const pdf = latex(input, {args: ['-shell-escape']})
         pdf.pipe(output)
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)

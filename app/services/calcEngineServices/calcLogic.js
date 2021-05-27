@@ -416,10 +416,10 @@ const getPastYearThefts = async (nation = 'USA') => {
     if (fs.existsSync(theftFile) && !syncInprogress) {
         return JSON.parse(fs.readFileSync(theftFile));
     }
-    return await calculatePastYearThefts(nation)
+    return await calculatePastYearThefts(nation, !!syncInprogress)
 }
 
-const calculatePastYearThefts = async (nation = 'USA') => {
+const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     let yearTh = []
 
 
@@ -524,8 +524,10 @@ const calculatePastYearThefts = async (nation = 'USA') => {
         }
     }
     // save in cache
-    cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
-    await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
+    if (!isSyncing) {
+        cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
+        await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
+    }
     return yearTh
 }
 
