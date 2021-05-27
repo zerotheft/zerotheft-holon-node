@@ -55,16 +55,16 @@ const theftAmountAbbr = (amt, pos) => {
     }
 
     let suffix = ''
-    if (amt > Math.pow(10, 12)) {
+    if (amt >= Math.pow(10, 12)) {
         amt /= Math.pow(10, 12)
         suffix = 'T'
-    } else if (amt > Math.pow(10, 9)) {
+    } else if (amt >= Math.pow(10, 9)) {
         amt /= Math.pow(10, 9)
         suffix = 'B'
-    } else if (amt > Math.pow(10, 6)) {
+    } else if (amt >= Math.pow(10, 6)) {
         amt /= Math.pow(10, 6)
         suffix = 'M'
-    } else if (amt > Math.pow(10, 3)) {
+    } else if (amt >= Math.pow(10, 3)) {
         amt /= Math.pow(10, 3)
         suffix = 'K'
     }
