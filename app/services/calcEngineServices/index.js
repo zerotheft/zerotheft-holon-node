@@ -11,11 +11,14 @@ const { generatePDFReport, generatePDFMultiReport, deleteJsonFile, mergePdfLatex
 const { defaultPropYear, firstPropYear, population } = require('./constants')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
+const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
+const singleIssueReportPath = `${getReportPath()}reports/ztReport`
+
 const singleIssueReport = async (leafPath, fromWorker = false, year) => {
     createLog(SINGLE_REPORT_PATH, 'Single report generation initiation......', leafPath)
     const fileName = `${year}_${leafPath.replace(/\//g, '-')}`
     try {
-        const filePath = `${getReportPath()}reports/ztReport`
+        const filePath = singleIssueReportPath
         if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
             const nation = leafPath.split('/')[0]
             const nationPaths = await pathsByNation(nation)
@@ -43,7 +46,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
             return { message: 'Issue not present' }
         }
     } catch (e) {
-        console.log(e)
+        console.log(`year: ${year} and path: ${path}`, e)
         createLog(SINGLE_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, leafPath)
         createLog(ERROR_PATH, `calcEngineServices=>singleIssueReport()::Exceptions in single report generation for ${leafPath} with Exception: ${e.message}`)
         return { error: e.message }
@@ -60,7 +63,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 const allYearCachedData = async (nation) => {
     createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
     let allYearData = {}
-    for (i = defaultPropYear; i > firstPropYear; i--) {
+    for (i = defaultPropYear; i >= firstPropYear; i--) {
         let tempValue = await cacheServer.hgetallAsync(`${i}`)
         if (get(tempValue, nation)) {
             allYearData[`${i}`] = JSON.parse(get(tempValue, nation))
@@ -69,12 +72,24 @@ const allYearCachedData = async (nation) => {
     return allYearData
 }
 
+/*
+* fetch single year data from cache
+*/
+const singleYearCachedData = async (nation, year) => {
+    let tempValue = await cacheServer.hgetallAsync(year)
+    if (get(tempValue, nation)) {
+        return JSON.parse(get(tempValue, nation))
+    }
+
+    throw new Error(`Cached data not found for year ${year}`)
+}
+
 const multiIssuesReport = async (path, fromWorker = false, year) => {
     // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
     const fileName = `${year}_${path.replace(/\//g, '-')}`
 
     try {
-        const filePath = `${getReportPath()}reports/multiIssueReport`
+        const filePath = multiIssueReportPath
         if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
             const nation = path.split('/')[0]
             const nationPaths = await pathsByNation(nation)
@@ -86,7 +101,8 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
 
             if (!isEmpty(allYearData)) {
                 const umbrellaPaths = await getUmbrellaPaths()
-                const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
+                const singleYearData = await singleYearCachedData(nation, year)
+                const pathsJson = { yearData: allYearData, singleYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths, pageLink: convertStringToHash(`full_${nation}_${year}`), umbrellaPaths: umbrellaPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
@@ -104,7 +120,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
     } catch (e) {
         // createLog(MULTI_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, path)
         // createLog(ERROR_PATH, `calcEngineServices=>multiIssuesReport()::Exceptions in single report generation for ${path} with Exception: ${e.message}`)
-        console.log(e)
+        console.log(`year: ${year} and path: ${path}`, e)
         return { error: e.message }
     } finally {
         // createLog(MULTI_REPORT_PATH, `Deleting json file => ${fileName}`, path)
@@ -116,7 +132,7 @@ const multiIssuesFullReport = async (path, fromWorker = false, year) => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
     try {
         const fullFileName = `full_${year}_${path.replace(/\//g, '-')}`
-        const filePath = `${getReportPath()}reports/multiIssueReport`
+        const filePath = multiIssueReportPath
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
             await multiIssuesReport(path, fromWorker, year)
@@ -140,7 +156,7 @@ const createUmbrellaFullReport = async (year, path, fullFileName) => {
     delete (nationPaths['Alias'])
 
     let nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
-    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
+    const reportPath = `${multiIssueReportPath}/${nationTocReportName}.pdf`
     // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
     let umbrellaPaths = await getUmbrellaPaths()
     umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
@@ -166,7 +182,7 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
     try {
         const fullFileName = `full_${year}_${nation}`
-        const filePath = `${getReportPath()}reports/multiIssueReport`
+        const filePath = multiIssueReportPath
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
             await multiIssuesReport(nation, fromWorker, year)
@@ -184,16 +200,22 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
     }
 }
 
+const getAllMultiReportPDFs = (nation, year) => {
+    let multiReports = []
+    fs.readdirSync(`${multiIssueReportPath}/`).forEach(file => {
+        if (/^full_2020_USA[^.]+.pdf$/.test(file)) multiReports.push(`${multiIssueReportPath}/${file}`)
+    })
+
+    return multiReports
+}
+
 const createNationFullReport = async (year, nation, fullFileName) => {
     const nationPaths = await pathsByNation(nation)
     delete (nationPaths['Alias'])
     let nationTocReportName = `${year}_${nation}`
-    const reportPath = `${getReportPath()}reports/multiIssueReport/${nationTocReportName}.pdf`
-    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
-    let umbrellaPaths = await getUmbrellaPaths()
-    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+    const reportPath = `${multiIssueReportPath}/${nationTocReportName}.pdf`
 
-    let pdfsSequence = await pdfPathTraverse(nationPaths[nation], nation, [], year, umbrellaPaths)
+    let pdfsSequence = getAllMultiReportPDFs(nation, year)
 
     if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
         pdfsSequence.unshift(reportPath)
@@ -222,13 +244,13 @@ const pdfPathTraverse = async (path, currPath, pdfsSequence, year, umbrellaPaths
             let nextPath = `${currPath}/${key}`.replace(/\//g, '-')
             let fileName = `${year}_${nextPath}`
             if (pathClone[key]['leaf']) {
-                let filePath = `${getReportPath()}reports/ztReport`
+                let filePath = singleIssueReportPath
                 if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
                     pdfsSequence.push(`${filePath}/${fileName}.pdf`)
                 }
             } else {
                 if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
-                    let filePath = `${getReportPath()}reports/ztReport`
+                    let filePath = singleIssueReportPath
                     if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
                         pdfsSequence.push(`${filePath}/${fileName}.pdf`)
                     }
@@ -316,9 +338,6 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
         return { error: e.message }
     }
 }
-
-
-
 
 module.exports = {
     allYearCachedData,

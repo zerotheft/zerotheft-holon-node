@@ -4,6 +4,8 @@
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
 \usepackage{adjustbox}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
 \usepackage[colorlinks,linkcolor=green!50!black]{hyperref}
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
@@ -172,5 +174,16 @@
 }
 
 \noindent
+  \begin{minted}[%
+    breaklines,
+    mathescape,
+    numbersep=5pt,
+    numbersep=5pt,
+    xleftmargin=0pt,
+    xrightmargin=0pt,
+  gobble=0,
+  linenos
+  ]{yaml}
 --leadingProposalDetail--
+  \end{minted}
 \end{document}
