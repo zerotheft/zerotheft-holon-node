@@ -1,7 +1,9 @@
+const fs = require('fs')
 const { uniq, mean } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
+const { exportsDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
 const { defaultPropYear, firstPropYear } = require('./constants')
 // let proposals = []
@@ -12,6 +14,7 @@ let yearCacheData = []
 for (let yr = firstPropYear; yr <= defaultPropYear; yr++) {
     yearCacheData.push(`YEAR_${yr}_SYNCED`)
 }
+
 
 const checkAllYearDataSynced = async () => {
     for (var j = 0; j < yearCacheData.length; j++) {
@@ -118,7 +121,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
     return pvt
 }
 
-const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
+const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
     if (pathH && pathH.leaf)
         return
     if (pathH && pathH.leaf)
@@ -140,7 +143,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
         vtby = {}
         // set up yearly totals
         for (let year = firstPropYear; year < defaultPropYear + 1; year++) {
-            vtby[`${year}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0 }, 'paths': {} }
+            vtby[`${year}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         }
 
     }
@@ -156,7 +159,7 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
         let isLeaf = false
         if (path) {
             // dive into children before doing any processing
-            await getHierarchyTotals(proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
+            await getHierarchyTotals(umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
         } else {
             path = {}
             isLeaf = true
@@ -210,7 +213,6 @@ const getHierarchyTotals = async (proposals, votes, pathHierarchy, pathH = null,
                 'props': pvty['props']
             }
             ytots['theft'] += theft
-
         }
     }
     return vtby
@@ -332,6 +334,14 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
                 secondaryData = childrenSum
             }
         }
+        if (totalsData['theft'] > 0) {
+            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+            if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
+                yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
+                yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
+            }
+        }
 
         yearData['paths'][fullPath]['_totals'] = totalsData
         if (!!secondaryData) {
@@ -342,6 +352,8 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
     }
     yearData['_totals']['legit'] = allLegit
+    if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+        yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
     return yearData
 }
 
@@ -395,9 +407,134 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
     return { proposals, votes }
 }
 
+/**
+ * Get the all year thefts
+ * @param {string} nation 
+ */
+const getPastYearThefts = async (nation = 'USA') => {
+    const theftFile = `${exportsDir}/calc_year_data/${nation}/past_year_thefts.json`
+    const syncInprogress = await cacheServer.getAsync('SYNC_INPROGRESS')
+    if (fs.existsSync(theftFile) && !syncInprogress) {
+        return JSON.parse(fs.readFileSync(theftFile));
+    }
+    return await calculatePastYearThefts(nation, !!syncInprogress)
+}
+
+const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
+    let yearTh = []
+
+
+    let sumTotals = {}
+    for (i = defaultPropYear; i >= firstPropYear; i--) {
+        let tempValue = await cacheServer.hgetallAsync(`${i}`)
+        if (get(tempValue, nation)) {
+            sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
+        }
+    }
+    // simple estimator - use the prior theft until it changes
+    let priorTheft
+    let firstTheft
+    for (year in sumTotals) {
+        let p = sumTotals[year]
+
+        let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
+        if (!p || get(p, 'missing')) {
+            yearTh.push(yd)
+            continue
+        } else if (p['_totals']['legit']) {
+            yd['Determined By'] = 'voting'
+            yd['theft'] = p['_totals']['theft']
+        } else { // not legit
+            yd['Determined By'] = 'incomplete voting'
+            yd['theft'] = p['_totals']['theft']
+        }
+
+        if (!firstTheft) {
+            firstTheft = yd['theft']
+        }
+        priorTheft = yd['theft']
+
+        yearTh.push(yd)
+    }
+
+    // second pass - back-fill any early years with firstTheft estimate
+    for (yd in yearTh) {
+        if (!yd['theft']) {
+            yd['theft'] = firstTheft
+        }
+    }
+
+    // third pass - step-estimate any theft between two legit/incomplete years
+    let lastTh
+    let lastThIdx = -1
+    let preStep
+    let preIdx
+    let postStep
+    let postIdx
+    yearTh.forEach((yd, idx) => {
+        if (yd['Determined By'] === 'voting' || yd['Determined By'] === 'incomplete voting') {
+            // if we had a legit in the past, back-fill all estimation cases between
+            let step
+            if (lastTh && lastThIdx < (idx - 1)) {
+                let diff = yd['theft'] - lastTh
+                let gap = idx - lastThIdx
+                step = diff / gap
+
+                for (let backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
+                    lastTh += step
+                    yearTh[backIdx]['theft'] = lastTh
+                }
+            } else if (lastTh && lastThIdx == (idx - 1)) {
+                step = yd['theft'] - lastTh
+            }
+            // prepare for fourth/fifth passes
+            if (step) {
+                if (!preStep && idx > 0) {
+                    preStep = step
+                    preIdx = idx
+                }
+                postStep = step
+                postIdx = idx
+            }
+            lastTh = yd['theft']
+            lastThIdx = idx
+        }
+    })
+    // fourth pass - apply preStep to years before first not missing
+    if (preIdx) {
+        lastTh = yearTh[preIdx]['theft']
+        for (let pi = preIdx - 1; pi < -1; pi--) {
+            lastTh -= preStep
+            if (lastTh <= 0) {
+                yearTh[pi]['theft'] = 0
+            } else {
+                yearTh[pi]['theft'] = lastTh
+            }
+        }
+    }
+    // fifth pass - apply postStep to years after last not missing
+    if (postIdx && postIdx < yearTh.length - 1) {
+        lastTh = yearTh[postIdx]['theft']
+        for (let pi = postIdx + 1; pi < yearTh.length; pi++) {
+            lastTh += postStep
+            if (lastTh <= 0) {
+                yearTh[pi]['theft'] = 0
+            } else {
+                yearTh[pi]['theft'] = lastTh
+            }
+        }
+    }
+    // save in cache
+    if (!isSyncing) {
+        cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
+        await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
+    }
+    return yearTh
+}
 
 module.exports = {
-
+    getPastYearThefts,
+    calculatePastYearThefts,
     manipulatePaths,
     getHierarchyTotals,
     doPathRollUpsForYear,

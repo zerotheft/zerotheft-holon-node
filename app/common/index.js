@@ -22,6 +22,18 @@ const createDir = async (dir) => {
         fs.mkdirSync(dir, { recursive: true });
     }
 }
+
+/**
+ * Saves the value in log file after creating directory
+ * @param {string} dir 
+ * @param {string} file 
+ * @param {object} value 
+ */
+const createAndWrite = async (dir, file, value) => {
+    await createDir(dir)
+    await writeFile(`${dir}/${file}`, value)
+}
+
 const respondWithPDF = (fileName, res) => {
     const file = fs.createReadStream(fileName)
     const stat = fs.statSync(fileName)
@@ -71,6 +83,7 @@ module.exports = {
     exportsDir,
     writeFile,
     createDir,
+    createAndWrite,
     respondWithPDF,
     readFromIPFS,
     convertUnixValToDate

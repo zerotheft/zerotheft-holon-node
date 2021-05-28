@@ -7,6 +7,7 @@ var path = require('path')
 const app = express()
 const routes = require('./app/routes')
 const { watcherInit } = require('./app/workers/watcherWorker')
+const { cleanupInit } = require('./app/workers/cleanupWorker')
 const { allDataExport } = require('./app/workers/exportDataWorker')
 const { allDataCache } = require('./app/workers/reports/dataCacheWorker')
 var Honeybadger = require('honeybadger')
@@ -62,17 +63,21 @@ app.get('*', function (req, res) {
 //allReportWorker kicks in every 1 hour cron job that generates reports if all path data has been synced successfully
 // createLog(MAIN_PATH, 'All Report Worker running in 3s')
 // setTimeout(() => allReportWorker(), 3000)
-//Initiated Heartbeat watcher
+//Initiated Heartbeat watcher. Runs every 5 min
 createLog(MAIN_PATH, 'Heartbeat running in 3s')
 setTimeout(() => watcherInit(), 3000)
 
-//allDataExport runs background job once a day(midnight) and exports data from the blockchain and saves in files
+//allDataExport runs background job once a day(midnight) and exports data from the blockchain and saves in files.
 createLog(MAIN_PATH, 'All Data Export running in 10s')
 setTimeout(() => allDataExport(), 10000)
 
-//allDataCache runs background job and initiate caching for all years one by one. Also repeat every 2 hrs
+//allDataCache runs background job and initiate caching for all years one by one. 
 createLog(MAIN_PATH, 'All Year Caching running in 5s')
 setTimeout(() => allDataCache(), 5000)
+
+//Cleanup worker cron initiated for every Friday @ 23:00
+createLog(MAIN_PATH, 'cleanup worker initiated')
+setTimeout(() => cleanupInit(), 5000)
 
 const args = minimist(process.argv.slice(2))
 const port = args.port || PORT || 3000

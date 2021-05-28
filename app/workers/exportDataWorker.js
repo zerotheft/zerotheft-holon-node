@@ -78,18 +78,20 @@ exportWorker.on("failed", async (job, returnvalue) => {
 
 
 
-
+/**
+ * Runs worker every 10pm daily and exports the blockchain data.
+ */
 const allDataExport = async () => {
   try {
     const proposalExport = await cacheServer.getAsync('PROPOSALS_EXPORT_INPROGRESS')
     const votersExport = await cacheServer.getAsync('VOTERS_EXPORT_INPROGRESS')
     const votesExport = await cacheServer.getAsync('VOTES_EXPORT_INPROGRESS')
     if (!proposalExport)
-      await exportDataQueue.add('proposalsExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+      await exportDataQueue.add('proposalsExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 22 * * *' } })
     if (!votersExport)
-      await exportDataQueue.add('votersExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+      await exportDataQueue.add('votersExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 22 * * *' } })
     if (!votesExport)
-      await exportDataQueue.add('votesExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 0 * * *' } })
+      await exportDataQueue.add('votesExport', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 22 * * *' } })
   } catch (e) {
     console.log(e)
     createLog(EXPORT_LOG_PATH, `===>allDataExport ${e}`)

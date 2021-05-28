@@ -45,10 +45,12 @@ const generateReportData = (fileName, year) => {
     const props = getPathYearProposals(summaryTotals, path, year)
     const votes = getPathYearVotes(props)
     const vt = getPathVoteTotals(summaryTotals[year], path)
+    if (vt['missing']) throw new Error(`generateReportData: Proposals not available for path: ${path} and year ${year}`);
+
     const voteTotals = {
-        'for': vt['_totals']['for'],
-        'against': vt['_totals']['against'],
-        'props': vt['props']
+        'for': get(vt, '_totals.for', 0),
+        'against': get(vt, '_totals.against', 0),
+        'props': get(vt, 'props', {})
     }
 
     const pathSummary = analyticsPathSummary(voteTotals)
@@ -124,38 +126,13 @@ const generateReportData = (fileName, year) => {
     })
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
-
     const leadingProp = get(pathSummary, 'leading_proposal')
-
 
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = latexSpecialChars(yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |'))
-
+    pdfData.leadingProposalDetail = yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |')
     return pdfData
-}
-
-function latexSpecialChars(detail) {
-    const characterToSkip = {
-        "#": "\\#",
-        "\\$": "\\$",
-        "%": "\\%",
-        "&": "\\&",
-        "~": "\\~{}",
-        "_": "\\_",
-        "^": "\\^{}",
-        "{": "\\{",
-        "}": "\\}",
-        "\n": "\n\\break{}",
-    };
-
-    Object.keys(characterToSkip).forEach((key) => {
-        const regex = new RegExp(key, 'g')
-        detail = detail.replace(regex, characterToSkip[key])
-    })
-
-    return detail
 }
 
 const prepareBellCurveData = (propThefts, propVotes) => {
@@ -260,8 +237,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(reportPDF)
-        const pdf = latex(input)
-
+        const pdf = latex(input, {args: ['-shell-escape']})
         pdf.pipe(output)
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
@@ -343,7 +319,7 @@ const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') 
 }
 
 const generateMultiReportData = (fileName, year) => {
-    const { summaryTotals, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
+    const { summaryTotals, singleYearData, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
@@ -364,10 +340,10 @@ const generateMultiReportData = (fileName, year) => {
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
-    const yearPaths = summaryTotals[year]['paths']
+    const yearPaths = singleYearData['paths']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
-    else if (path === nation) sumTotals = summaryTotals[year]['_totals']
+    else if (path === nation) sumTotals = singleYearData['_totals']
 
     let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
@@ -382,12 +358,12 @@ const generateMultiReportData = (fileName, year) => {
         })
     }
 
-    const { pageNo: resultPageNo, summaryTotalsPaths } = assignPageNumbers(summaryTotals[year]['paths'], paths, '', pageNo)
-    summaryTotals[year]['paths'] = summaryTotalsPaths
+    const { pageNo: resultPageNo, summaryTotalsPaths } = assignPageNumbers(singleYearData['paths'], paths, '', pageNo)
+    singleYearData['paths'] = summaryTotalsPaths
 
     const subPathTotals = {}
     subPathsFlat.forEach((p) => {
-        if (p in summaryTotals[year]['paths']) subPathTotals[p] = summaryTotals[year]['paths'][p]['_totals']
+        if (p in singleYearData['paths']) subPathTotals[p] = singleYearData['paths'][p]['_totals']
     })
 
     const pathSummary = analyticsPathSummary(sumTotals, true)
@@ -559,7 +535,7 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
             reject({ message: err })
-            fs.unlinkSync(reportPDF)
+            fs.unlinkSync(mergedLatexPDF)
             fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {
