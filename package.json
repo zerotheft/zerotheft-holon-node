@@ -57,6 +57,7 @@
     "honeybadger": "^1.4.0",
     "inquirer": "^7.3.3",
     "js-yaml": "^3.14.0",
+    "json2yaml": "^1.1.0",
     "link-module-alias": "^1.2.0",
     "lodash": "^4.17.21",
     "minimist": "^1.2.5",
