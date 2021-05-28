@@ -8,7 +8,7 @@ const { getReportPath, getAppRoute } = require('../../../config');
 const { cacheServer } = require('../redisService');
 const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
 const { generatePDFReport, generatePDFMultiReport, deleteJsonFile, mergePdfLatex } = require('./reportCommands')
-const { defaultPropYear, firstPropYear, population } = require('./constants')
+const { defaultPropYear, firstPropYear, usaPopulation } = require('./helper')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
@@ -309,8 +309,8 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             }
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
-            agg['info']['each_year'] = nationData['_totals']['theft'] / population(year)
-            agg['info']['population'] = population(year)
+            agg['info']['each_year'] = nationData['_totals']['theft'] / usaPopulation(year)
+            agg['info']['population'] = usaPopulation(year)
             agg['info']['many_years'] = totalTh
             agg['info']['max_year'] = maxYr
             agg['info']['min_year'] = minYr
