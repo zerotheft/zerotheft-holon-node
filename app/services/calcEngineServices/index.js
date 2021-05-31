@@ -203,7 +203,8 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
 const getAllMultiReportPDFs = (nation, year) => {
     let multiReports = []
     fs.readdirSync(`${multiIssueReportPath}/`).forEach(file => {
-        if (/^full_2020_USA[^.]+.pdf$/.test(file)) multiReports.push(`${multiIssueReportPath}/${file}`)
+        const regex = new RegExp(`^full_${year}_${nation}[^.]+.pdf$`)
+        if (regex.test(file)) multiReports.push(`${multiIssueReportPath}/${file}`)
     })
 
     return multiReports
