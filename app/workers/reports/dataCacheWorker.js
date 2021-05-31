@@ -6,7 +6,7 @@ const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/constants')
+const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
 
 const connection = new IORedis()
