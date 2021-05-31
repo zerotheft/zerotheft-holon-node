@@ -20,9 +20,9 @@ const allYearDataScheduler = new QueueScheduler('AllYearDataQueue', { connection
 const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
     if (!!job.data.reSync) { //if its from cron
         createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
+        cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
-        cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('PAST_THEFTS')
     }
     for (let year = defaultPropYear; year >= firstPropYear; year--) {
