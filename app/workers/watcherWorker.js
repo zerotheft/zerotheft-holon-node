@@ -13,6 +13,8 @@ const watcherQueueScheduler = new QueueScheduler('WatcherQueue', { connection })
 const watcherQueue = new Queue('WatcherQueue', { connection })
 
 const watcherWorker = new Worker('WatcherQueue', async job => {
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
   try {
     console.log('*****HEARTBEAT Report*****')
 
