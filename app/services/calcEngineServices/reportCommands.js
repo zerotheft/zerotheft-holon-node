@@ -2,6 +2,8 @@ const { exec } = require('child_process')
 const { get, min, max, startCase } = require("lodash")
 const latex = require('node-latex')
 const yaml = require('js-yaml')
+const yamlConverter = require('json2yaml')
+
 const fs = require('fs')
 const homedir = require('os').homedir()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
@@ -131,7 +133,7 @@ const generateReportData = (fileName, year) => {
     pdfData.leadingProposalID = leadingProp['proposalid']
     pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = yaml.safeDump(leadingProp['detail'], { skipInvalid: true }).replace(/: ?>/g, ': |')
+    pdfData.leadingProposalDetail = yamlConverter.stringify(leadingProp['detail']).replace(/: ?>/g, ': |')
     return pdfData
 }
 
