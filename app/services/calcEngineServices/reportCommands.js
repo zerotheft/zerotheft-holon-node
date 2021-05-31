@@ -9,6 +9,7 @@ const homedir = require('os').homedir()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
+const { getProposalYaml } = require('zerotheft-node-utils').proposals
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
 const { loadSingleIssue, getPathYearProposals, getPathYearVotes, getPathVoteTotals, loadAllIssues, getLeafPaths, getFlatPaths } = require('./inputReader')
 const { getCitizenAmounts, realTheftAmount, theftAmountAbbr, usaPopulation } = require('./helper')
@@ -34,7 +35,7 @@ const generateReport = async (noteBookName, fileName, year, isPdf = 'false') => 
     })
 }
 
-const generateReportData = (fileName, year) => {
+const generateReportData = async (fileName, year) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
     let pdfData = {}
@@ -129,11 +130,14 @@ const generateReportData = (fileName, year) => {
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
     const leadingProp = get(pathSummary, 'leading_proposal')
+    const proposalID = get(leadingProp, 'proposalid')
+    const yamlJSON = await getProposalYaml(proposalID, get(leadingProp, 'proposal_hash'), path, year)
 
-    pdfData.leadingProposalID = leadingProp['proposalid']
-    pdfData.leadingProposalAuthor = get(leadingProp, 'detail.author.name')
+    pdfData.leadingProposalID = proposalID
+    pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = yamlConverter.stringify(leadingProp['detail']).replace(/: ?>/g, ': |')
+    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+
     return pdfData
 }
 
@@ -239,7 +243,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(reportPDF)
-        const pdf = latex(input, {args: ['-shell-escape']})
+        const pdf = latex(input, { args: ['-shell-escape'] })
         pdf.pipe(output)
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
@@ -296,7 +300,7 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
 
 const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
     createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
-    const pdfData = generateReportData(fileName, year)
+    const pdfData = await generateReportData(fileName, year)
     return await generateLatexPDF(pdfData, fileName)
 
     // return new Promise((resolve, reject) => {
