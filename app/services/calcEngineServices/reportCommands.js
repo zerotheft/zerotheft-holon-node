@@ -131,7 +131,7 @@ const generateReportData = async (fileName, year) => {
 
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'proposalid')
-    const yamlJSON = await getProposalYaml(proposalID, get(leadingProp, 'proposal_hash'), path, year)
+    const yamlJSON = await getProposalYaml(proposalID, path, year)
 
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
@@ -281,7 +281,7 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(reportPDF)
-        const pdf = latex(input)
+        const pdf = latex(input, { args: ['-shell-escape'] })
 
         pdf.pipe(output)
         pdf.on('error', err => {

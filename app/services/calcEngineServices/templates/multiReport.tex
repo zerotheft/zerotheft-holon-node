@@ -1,3 +1,4 @@
+% headsectionstart
 \documentclass{article}
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{longtable}
@@ -29,15 +30,17 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=500pt},
-	leftHeaderText/.style={headerText, align=left,text width=290pt},
-	rightHeaderText/.style={headerText, align=right,text width=150pt},
+	fullWidth/.style={text width=480pt},
+	leftHeaderText/.style={headerText, align=left,text width=280pt},
+	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
 }
 
 \begin{document}
 \sffamily
+% headsectionend
+
 % header
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
