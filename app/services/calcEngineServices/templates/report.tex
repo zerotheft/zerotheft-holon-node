@@ -1,3 +1,4 @@
+% headsectionstart
 \documentclass{article}
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{tikz}
@@ -6,7 +7,12 @@
 \usepackage{adjustbox}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
-\usepackage[colorlinks,linkcolor=green!50!black]{hyperref}
+\usepackage[colorlinks = true,
+linkcolor = blue,
+urlcolor  = blue,
+citecolor = blue,
+anchorcolor = blue]{hyperref}
+
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
 \definecolor{theftBgColor1}{RGB}{235,215,249}
@@ -16,7 +22,6 @@
 \definecolor{theftValueType3Color}{RGB}{125,110,142}
 \definecolor{yesVoteColor}{RGB}{115,54,163}
 \definecolor{noVoteColor}{RGB}{61,38,80}
-
 
 \tikzset{
 	headerText/.style={text=white},
@@ -29,6 +34,8 @@
 
 \begin{document}
 \sffamily
+% headsectionend
+
 % header
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
