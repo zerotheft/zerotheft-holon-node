@@ -23,8 +23,10 @@ const pathProposalsByYear = async (req, res, next) => {
     var votes = [],
       theftAmt = []
     response.map((proposal) => {
-      votes.push(proposal['votes']);
-      theftAmt.push(proposal['theftAmt'])
+      if(proposal['votes']){
+        votes.push(proposal['votes']);
+        theftAmt.push(proposal['theftAmt'])
+      }
     })
     const exactData = prepareBellCurveData(theftAmt, votes)
     return res.send({ data: response, chartData: exactData })
