@@ -84,7 +84,7 @@ const singleYearCachedData = async (nation, year) => {
     throw new Error(`Cached data not found for year ${year}`)
 }
 
-const multiIssuesReport = async (path, fromWorker = false, year) => {
+const multiIssuesReport = async (path, fromWorker = false, year, texsSequence) => {
     // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
     const fileName = `${year}_${path.replace(/\//g, '-')}`
 
@@ -107,7 +107,7 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
 
-                await generatePDFMultiReport('multiIssueReport', fileName, year)
+                await generatePDFMultiReport('multiIssueReport', fileName, year, texsSequence)
                 return { report: `${fileName}.pdf` }
             } else {
                 return { message: 'No Issues for the path' }
@@ -128,6 +128,27 @@ const multiIssuesReport = async (path, fromWorker = false, year) => {
         await deleteJsonFile(fileName)
     }
 }
+
+const getTexsSequence = async (year, path) => {
+    const nation = path.split('/')[0]
+    const nationPaths = await pathsByNation(nation)
+    delete (nationPaths['Alias'])
+
+    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
+    let umbrellaPaths = await getUmbrellaPaths()
+    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+
+    let texsSequence = await texPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
+
+    const nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
+    const reportPathTex = `${multiIssueReportPath}/${nationTocReportName}.tex`
+    if (texsSequence.length > 0 || fs.existsSync(reportPathTex)) {
+        texsSequence.unshift(reportPathTex)
+    }
+
+    return texsSequence
+}
+
 const multiIssuesFullReport = async (path, fromWorker = false, year) => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
     try {
@@ -135,8 +156,19 @@ const multiIssuesFullReport = async (path, fromWorker = false, year) => {
         const filePath = multiIssueReportPath
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            await multiIssuesReport(path, fromWorker, year)
-            await createUmbrellaFullReport(year, path, fullFileName)
+            const texsSequence = await getTexsSequence(year, path)
+            let availablePdfsPaths = []
+            texsSequence.forEach((texFile) => {
+                const matches = texFile.match(/\/[^-]+-([^\/]+).tex$/)
+                if (matches) {
+                    availablePdfsPaths.push(matches[1].replace(/-/g, '/'))
+                }
+            })
+
+            await multiIssuesReport(path, fromWorker, year, availablePdfsPaths)
+
+            // create full umbrealla report
+            await mergePdfLatex(fullFileName, texsSequence)
             return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
             return { report: `${fullFileName}.pdf` }
@@ -147,28 +179,6 @@ const multiIssuesFullReport = async (path, fromWorker = false, year) => {
         // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${path} with Exception: ${e.message}`)
         // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${path} with Exception: ${e.message}`)
         return { error: e.message }
-    }
-}
-
-const createUmbrellaFullReport = async (year, path, fullFileName) => {
-    const nation = path.split('/')[0]
-    const nationPaths = await pathsByNation(nation)
-    delete (nationPaths['Alias'])
-
-    let nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
-    const reportPath = `${multiIssueReportPath}/${nationTocReportName}.pdf`
-    const reportPathTex = `${multiIssueReportPath}/${nationTocReportName}.tex`
-    // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
-    let umbrellaPaths = await getUmbrellaPaths()
-    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
-
-    let texsSequence = await texPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
-
-    if (texsSequence.length > 0 || fs.existsSync(reportPathTex)) {
-        texsSequence.unshift(reportPathTex)
-        await mergePdfLatex(fullFileName, texsSequence)
-    } else {
-        return { message: 'Report not present' }
     }
 }
 
@@ -186,8 +196,19 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
         const filePath = multiIssueReportPath
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            await multiIssuesReport(nation, fromWorker, year)
-            await createNationFullReport(year, nation, fullFileName)
+            const texsSequence = await getAllMultiReportTexs(nation, year)
+            let availablePdfsPaths = []
+            texsSequence.forEach((texFile) => {
+                const matches = texFile.match(/\/[^-]+-([^\/]+).tex$/)
+                if (matches) {
+                    availablePdfsPaths.push(matches[1].replace(/-/g, '/'))
+                }
+            })
+
+            await multiIssuesReport(nation, fromWorker, year, availablePdfsPaths)
+
+            // create full nation report
+            await mergePdfLatex(fullFileName, texsSequence)
             return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
             return { report: `${fullFileName}.pdf` }
@@ -197,34 +218,28 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
     } catch (e) {
         // createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
         // createLog(ERROR_PATH, `calcEngineServices=>nationReport()::Exceptions in full report generation for ${nation} with Exception: ${e.message}`)
+        console.log(e)
         return { error: e.message }
     }
 }
 
-const getAllMultiReportTexs = (nation, year) => {
-    let multiReports = []
+const getAllMultiReportTexs = async (nation, year) => {
+    let texsSequence = []
     fs.readdirSync(`${multiIssueReportPath}/`).forEach(file => {
         const regex = new RegExp(`^full_${year}_${nation}[^.]+.tex$`)
-        if (regex.test(file)) multiReports.push(`${multiIssueReportPath}/${file}`)
+        if (regex.test(file)) texsSequence.push(`${multiIssueReportPath}/${file}`)
     })
 
-    return multiReports
-}
-
-const createNationFullReport = async (year, nation, fullFileName) => {
     const nationPaths = await pathsByNation(nation)
     delete (nationPaths['Alias'])
     let nationTocReportName = `${year}_${nation}`
     const reportPath = `${multiIssueReportPath}/${nationTocReportName}.tex`
 
-    let texsSequence = getAllMultiReportTexs(nation, year)
-
     if (texsSequence.length > 0 || fs.existsSync(reportPath)) {
         texsSequence.unshift(reportPath)
-        await mergePdfLatex(fullFileName, texsSequence)
-    } else {
-        return { message: 'Report not present' }
     }
+
+    return texsSequence
 }
 
 const texPathTraverse = async (path, currPath, texsSequence, year, umbrellaPaths, parentPaths = []) => {
