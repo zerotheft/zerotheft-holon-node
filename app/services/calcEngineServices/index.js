@@ -329,6 +329,7 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             return agg;
         }
         else {
+            cacheServer.del('PAST_THEFTS')
             const response = singleYearCaching(nation, year) // Background task for processing and saving data into cache
             createLog(MAIN_PATH, `Background task for processing and saving data into cache for ${nation} in ${year}`)
             return response
