@@ -137,7 +137,9 @@ const generateReportData = async (fileName, year) => {
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/\\n/g, `
+    `)
+    // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
 }
