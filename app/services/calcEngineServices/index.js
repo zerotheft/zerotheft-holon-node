@@ -157,15 +157,16 @@ const createUmbrellaFullReport = async (year, path, fullFileName) => {
 
     let nationTocReportName = `${year}_${path.replace(/\//g, '-')}`
     const reportPath = `${multiIssueReportPath}/${nationTocReportName}.pdf`
+    const reportPathTex = `${multiIssueReportPath}/${nationTocReportName}.tex`
     // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
     let umbrellaPaths = await getUmbrellaPaths()
     umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
 
-    let pdfsSequence = await pdfPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
+    let texsSequence = await texPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
 
-    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
-        pdfsSequence.unshift(reportPath)
-        await mergePdfLatex(fullFileName, pdfsSequence)
+    if (texsSequence.length > 0 || fs.existsSync(reportPathTex)) {
+        texsSequence.unshift(reportPathTex)
+        await mergePdfLatex(fullFileName, texsSequence)
     } else {
         return { message: 'Report not present' }
     }
@@ -200,10 +201,10 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
     }
 }
 
-const getAllMultiReportPDFs = (nation, year) => {
+const getAllMultiReportTexs = (nation, year) => {
     let multiReports = []
     fs.readdirSync(`${multiIssueReportPath}/`).forEach(file => {
-        const regex = new RegExp(`^full_${year}_${nation}[^.]+.pdf$`)
+        const regex = new RegExp(`^full_${year}_${nation}[^.]+.tex$`)
         if (regex.test(file)) multiReports.push(`${multiIssueReportPath}/${file}`)
     })
 
@@ -214,19 +215,19 @@ const createNationFullReport = async (year, nation, fullFileName) => {
     const nationPaths = await pathsByNation(nation)
     delete (nationPaths['Alias'])
     let nationTocReportName = `${year}_${nation}`
-    const reportPath = `${multiIssueReportPath}/${nationTocReportName}.pdf`
+    const reportPath = `${multiIssueReportPath}/${nationTocReportName}.tex`
 
-    let pdfsSequence = getAllMultiReportPDFs(nation, year)
+    let texsSequence = getAllMultiReportTexs(nation, year)
 
-    if (pdfsSequence.length > 0 || fs.existsSync(reportPath)) {
-        pdfsSequence.unshift(reportPath)
-        await mergePdfLatex(fullFileName, pdfsSequence)
+    if (texsSequence.length > 0 || fs.existsSync(reportPath)) {
+        texsSequence.unshift(reportPath)
+        await mergePdfLatex(fullFileName, texsSequence)
     } else {
         return { message: 'Report not present' }
     }
 }
 
-const pdfPathTraverse = async (path, currPath, pdfsSequence, year, umbrellaPaths, parentPaths = []) => {
+const texPathTraverse = async (path, currPath, texsSequence, year, umbrellaPaths, parentPaths = []) => {
     let pathClone = Object.assign({}, path)
     if (path && path.leaf)
         delete path.leaf
@@ -246,31 +247,31 @@ const pdfPathTraverse = async (path, currPath, pdfsSequence, year, umbrellaPaths
             let fileName = `${year}_${nextPath}`
             if (pathClone[key]['leaf']) {
                 let filePath = singleIssueReportPath
-                if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-                    pdfsSequence.push(`${filePath}/${fileName}.pdf`)
+                if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
+                    texsSequence.push(`${filePath}/${fileName}.tex`)
                 }
             } else {
                 if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
                     let filePath = singleIssueReportPath
-                    if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-                        pdfsSequence.push(`${filePath}/${fileName}.pdf`)
+                    if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
+                        texsSequence.push(`${filePath}/${fileName}.tex`)
                     }
                     parentPaths.push(nextPath)
                 } else {
                     let filePath = `${getReportPath()}reports/temp_multiIssueReport`
-                    if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
-                        pdfsSequence.push(`${filePath}/${fileName}.pdf`)
+                    if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
+                        texsSequence.push(`${filePath}/${fileName}.tex`)
                     }
                 }
                 createLog(FULL_REPORT_PATH, `Traversing recursively for the path for the year ${year} and nexx path: ${nextPath}`)
-                await pdfPathTraverse(nestedValues, nextPath, pdfsSequence, year, umbrellaPaths, parentPaths)
+                await texPathTraverse(nestedValues, nextPath, texsSequence, year, umbrellaPaths, parentPaths)
             }
         }
-        return pdfsSequence
+        return texsSequence
     } catch (e) {
         console.log(e)
         createLog(FULL_REPORT_PATH, `Exceptions in full report generation for ${year} with Exception: ${e.message}`)
-        createLog(ERROR_PATH, `calcEngineServices=>pdfPathTraverse()::Exceptions in full report generation for ${year} with Exception: ${e.message}`)
+        createLog(ERROR_PATH, `calcEngineServices=>texPathTraverse()::Exceptions in full report generation for ${year} with Exception: ${e.message}`)
         throw e
     }
 }
