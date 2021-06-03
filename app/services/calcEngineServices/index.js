@@ -205,7 +205,6 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
                 }
             })
 
-            console.log('==========texsSequence', texsSequence, availablePdfsPaths)
             await multiIssuesReport(nation, fromWorker, year, availablePdfsPaths)
 
             // create full nation report
