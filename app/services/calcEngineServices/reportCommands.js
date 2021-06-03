@@ -253,7 +253,6 @@ const generateLatexPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
@@ -292,7 +291,6 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
@@ -511,21 +509,23 @@ const generatePDF = async (folder, pdfReportName) => {
     })
 }
 
-const mergePdfLatex = async (fileName, pdfsSequence) => {
+const mergePdfLatex = async (fileName, texsSequence) => {
     return new Promise((resolve, reject) => {
-        let mergedLatex = `\\documentclass{article}
-        \\usepackage{pdfpages}
-        \\begin{document}
-        `
-        pdfsSequence.forEach((pdf) => {
-            mergedLatex += `\\includepdf[pages=-]{${pdf}}
-            `
+        let mergedTex = ''
+        texsSequence.forEach((texFile) => {
+            let texContent = fs.readFileSync(texFile, 'utf8')
+            const texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
+
+            mergedTex += `\\newpage
+            ` + texBody
         })
-        mergedLatex += `\\end{document}`
+
+        let mergedTemplate = fs.readFileSync(`${templates}/mixedReport.tex`, 'utf8')
+        mergedTemplate = mergedTemplate.replace(/--mixedContent--/g, mergedTex)
 
         const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
         const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
-        fs.writeFileSync(reportPrepd, mergedLatex, function (err) {
+        fs.writeFileSync(reportPrepd, mergedTemplate, function (err) {
             if (err) {
                 console.error('generateLatexPDF::', err)
                 reject({ message: err })
@@ -535,8 +535,7 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(mergedLatexPDF)
-        const pdf = latex(input)
-
+        const pdf = latex(input, { args: ['-shell-escape'] })
         pdf.pipe(output)
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
@@ -546,7 +545,6 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
