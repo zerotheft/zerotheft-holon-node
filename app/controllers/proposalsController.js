@@ -1,5 +1,4 @@
 const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByYear } = require('../services/proposalsService');
-const { prepareBellCurveData } = require('../services/calcEngineServices/helper')
 
 const getProposalWithDetail = async (req, res, next) => {
   const response = await proposalWithDetails(req.params.id, true)
@@ -28,8 +27,7 @@ const pathProposalsByYear = async (req, res, next) => {
         theftAmt.push(proposal['theftAmt'])
       }
     })
-    const exactData = prepareBellCurveData(theftAmt, votes)
-    return res.send({ data: response, chartData: exactData })
+    return res.send({ data: response, chartData: { bellCurveThefts: theftAmt, bellCurveVotes: votes } })
   } catch(e) {
     return res.status(400) && next(e)
   }
