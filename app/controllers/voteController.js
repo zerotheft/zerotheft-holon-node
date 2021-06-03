@@ -18,6 +18,7 @@ const priorVote = async (req, res, next) => {
     next(e.message)
   }
 }
+
 module.exports = {
   vote,
   priorVote

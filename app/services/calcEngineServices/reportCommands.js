@@ -1,5 +1,5 @@
 const { exec } = require('child_process')
-const { get, min, max, startCase } = require("lodash")
+const { get, startCase } = require("lodash")
 const latex = require('node-latex')
 const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
@@ -12,7 +12,7 @@ const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-uti
 const { getProposalYaml } = require('zerotheft-node-utils').proposals
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
 const { loadSingleIssue, getPathYearProposals, getPathYearVotes, getPathVoteTotals, loadAllIssues, getLeafPaths, getFlatPaths } = require('./inputReader')
-const { getCitizenAmounts, realTheftAmount, theftAmountAbbr, usaPopulation } = require('./helper')
+const { getCitizenAmounts, realTheftAmount, theftAmountAbbr, usaPopulation, prepareBellCurveData } = require('./helper')
 const { pathSummary: analyticsPathSummary,
     splitPath,
     yesNoVoteTotalsSummary,
@@ -139,87 +139,6 @@ const generateReportData = async (fileName, year) => {
     pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
-}
-
-const prepareBellCurveData = (propThefts, propVotes) => {
-    let axTh = []
-    let axVt = []
-
-    // now "linearize" the prop_thefts data
-    if (propThefts.length > 0) {
-        propThefts = propThefts.map((theft) => parseInt(theft))
-        let minTh = min(propThefts)
-        let maxTh = max(propThefts)
-        let minIncr = null
-
-        // find the minimum increment between thefts
-        propThefts.forEach((t, i) => {
-            if (i == 0) return
-            const incr = t - propThefts[i - 1]
-            if (minIncr === null || incr < minIncr) minIncr = incr
-        })
-
-        if (minIncr === null) {
-            minIncr = propThefts[0] * 0.1
-        } else if (minTh > 0) {
-            minIncr = min([minTh, minIncr])
-        }
-
-        // special cases
-        // - single theft, three "columns"
-        // - two thefts , five "columns"
-        if (propThefts.length == 1) {
-            minIncr = propThefts[0] * 0.2
-        } else if (propThefts.length == 2) {
-            minIncr = minIncr / 3
-        }
-
-        // push one increment out in either direction
-        minTh = minTh - minIncr
-        maxTh = maxTh + minIncr
-        const rng = maxTh - minTh
-
-        let cells
-        if (minIncr == 0)
-            cells = 0
-        else
-            cells = parseInt(rng / minIncr)
-
-        if (cells > 100) {
-            cells = 100
-            minIncr = rng / 100
-        }
-
-        minIncr = parseInt(minIncr.toFixed())
-        minTh = parseInt(minTh)
-        maxTh = parseInt(maxTh)
-
-        // now we create a new dataset that is distributed across the axis
-        thIdx = 0
-        nextTh = propThefts[0]
-
-        for (th = minTh; th < maxTh; th += minIncr) {
-            axTh.push(th)
-            // we have to allow for some slop, so the "next_th" and "max_th" checks need to be reduced by 
-            // about 1% of the increment to allow for rounding errors
-            const nextThThreshold = nextTh - (minIncr * 0.01)
-            const maxThThreshold = maxTh - (minIncr * 0.01)
-            if (th > maxThThreshold || th < nextThThreshold) {
-                axVt.push(0)
-            } else {
-                axVt.push(propVotes[thIdx])
-                thIdx += 1
-                nextTh = thIdx < propThefts.length ? propThefts[thIdx] : 0
-            }
-
-        }
-
-        // append for the last step
-        axTh.push(maxTh)
-        axVt.push(0)
-    }
-
-    return { bellCurveThefts: axTh, bellCurveVotes: axVt }
 }
 
 const generateLatexPDF = async (pdfData, fileName) => {
