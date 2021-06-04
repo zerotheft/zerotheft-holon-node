@@ -43,6 +43,7 @@ const generateReportData = async (fileName, year) => {
     pdfData.year = year
     pdfData.country = 'USA'
     pdfData.holonUrl = holon
+    pdfData.pageID = path
 
     const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
     const props = getPathYearProposals(summaryTotals, path, year)
@@ -136,7 +137,9 @@ const generateReportData = async (fileName, year) => {
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
-    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/\\n/g, `
+    `)
+    // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
 }
@@ -172,7 +175,6 @@ const generateLatexPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
@@ -211,7 +213,6 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
@@ -243,14 +244,20 @@ const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') 
     // })
 }
 
-const generateMultiReportData = (fileName, year) => {
+const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
     const { summaryTotals, singleYearData, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
+
+    const pathData = actualPath.split('/')
+    const nation = pathData[0]
+    const noNationPath = pathData.slice(1).join('/')
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.year = year
-    pdfData.country = 'USA'
+    pdfData.country = nation
     pdfData.holonUrl = holon
+    pdfData.pageID = noNationPath
+
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
@@ -258,10 +265,9 @@ const generateMultiReportData = (fileName, year) => {
     const population = usaPopulation(year)
     const pdfReportPath = `${holon}/pathReports/${fileName}.pdf`
 
-    const nation = actualPath.split('/')[0]
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? 'USA' : actualPath.split('/').slice(1).join('/')
+    const path = actualPath == nation ? nation : noNationPath
     const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
@@ -334,14 +340,14 @@ const generateMultiReportData = (fileName, year) => {
 
     pdfData.theftValueChartData = theftValueChartData
 
-    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, pdflinks, holon, nation, subPaths, subPathTotals)
+    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, pdflinks, holon, nation, subPaths, subPathTotals, availablePdfsPaths)
 
     pdfData.sourcesOfTheft = sourcesOfTheft
 
     return pdfData
 }
 
-const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon) => {
+const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon, availablePdfsPaths) => {
     const probPretty = startCase(prob)
     const legit = tots['legit'] ? 'legit' : ''
     let votepct = tots['votes'] > 0 ? tots['for'] / tots['votes'] : 0
@@ -363,37 +369,37 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, pdflinks, holon) => {
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${(votepct * 100).toFixed(2)}\\%} &
-    \\href{${holon}/pathReports/${filename}.pdf#page=${page}}{Page ${page}} &
+    ${availablePdfsPaths.includes(fullPath) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
 
-const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, pdflinks, holon) => {
+const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, pdflinks, holon, availablePdfsPaths) => {
     let disp = ''
     if (!paths) return disp
 
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
         const pp = prefix + p
-        disp += rowDisp(p, subPathTotals[pp], indent, sumTotals['theft'], pp, pdflinks, holon)
-        disp += walkSubPath(prefix + p + '/', paths[p], indent + 1, subPathTotals, sumTotals, pdflinks, holon)
+        disp += rowDisp(p, subPathTotals[pp], indent, sumTotals['theft'], pp, pdflinks, holon, availablePdfsPaths)
+        disp += walkSubPath(prefix + p + '/', paths[p], indent + 1, subPathTotals, sumTotals, pdflinks, holon, availablePdfsPaths)
     })
 
     return disp
 }
 
-const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, pdflinks, holon, nation, subPaths, subPathTotals) => {
+const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, pdflinks, holon, nation, subPaths, subPathTotals, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDisp(path, sumTotals, 0, totalTheft, fullPath, pdflinks, holon)
+    disp = rowDisp(path, sumTotals, 0, totalTheft, fullPath, pdflinks, holon, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = path == nation ? '' : path + '/'
-    disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, pdflinks, holon)
+    disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, pdflinks, holon, availablePdfsPaths)
 
     return disp
 }
 
-const generatePDFMultiReport = async (noteBookName, fileName, year, isPdf = 'false') => {
-    const pdfData = generateMultiReportData(fileName, year)
+const generatePDFMultiReport = async (noteBookName, fileName, year, availablePdfsPaths) => {
+    const pdfData = generateMultiReportData(fileName, year, availablePdfsPaths)
     return await generateLatexMultiPDF(pdfData, fileName)
     // return new Promise((resolve, reject) => {
     //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
@@ -430,21 +436,23 @@ const generatePDF = async (folder, pdfReportName) => {
     })
 }
 
-const mergePdfLatex = async (fileName, pdfsSequence) => {
+const mergePdfLatex = async (fileName, texsSequence) => {
     return new Promise((resolve, reject) => {
-        let mergedLatex = `\\documentclass{article}
-        \\usepackage{pdfpages}
-        \\begin{document}
-        `
-        pdfsSequence.forEach((pdf) => {
-            mergedLatex += `\\includepdf[pages=-]{${pdf}}
-            `
+        let mergedTex = ''
+        texsSequence.forEach((texFile) => {
+            let texContent = fs.readFileSync(texFile, 'utf8')
+            const texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
+
+            mergedTex += `\\newpage
+            ` + texBody
         })
-        mergedLatex += `\\end{document}`
+
+        let mergedTemplate = fs.readFileSync(`${templates}/mixedReport.tex`, 'utf8')
+        mergedTemplate = mergedTemplate.replace(/--mixedContent--/g, mergedTex)
 
         const reportPrepd = `${getReportPath()}reports/multiIssueReport/${fileName}.tex`
         const mergedLatexPDF = `${getReportPath()}reports/multiIssueReport/${fileName}.pdf`
-        fs.writeFileSync(reportPrepd, mergedLatex, function (err) {
+        fs.writeFileSync(reportPrepd, mergedTemplate, function (err) {
             if (err) {
                 console.error('generateLatexPDF::', err)
                 reject({ message: err })
@@ -454,8 +462,7 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
 
         const input = fs.createReadStream(reportPrepd)
         const output = fs.createWriteStream(mergedLatexPDF)
-        const pdf = latex(input)
-
+        const pdf = latex(input, { args: ['-shell-escape'] })
         pdf.pipe(output)
         pdf.on('error', err => {
             console.error('generateLatexPDF::', err)
@@ -465,7 +472,6 @@ const mergePdfLatex = async (fileName, pdfsSequence) => {
         })
         pdf.on('finish', () => {
             console.log('PDF generated!')
-            fs.unlinkSync(reportPrepd)
             resolve()
         })
     })
