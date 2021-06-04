@@ -28,7 +28,7 @@ const pathProposalsByYear = async (req, res, next) => {
     })
     const exactData = prepareBellCurveData(theftAmt, votes)
     return res.send({ data: response, chartData: exactData })
-  } catch(e) {
+  } catch (e) {
     return res.status(400) && next(e)
   }
 }

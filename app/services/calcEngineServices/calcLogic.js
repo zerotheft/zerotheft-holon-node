@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { uniq, mean } = require('lodash')
+const { uniq, mean, isEmpty } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
@@ -25,24 +25,23 @@ const checkAllYearDataSynced = async () => {
     return true
 }
 
+/**
+ * Get Path Proposal Years
+ * @param {string} path Respective bytes value of path string
+ * @param {Array} proposals Collection of proposals as array of json object
+ * @returns Array of proposal years
+ */
 const getPathProposalYears = async (path, proposals) => {
     createLog(CALC_STATUS_PATH, `Getting Years for Proposals in ${path}`, path)
     let propYears = []
 
-    // proposals.forEach(p => {
-    //     if (p && p.path) {
-    //         if (p.path === path) {
-    //             propYears.push(p['year'])
-    //         }
-    //     }
-    // })
     await PromisePool
         .withConcurrency(10)
         .for(proposals)
         .process(async p => {
             if (p && p.path) {
-                if (p.path === path) {
-                    propYears.push(p['year'])
+                if (p.path === path && !isEmpty(p['theftYears'])) {
+                    Object.keys(p['theftYears']).map((y => propYears.push(parseInt(y))))
                 }
             }
         })
@@ -50,36 +49,48 @@ const getPathProposalYears = async (path, proposals) => {
 
 }
 
+/**
+ * Get the votes of particular year of a path
+ * @param {string} path 
+ * @param {integer} year 
+ * @param {object} votes 
+ * @returns Votes array of a year
+ */
 const getPathYearVotes = async (path, year, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Votes in ${path}`, path)
     const pathYearVotes = []
-    const { results, errors } = await PromisePool
-        .withConcurrency(10)
+    await PromisePool
+        .withConcurrency(1)
         .for(votes)
         .process(async v => {
-
-            if (v['path'] === path && v['year'] === year) {
-                return v
+            if (v['path'] === path && (v['votedYears'].includes(parseInt(year)) || !v['voteType'])) { // return only votes comparing with years or if its "no" votes then simply return
+                pathYearVotes.push(v)
             }
         })
 
-    return results
+    return pathYearVotes
 }
 
+/**
+ * Get Path Year vote totals
+ * @param {string} path 
+ * @param {integer} year 
+ * @param {object} proposals 
+ * @param {object} votes 
+ * @returns Seperate "Yes"or"No" votes and calculate count
+ */
 const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
     let vs = await getPathYearVotes(path, `${year}`, votes)
-
     // let p = proposals //getProposals() // v
     let propIds = proposals.map(x => x['id'])
+    let theftAmounts = []
     await PromisePool
         .withConcurrency(10)
         .for(vs)
         .process(async v => {
             if (v === undefined) return
-            // for (let vi = 0; vi < vs.length; vi++) {
-            //     let v = vs[vi]
             //TODO work on this v 
             let voteProposalId = `${v['proposalId']}`
             let prop
@@ -89,6 +100,9 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
                     // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
                 }
             }
+            // see if voter has own theft amounts else push actual theft amounts of proposal
+            let amt = (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year]) ? v['altTheftAmt'][year] : prop['theftAmt']
+
             if (!voteProposalId || parseInt(prop.theftAmt) <= 0) {
                 tots['against'] += 1
             } else {
@@ -98,20 +112,26 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
                 return
             } else if ('props' in tots && voteProposalId in tots['props']) {
                 tots['props'][voteProposalId]['count'] += 1
+                tots['props'][voteProposalId]['all_theft_amounts'].push(amt)
             } else {
-                let theft = parseInt(prop.theftAmt)
-                tots['props'][voteProposalId] = { ...prop, 'proposalid': voteProposalId, 'description': prop['description'], 'theft': theft, 'count': 1 }
+                tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': [amt] }
             }
         })
 
     return tots
 }
 
+/**
+ * Get Path Vote Totals
+ * @param {string} path 
+ * @param {object} proposals 
+ * @param {object} votes 
+ * @returns JSON object of vote totals indexed to years
+ */
 const getPathVoteTotals = async (path, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Vote Total in ${path}`, path)
     let pvt = {}
     const years = await getPathProposalYears(path, proposals)
-
     await PromisePool
         .withConcurrency(10)
         .for(years)
@@ -167,6 +187,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(fullPath, proposals, votes)
         for (y in pvt) {
+
             // walk years in the totals for each path
             let pvty = pvt[y]
 
@@ -187,29 +208,33 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             if ('props' in pvty) {
                 for (pid in pvty['props']) {
                     let p = pvty['props'][pid]
+                    p['voted_theft_amount'] = p['all_theft_amounts'].length > 0 ? mean(p['all_theft_amounts']) : p['theftAmt']
                     if (!propMax || p['count'] > propMax['count']) {
                         propMax = p
-                    } else if (p['count'] == propMax['count'] && p['theft'] > propMax['theft']) {
+                    } else if (p['count'] == propMax['count'] && p['voted_theft_amount'] > propMax['voted_theft_amount']) {
                         propMax = p
                     }
                     // collect all theft amounts that got YES vote
-                    if (p['theft'] > 0) yesTheftAmts.push(p['theft'])
+                    if (p['voted_theft_amount'] > 0) yesTheftAmts.push(p['voted_theft_amount'])
                 }
             }
             let theft = 0
+            let reason = "No custom theft amounts from any voters"
             let avgData = {}
             if (propMax) {
-                if ((propMax['theft'] === 0 && votesFor < votesAgainst) || propMax['theft'] > 0)
-                    theft = propMax['theft']
+                //if actual theft amount of proposal differs from voted theft amounts(which is if voter adds custom theft amount)
+                if (propMax['voted_theft_amount'] !== propMax['theftAmt']) { reason = 'Actual theft amount differs since proposal got custom theft amounts from voter' }
+                if ((propMax['voted_theft_amount'] === 0 && votesFor < votesAgainst) || propMax['voted_theft_amount'] > 0)
+                    theft = propMax['voted_theft_amount']
                 else {
                     theft = mean(yesTheftAmts)
-                    avgData = { 'is_theft_avg': true, 'avg_from': yesTheftAmts, '_actual_leading_prop': { 'prop_id': propMax['id'], 'actual_theft': propMax['theft'], 'votes': propMax['count'] } }
+                    avgData = { 'is_theft_avg': true, 'avg_from': yesTheftAmts, '_actual_leading_prop': { 'prop_id': propMax['id'], 'actual_theft': propMax['voted_theft_amount'], 'votes': propMax['count'] } }
                 }
             }
             let legit = (votes >= legitimiateThreshold)
             let need_votes = (legit) ? 0 : legitimiateThreshold - votes;
             vtby[y]['paths'][fullPath] = {
-                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'need_votes': need_votes, ...avgData },
+                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'need_votes': need_votes, ...avgData },
                 'props': pvty['props']
             }
             ytots['theft'] += theft

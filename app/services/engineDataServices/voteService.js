@@ -37,7 +37,7 @@ const exportAllVotes = async (req) => {
           if (parseInt(voteID) > parseInt(lastVid)) {
             console.log('exporting voteID:: ', voteID)
             //First get the votes info
-            let { voter, voteType, proposalID, altTheftAmt, comment, date } = await voterContract.callSmartContractGetFunc('getVotes', [parseInt(voteID)])
+            let { voter, voteType, proposalID, altTheftAmt, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [parseInt(voteID)])
             const { holon, isFunded, isArchive } = await voterContract.callSmartContractGetFunc('getVoteExtra', [parseInt(voteID)])
 
             //get the voter information
