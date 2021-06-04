@@ -73,13 +73,13 @@ anchorcolor = blue]{hyperref}
   \end{tikzpicture}
 }
 
-\trimbox{0 -40pt 0 0}{
+\trimbox{25pt -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       title style={at={(0.5,1)},anchor=south,text=primary},
       title = \large \textbf{Theft from --minYear-- to --maxYear--},
-      % xlabel={x label},
-      % ylabel={y label},
+      xlabel={Year},
+      ylabel={Theft Amount},
       % xmin = 0, xmax = 10,
       % ymin = 0, ymax = 1,
       grid = both,
@@ -92,7 +92,7 @@ anchorcolor = blue]{hyperref}
       height = 0.4\textwidth,
       legend cell align = {left},
       % legend pos = north west,
-      legend style={at={(0.5,-25pt)},anchor=north},
+      legend style={at={(0.5,-35pt)},anchor=north},
       scatter/classes={
       voting={theftValueType1Color, /tikz/mark size=3pt},%
       incompletevoting={theftValueType2Color, /tikz/mark size=3pt},%
@@ -152,6 +152,8 @@ anchorcolor = blue]{hyperref}
       ybar interval,
       title style={at={(0.5,1)},anchor=south,text=primary},
       title = \large \textbf{Votes For Theft Amount},
+      xlabel={Theft Amount},
+      ylabel={Votes},
       ymajorgrids = true,
       xmajorgrids = false,
       width = 0.5\textwidth,
