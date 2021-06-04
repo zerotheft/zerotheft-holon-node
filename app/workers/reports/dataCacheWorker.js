@@ -64,14 +64,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
             doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
 
             // check if its valid before caching
-            let fileDir = `${exportsDir}/calc_year_data/${nation}`
-            let cTheft = 0
-            let isCached = false
-            if (fs.existsSync(`${fileDir}/${year}.json`)) {
-                let cVal = JSON.parse(fs.readFileSync(`${fileDir}/${year}.json`));
-                cTheft = cVal['_totals']['theft']
-                isCached = true
-            }
+            let isCached =fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`)?true:false
             // only if there is no cached data and if total theft is not zero
             if (yearData['_totals']['theft'] !== 0 || (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0)) {
                 cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
