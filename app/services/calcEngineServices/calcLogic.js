@@ -67,7 +67,6 @@ const getPathYearVotes = async (path, year, votes) => {
                 pathYearVotes.push(v)
             }
         })
-
     return pathYearVotes
 }
 
@@ -83,9 +82,9 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
     let vs = await getPathYearVotes(path, `${year}`, votes)
+    // if (year === 2019) console.log(vs)
     // let p = proposals //getProposals() // v
     let propIds = proposals.map(x => x['id'])
-    let theftAmounts = []
     await PromisePool
         .withConcurrency(10)
         .for(vs)
@@ -101,8 +100,8 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
                 }
             }
             // see if voter has own theft amounts else push actual theft amounts of proposal
-            let amt = (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year]) ? v['altTheftAmt'][year] : prop['theftAmt']
-
+            let amt = (!v['voteType']) ? 0 : (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year] && v['voteType']) ? v['altTheftAmt'][year] : prop['theftYears'][year]
+            if (!v['voteType'] && year === 2019) console.log((!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year]), prop['theftYears'], amt)
             if (!voteProposalId || parseInt(prop.theftAmt) <= 0) {
                 tots['against'] += 1
             } else {
@@ -234,7 +233,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             let legit = (votes >= legitimiateThreshold)
             let need_votes = (legit) ? 0 : legitimiateThreshold - votes;
             vtby[y]['paths'][fullPath] = {
-                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'need_votes': need_votes, ...avgData },
+                '_totals': { 'legit': legit, 'votes': votes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_theft_amts': propMax['all_theft_amounts'], 'need_votes': need_votes, ...avgData },
                 'props': pvty['props']
             }
             ytots['theft'] += theft
