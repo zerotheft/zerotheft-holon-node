@@ -90,7 +90,7 @@ const runPathReport = async (path, currPath, umbrellaPaths, parentPaths = []) =>
                         // console.log(`singleIssueReport onging for ${nextPath}(year ${year})`)
                         await singleIssueReport(nextPath, true, year)
                     }
-                } else {
+                } else if (path[key] && (path[key]['umbrella'] || path[key]['parent'])) {
                     // if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
                     //     for (let year = lastYear; year > lastYear - 20; year--) {
                     //         // console.log(`singleIssueReport onging for ${nextPath}(year ${year})`)
