@@ -98,12 +98,12 @@ const runPathReport = async (path, currPath, umbrellaPaths, parentPaths = []) =>
                     //     }
                     //     parentPaths.push(nextPath)
                     // } else {
+                    await runPathReport(path[key], nextPath, umbrellaPaths, parentPaths)
                     for (let year = lastYear; year > lastYear - 20; year--) {
                         // console.log(`multiIssuesFullReport onging for ${nextPath}(year ${year})`)
                         await multiIssuesFullReport(nextPath, true, year)
                     }
                     // }
-                    await runPathReport(path[key], nextPath, umbrellaPaths, parentPaths)
                 }
             })
     } catch (e) {
