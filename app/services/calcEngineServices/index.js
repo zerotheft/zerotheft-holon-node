@@ -333,6 +333,8 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             agg['info']['max_year'] = maxYr
             agg['info']['min_year'] = minYr
             agg['info']['between_years'] = (maxYr - minYr) + 1
+            agg['info']['votes'] = nationData['_totals']['votes']
+            agg['info']['proposals'] = nationData['_totals']['proposals']
 
             //log the aggregated data in file inside exports directory
             const exportFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
