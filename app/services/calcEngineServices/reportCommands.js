@@ -138,16 +138,60 @@ const generateReportData = async (fileName, year) => {
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
 
-    const { summary, summary_year, summary_country, hierarchy, title, author, describe_problem_area } = yamlJSON
-    const yamlJSONPart = { summary, summary_year, summary_country, hierarchy, title, author, describe_problem_area }
+    const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+    const limitedLinesArray = limitTextLines(leadingProposalDetail)
 
-    pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/\\n/g, `
-    `)
-    pdfData.leadingProposalDetailPart = yamlConverter.stringify(yamlJSONPart).replace(/\\n/g, `
-    `)
+    pdfData.leadingProposalDetail = leadingProposalDetail.replace(/\\n/g, '\n')
+    pdfData.leadingProposalDetailPart = limitedLinesArray.join('\n')
     // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
+}
+
+const wordLengthThreshold = 15
+
+const breakLines = (line, lineChars, indent, start) => {
+    const end = start + lineChars
+    const spaceIndex = line.lastIndexOf(' ', end) + 1
+    if (start > 0) {
+        line = line.substring(0, start) + (indent + '  ') + line.substring(start)
+    }
+    const nextStart = spaceIndex === 0 || (end - spaceIndex > wordLengthThreshold) ? end : line.length < end ? line.length : spaceIndex
+    let brokenLines = [line.substring(start, nextStart)]
+
+    if (end < line.length) {
+        brokenLines = [...brokenLines, ...breakLines(line, lineChars, indent, nextStart)]
+    }
+
+    return brokenLines
+}
+
+const limitTextLines = (content, lineLimit = 120, lineChars = 90) => {
+    content = content.replace(/\\n/g, '\n')
+    const lineArray = content.split(/\n/g)
+
+    let limitedLinesArray = []
+    const linCharsRegex = new RegExp(`.{1,${lineChars}}`, 'g')
+
+    for (var i = 0; i < lineArray.length; i++) {
+
+        const lineContent = lineArray[i]
+
+        if (lineContent.length > lineChars) {
+            const indentMatch = lineContent.match(/^\s+/)
+            const brokenLines = breakLines(lineContent, lineChars, indentMatch ? indentMatch[0] : '', 0)
+            limitedLinesArray = [...limitedLinesArray, ...brokenLines]
+        } else {
+            limitedLinesArray.push(lineContent)
+        }
+
+        if (limitedLinesArray.length >= lineLimit) {
+            limitedLinesArray.splice(lineLimit)
+            break;
+        }
+    }
+
+    return limitedLinesArray
 }
 
 const generateLatexPDF = async (pdfData, fileName) => {
