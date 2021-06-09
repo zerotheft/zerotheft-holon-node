@@ -66,20 +66,20 @@ const scanDataWorker = new Worker('ScanData', async job => {
             // check if its valid before caching
             let isCached = fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`) ? true : false
             // only if there is no cached data and if total theft is not zero
-            // if (yearData['_totals']['theft'] !== 0 || (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0)) {
-            cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
-            // Save yearData in files
-            const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
-            // export full data with proposals
-            await createAndWrite(yearDataDir, `${year}.json`, yearData)
+            if (yearData['_totals']['theft'] !== 0 || (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0)) {
+                cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
+                // Save yearData in files
+                const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
+                // export full data with proposals
+                await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
-            //JSON with proposals data is huge so removing proposals from every path and then export it seperately
-            Object.keys(yearData['paths']).forEach((path) => {
-                delete yearData['paths'][path]['props']
-            })
-            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
-            cacheServer.set(`YEAR_${year}_SYNCED`, true)
-            // }
+                //JSON with proposals data is huge so removing proposals from every path and then export it seperately
+                Object.keys(yearData['paths']).forEach((path) => {
+                    delete yearData['paths'][path]['props']
+                })
+                await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
+                cacheServer.set(`YEAR_${year}_SYNCED`, true)
+            }
         }
     } catch (e) {
         console.log("ScanDataWoker", e)
