@@ -1,3 +1,5 @@
+% headsectionstart
+% update mixedReport hedsection if any changes done in this headsection
 \documentclass{article}
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{longtable}
@@ -29,15 +31,18 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=500pt},
-	leftHeaderText/.style={headerText, align=left,text width=290pt},
-	rightHeaderText/.style={headerText, align=right,text width=150pt},
+	fullWidth/.style={text width=480pt},
+	leftHeaderText/.style={headerText, align=left,text width=280pt},
+	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
 }
 
 \begin{document}
 \sffamily
+% headsectionend
+
+\hypertarget{--pageID--}{}
 % header
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
@@ -73,13 +78,13 @@ anchorcolor = blue]{hyperref}
   \end{tikzpicture}
 }
 
-\trimbox{0 -40pt 0 0}{
+\trimbox{25pt -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       title style={at={(0.5,1)},anchor=south,text=primary},
       title = \large \textbf{Theft from --minYear-- to --maxYear--},
-      % xlabel={x label},
-      % ylabel={y label},
+      xlabel={Year},
+      ylabel={Theft Amount},
       % xmin = 0, xmax = 10,
       % ymin = 0, ymax = 1,
       grid = both,
@@ -92,7 +97,7 @@ anchorcolor = blue]{hyperref}
       height = 0.4\textwidth,
       legend cell align = {left},
       % legend pos = north west,
-      legend style={at={(0.5,-25pt)},anchor=north},
+      legend style={at={(0.5,-35pt)},anchor=north},
       scatter/classes={
       voting={theftValueType1Color, /tikz/mark size=3pt},%
       incompletevoting={theftValueType2Color, /tikz/mark size=3pt},%
@@ -104,7 +109,7 @@ anchorcolor = blue]{hyperref}
       text=primary,
       scatter src=explicit symbolic,
       nodes near coords*=\scriptsize \textbf{\Theft},
-      every node near coord/.append style={below right, rotate=35, shift={(2pt, 8pt)}},
+      every node near coord/.append style={below right, rotate=90, shift={(0, 6pt)}},
       visualization depends on={value \thisrow{Theft} \as \Theft},
     ] 
     table [meta=DeterminedBy] {

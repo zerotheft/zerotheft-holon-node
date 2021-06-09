@@ -1,4 +1,5 @@
 const IORedis = require('ioredis')
+const fs = require('fs')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 
@@ -6,7 +7,7 @@ const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/constants')
+const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
 
 const connection = new IORedis()
@@ -20,9 +21,9 @@ const allYearDataScheduler = new QueueScheduler('AllYearDataQueue', { connection
 const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
     if (!!job.data.reSync) { //if its from cron
         createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
+        cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
-        cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('PAST_THEFTS')
     }
     for (let year = defaultPropYear; year >= firstPropYear; year--) {
@@ -61,20 +62,25 @@ const scanDataWorker = new Worker('ScanData', async job => {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)
             doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
-            cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
-            // Save yearData in files
-            const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
-            // export full data with proposals
-            await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
-            //JSON with proposals data is huge so removing proposals from every path and then export it seperately
-            Object.keys(yearData['paths']).forEach((path) => {
-                delete yearData['paths'][path]['props']
-            })
-            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
+            // check if its valid before caching
+            let isCached =fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`)?true:false
+            // only if there is no cached data and if total theft is not zero
+            if (yearData['_totals']['theft'] !== 0 || (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0)) {
+                cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
+                // Save yearData in files
+                const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
+                // export full data with proposals
+                await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
+                //JSON with proposals data is huge so removing proposals from every path and then export it seperately
+                Object.keys(yearData['paths']).forEach((path) => {
+                    delete yearData['paths'][path]['props']
+                })
+                await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
+                cacheServer.set(`YEAR_${year}_SYNCED`, true)
+            }
         }
-        cacheServer.set(`YEAR_${year}_SYNCED`, true)
     } catch (e) {
         console.log("ScanDataWoker", e)
         throw e

@@ -5,7 +5,7 @@ const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
 const { exportsDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
-const { defaultPropYear, firstPropYear } = require('./constants')
+const { defaultPropYear, firstPropYear } = require('./helper')
 // let proposals = []
 // let votes = []
 let yearCacheData = []
@@ -409,12 +409,15 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
 
 /**
  * Get the all year thefts
- * @param {string} nation 
+ * @param {string} nation Name of a country
  */
 const getPastYearThefts = async (nation = 'USA') => {
     const theftFile = `${exportsDir}/calc_year_data/${nation}/past_year_thefts.json`
     const syncInprogress = await cacheServer.getAsync('SYNC_INPROGRESS')
-    if (fs.existsSync(theftFile) && !syncInprogress) {
+    const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
+
+    // if file is available, syncing is not running and caching index is also available then read the cached file
+    if (fs.existsSync(theftFile) && !syncInprogress && !!pastThefts) {
         return JSON.parse(fs.readFileSync(theftFile));
     }
     return await calculatePastYearThefts(nation, !!syncInprogress)
@@ -524,7 +527,7 @@ const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
             }
         }
     }
-    // save in cache
+    // save in cache only when sync is not happening
     if (!isSyncing) {
         cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
         await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)

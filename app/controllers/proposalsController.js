@@ -19,8 +19,15 @@ const getTemplateDetail = async (req, res, next) => {
 const pathProposalsByYear = async (req, res, next) => {
   try {
     const response = await getPathProposalsByYear(req.query.path, req.query.year)
-    
-    return res.send(response)
+    var votes = [],
+      theftAmt = []
+    response.map((proposal) => {
+      if(proposal['votes']){
+        votes.push(proposal['votes']);
+        theftAmt.push(proposal['theftAmt'])
+      }
+    })
+    return res.send({ data: response, chartData: { bellCurveThefts: theftAmt, bellCurveVotes: votes } })
   } catch(e) {
     return res.status(400) && next(e)
   }

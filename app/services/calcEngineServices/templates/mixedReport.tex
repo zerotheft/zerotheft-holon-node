@@ -1,0 +1,49 @@
+% headsectionstart
+% any changes on headsection of multiReport and report headsection should be added here
+\documentclass{article}
+\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgf-pie}
+\usepackage{adjustbox}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
+\usepackage[colorlinks = true,
+linkcolor = blue,
+urlcolor  = blue,
+citecolor = blue,
+anchorcolor = blue]{hyperref}
+% \newcommand{\ztHref}[3][blue]{\href{#2}{\color{#1}{#3}}}
+
+\usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
+\definecolor{primary}{RGB}{115,54,163}
+\definecolor{theftBgColor1}{RGB}{235,215,249}
+\definecolor{theftBgColor2}{RGB}{238,229,197}
+\definecolor{theftValueType1Color}{RGB}{0,0,0}
+\definecolor{theftValueType2Color}{RGB}{115,54,163}
+\definecolor{theftValueType3Color}{RGB}{125,110,142}
+\definecolor{yesVoteColor}{RGB}{115,54,163}
+\definecolor{noVoteColor}{RGB}{61,38,80}
+\definecolor{tableHeaderBg}{HTML}{F0EAFA}
+\definecolor{tableTheftBg}{HTML}{EF6868}
+\definecolor{tableNoTheftBg}{HTML}{71AE70}
+
+
+\tikzset{
+	headerText/.style={text=white},
+	fullWidth/.style={text width=480pt},
+	leftHeaderText/.style={headerText, align=left,text width=280pt},
+	rightHeaderText/.style={headerText, align=right,text width=180pt},
+	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
+	theftBlockContent/.style={text=black, text width=100pt},
+}
+
+\begin{document}
+\sffamily
+% headsectionend
+
+--mixedContent--
+
+\end{document}

@@ -1,3 +1,5 @@
+% headsectionstart
+% update mixedReport hedsection if any changes done in this headsection
 \documentclass{article}
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{tikz}
@@ -6,7 +8,12 @@
 \usepackage{adjustbox}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
-\usepackage[colorlinks,linkcolor=green!50!black]{hyperref}
+\usepackage[colorlinks = true,
+linkcolor = blue,
+urlcolor  = blue,
+citecolor = blue,
+anchorcolor = blue]{hyperref}
+
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
 \definecolor{theftBgColor1}{RGB}{235,215,249}
@@ -16,7 +23,6 @@
 \definecolor{theftValueType3Color}{RGB}{125,110,142}
 \definecolor{yesVoteColor}{RGB}{115,54,163}
 \definecolor{noVoteColor}{RGB}{61,38,80}
-
 
 \tikzset{
 	headerText/.style={text=white},
@@ -29,6 +35,9 @@
 
 \begin{document}
 \sffamily
+% headsectionend
+
+\hypertarget{--pageID--}{}
 % header
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
@@ -64,13 +73,13 @@
   \end{tikzpicture}
 }
 
-\trimbox{0 -40pt 0 0}{
+\trimbox{25pt -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       title style={at={(0.5,1)},anchor=south,text=primary},
       title = \large \textbf{Theft from --minYear-- to --maxYear--},
-      % xlabel={x label},
-      % ylabel={y label},
+      xlabel={Year},
+      ylabel={Theft Amount},
       % xmin = 0, xmax = 10,
       % ymin = 0, ymax = 1,
       grid = both,
@@ -83,7 +92,7 @@
       height = 0.4\textwidth,
       legend cell align = {left},
       % legend pos = north west,
-      legend style={at={(0.5,-25pt)},anchor=north},
+      legend style={at={(0.5,-35pt)},anchor=north},
       scatter/classes={
       voting={theftValueType1Color, /tikz/mark size=3pt},%
       incompletevoting={theftValueType2Color, /tikz/mark size=3pt},%
@@ -143,6 +152,8 @@
       ybar interval,
       title style={at={(0.5,1)},anchor=south,text=primary},
       title = \large \textbf{Votes For Theft Amount},
+      xlabel={Theft Amount},
+      ylabel={Votes},
       ymajorgrids = true,
       xmajorgrids = false,
       width = 0.5\textwidth,
@@ -181,9 +192,12 @@
     numbersep=5pt,
     xleftmargin=0pt,
     xrightmargin=0pt,
-  gobble=0,
-  linenos
+    breaksymbolleft=,
+    gobble=0,
+    linenos
   ]{yaml}
 --leadingProposalDetail--
   \end{minted}
+
+  --viewMore--
 \end{document}
