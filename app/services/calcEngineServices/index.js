@@ -205,6 +205,14 @@ const nationReport = async (year, fromWorker = false, nation = 'USA') => {
                 }
             })
 
+            const leafTexsSequence = await getAllSingleReportTexs(nation, year)
+            leafTexsSequence.forEach((texFile) => {
+                const matches = texFile.match(/\/[^-]+-([^\/]+).tex$/)
+                if (matches) {
+                    availablePdfsPaths.push(matches[1].replace(/-/g, '/'))
+                }
+            })
+
             await multiIssuesReport(nation, fromWorker, year, availablePdfsPaths)
 
             // create full nation report
@@ -239,6 +247,15 @@ const getAllMultiReportTexs = async (nation, year) => {
         texsSequence.unshift(reportPath)
     }
 
+    return texsSequence
+}
+
+const getAllSingleReportTexs = async (nation, year) => {
+    let texsSequence = []
+    fs.readdirSync(`${singleIssueReportPath}/`).forEach(file => {
+        const regex = new RegExp(`^${year}_${nation}[^.]+.tex$`)
+        if (regex.test(file)) texsSequence.push(`${singleIssueReportPath}/${file}`)
+    })
     return texsSequence
 }
 
