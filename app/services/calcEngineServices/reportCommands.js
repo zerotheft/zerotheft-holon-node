@@ -166,7 +166,7 @@ const breakLines = (line, lineChars, indent, start) => {
     return brokenLines
 }
 
-const limitTextLines = (content, lineLimit = 120, lineChars = 90) => {
+const limitTextLines = (content, lineLimit = 119, lineChars = 90) => {
     content = content.replace(/\\n/g, '\n')
     const lineArray = content.split(/\n/g)
 
@@ -198,14 +198,16 @@ const generateLatexPDF = async (pdfData, fileName) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
         Object.keys(pdfData).forEach((key) => {
-            if (['leadingProposalDetail', 'leadingProposalDetailPart'].includes(key)) return
+            if (['leadingProposalDetail', 'leadingProposalDetailPart', 'viewMore'].includes(key)) return
 
             const regex = new RegExp(`--${key}--`, 'g')
             template = template.replace(regex, pdfData[key])
         })
 
         const templateFull = template.replace(/--leadingProposalDetail--/g, pdfData['leadingProposalDetail'])
+            .replace(/--viewMore--/g, '')
         const templatePart = template.replace(/--leadingProposalDetail--/g, pdfData['leadingProposalDetailPart'])
+            .replace(/--viewMore--/g, `\\href{${pdfData['holonUrl']}/path/${pdfData['pathSlug']}/issue/${pdfData['leafSlug']}}{\\color{blue}View More}`)
 
         const reportPrepd = `${getReportPath()}reports/ztReport/${fileName}.tex`
         const reportPDF = `${getReportPath()}reports/ztReport/${fileName}.pdf`
