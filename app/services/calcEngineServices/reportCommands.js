@@ -137,7 +137,13 @@ const generateReportData = async (fileName, year) => {
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
+
+    const { summary, summary_year, summary_country, hierarchy, title, author, describe_problem_area } = yamlJSON
+    const yamlJSONPart = { summary, summary_year, summary_country, hierarchy, title, author, describe_problem_area }
+
     pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/\\n/g, `
+    `)
+    pdfData.leadingProposalDetailPart = yamlConverter.stringify(yamlJSONPart).replace(/\\n/g, `
     `)
     // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
@@ -148,14 +154,19 @@ const generateLatexPDF = async (pdfData, fileName) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
         Object.keys(pdfData).forEach((key) => {
+            if (['leadingProposalDetail', 'leadingProposalDetailPart'].includes(key)) return
+
             const regex = new RegExp(`--${key}--`, 'g')
             template = template.replace(regex, pdfData[key])
         })
 
+        const templateFull = template.replace(/--leadingProposalDetail--/g, pdfData['leadingProposalDetail'])
+        const templatePart = template.replace(/--leadingProposalDetail--/g, pdfData['leadingProposalDetailPart'])
+
         const reportPrepd = `${getReportPath()}reports/ztReport/${fileName}.tex`
         const reportPDF = `${getReportPath()}reports/ztReport/${fileName}.pdf`
 
-        fs.writeFileSync(reportPrepd, template, function (err) {
+        fs.writeFileSync(reportPrepd, templateFull, function (err) {
             if (err) {
                 console.error('generateLatexPDF::', err)
                 reject({ message: err })
@@ -174,6 +185,13 @@ const generateLatexPDF = async (pdfData, fileName) => {
             fs.unlinkSync(reportPrepd)
         })
         pdf.on('finish', () => {
+            fs.writeFileSync(reportPrepd, templatePart, function (err) {
+                if (err) {
+                    console.error('generateLatexPDFPart::', err)
+                    reject({ message: err })
+                }
+                console.log('report for full report Prepared');
+            });
             console.log('PDF generated!')
             resolve()
         })
