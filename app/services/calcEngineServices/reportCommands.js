@@ -23,6 +23,7 @@ const { pathSummary: analyticsPathSummary,
 
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
 const singleIssueReportPath = `${getReportPath()}reports/ztReport`
+const pleaseVoteImage = `${APP_PATH}/Zerotheft-Holon/holon-api/app/assets/please_vote.png`
 
 const generateReport = async (noteBookName, fileName, year, isPdf = 'false') => {
     createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
@@ -326,7 +327,7 @@ const generateNoVoteReportData = async (fileName, year, path, holon) => {
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
-    pdfData.pleaseVoteImage = `${APP_PATH}/Zerotheft-Holon/holon-api/app/assets/Please Vote.png`
+    pdfData.pleaseVoteImage = pleaseVoteImage
 
     return pdfData
 }
@@ -388,7 +389,7 @@ const generateNoVoteMultiReportData = async (fileName, year, path, holon, subPat
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
-    pdfData.pleaseVoteImage = `${APP_PATH}/Zerotheft-Holon/holon-api/app/assets/Please Vote.png`
+    pdfData.pleaseVoteImage = pleaseVoteImage
 
     const sourcesOfTheft = prepareSourcesOfTheftNoVote(year, noNationPath, nation, subPaths, availablePdfsPaths)
 
