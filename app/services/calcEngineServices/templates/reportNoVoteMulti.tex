@@ -52,10 +52,10 @@ anchorcolor = blue]{hyperref}
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
     \node(top){};
-    \node[below=-20px of top] (noVoteImage) {\includegraphics[width=60pt]{--pleaseVoteImage--}};
+    \node[below=-20pt of top] (noVoteImage) {\includegraphics[width=60pt]{--pleaseVoteImage--}};
     \node[noVotesMessageWidth, align=center, below=10pt of noVoteImage] (title) {\Huge \textbf{Please Vote}};
     \node[noVotesMessageWidth, align=center, below=10pt of title] (message) {Looking for the voting results and the estimated amount of theft? As of now, no one has voted \\on this problem area. Be the first to weigh in on the matter, and make sure to get others \\involved as well!}; 
-    \node[below=-20px of message](bottom){};
+    \node[below=-20pt of message](bottom){};
 
     \begin{scope}[on background layer]
     \node[fill=noVoteMessageBg, fit=(top)(title)(message)(bottom), inner sep=40pt] (voteMessage) {};
