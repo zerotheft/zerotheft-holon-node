@@ -222,7 +222,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             let avgData = {}
             if (propMax) {
                 //if actual theft amount of proposal differs from voted theft amounts(which is if voter adds custom theft amount)
-                if (propMax['voted_theft_amount'] !== propMax['theftAmt']) { reason = 'Actual theft amount differs since proposal got custom theft amounts from voter' }
+                if (propMax['voted_theft_amount'] !== propMax['theftYears'][y]) { reason = 'Actual theft amount differs since proposal got custom theft amounts from voter' }
                 if ((propMax['voted_theft_amount'] === 0 && votesFor < votesAgainst) || propMax['voted_theft_amount'] > 0)
                     theft = propMax['voted_theft_amount']
                 else {

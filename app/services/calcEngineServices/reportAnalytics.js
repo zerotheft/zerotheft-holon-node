@@ -1,4 +1,3 @@
-const { toDate } = require("date-fns")
 const { get, max, startCase } = require("lodash")
 const { paths } = require("zerotheft-node-utils")
 const { theftAmountAbbr, realTheftAmount } = require("./helper")
@@ -6,7 +5,7 @@ const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true) => {
     let sums = {}
     Object.keys(voteTotals.props).forEach((key) => {
         const prop = voteTotals.props[key]
-        const theft = prop.theft
+        const theft = prop.voted_theft_amount
         if (theft <= 0) {
             return
         }
@@ -21,7 +20,6 @@ const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true) => {
 
     let thefts = []
     let votes = []
-
     Object.keys(sums).sort((a, b) => { return parseInt(a) - parseInt(b) }).map((th) => {
         const thv = cleanTheft ? theftAmountAbbr(th) : th
         thefts.push(thv)
@@ -56,7 +54,7 @@ const pathSummary = (voteTotals, isSummary = false, cleanTheft = true) => {
     let leadingProp = null
     Object.keys(voteTotals.props).forEach((key) => {
         const prop = voteTotals.props[key]
-        if (prop.theft <= 0) {
+        if (prop.voted_theft_amount <= 0) {
             return
         }
         const count = prop['count']
@@ -81,6 +79,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
     let priorTheft = null
     let firstTheft = null
     Object.keys(sumtotals).forEach((year) => {
+
         let p
         if (path === nation) {
             p = sumtotals[year]
@@ -109,6 +108,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
                 yd['theft'] = get(p, '_totals.theft')
             }
         }
+
         firstTheft = firstTheft ? firstTheft : yd['theft']
         priorTheft = yd['theft']
 
@@ -173,6 +173,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
                 yearTh[pi]['Theft'] = theftAmountAbbr(0)
             } else {
                 yearTh[pi]['theft'] = lastTh
+
                 yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
             }
         }
@@ -187,6 +188,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
                 yearTh[pi]['Theft'] = theftAmountAbbr(0)
             } else {
                 yearTh[pi]['theft'] = lastTh
+
                 yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
             }
         }

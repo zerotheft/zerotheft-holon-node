@@ -88,11 +88,13 @@ const generateReportData = async (fileName, year) => {
     const cts = getCitizenAmounts(year)
     const perCitTheft = theftAmountAbbr((realTheftAmount(leadingTheft) / cts['citizens']).toFixed(2))
     const xYrs = (parseInt(maxYr) - parseInt(minYr)) + 1
+
     const manyYearsPerCit = theftAmountAbbr(totalTh / cts['citizens'])
 
     pdfData.theft = leadingTheft
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCitTheft
+
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
     pdfData.manyYearsPerCit = manyYearsPerCit
     pdfData.xYrs = xYrs
@@ -131,9 +133,8 @@ const generateReportData = async (fileName, year) => {
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
     const leadingProp = get(pathSummary, 'leading_proposal')
-    const proposalID = get(leadingProp, 'proposalid')
+    const proposalID = get(leadingProp, 'id')
     const yamlJSON = await getProposalYaml(proposalID, path, year)
-
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
