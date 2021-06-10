@@ -35,3 +35,5 @@ scripts
 *.log
 .DS_STORE
 debinstall
+nodemon.json
+.vscode

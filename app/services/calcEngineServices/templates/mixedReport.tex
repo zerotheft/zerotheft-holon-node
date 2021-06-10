@@ -4,6 +4,7 @@
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
+\usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
@@ -29,6 +30,7 @@ anchorcolor = blue]{hyperref}
 \definecolor{tableHeaderBg}{HTML}{F0EAFA}
 \definecolor{tableTheftBg}{HTML}{EF6868}
 \definecolor{tableNoTheftBg}{HTML}{71AE70}
+\definecolor{noVoteMessageBg}{HTML}{F9EADD}
 
 
 \tikzset{
@@ -38,6 +40,7 @@ anchorcolor = blue]{hyperref}
 	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
+	noVotesMessageWidth/.style={text width=404pt},
 }
 
 \begin{document}

@@ -1,0 +1,60 @@
+% headsectionstart
+% update mixedReport hedsection if any changes done in this headsection
+\documentclass{article}
+\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{adjustbox}
+\usepackage[colorlinks = true,
+linkcolor = blue,
+urlcolor  = blue,
+citecolor = blue,
+anchorcolor = blue]{hyperref}
+
+\usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
+\definecolor{primary}{RGB}{115,54,163}
+\definecolor{noVoteMessageBg}{HTML}{F9EADD}
+
+\tikzset{
+	headerText/.style={text=white},
+	noVotesMessageWidth/.style={text width=404pt},
+	leftHeaderText/.style={headerText, align=left,text width=280pt},
+	rightHeaderText/.style={headerText, align=right,text width=180pt},
+}
+
+\begin{document}
+\sffamily
+% headsectionend
+
+\hypertarget{--pageID--}{}
+% header
+\trimbox{0 -15pt 0 0}{ 
+  \begin{tikzpicture}
+      \node[leftHeaderText] (subtitle) {ZeroTheft Movement: --subtitle--};
+      \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
+      \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
+
+      \node[rightHeaderText, right=10pt of subtitle] (year) {--year--};
+      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
+      \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
+    
+      \begin{scope}[on background layer]
+      \node[fill=primary, fit=(subtitle)(title)(belowtitle)(year)(country)(holon)] (header) {};
+      \end{scope}
+  \end{tikzpicture}
+}
+
+\trimbox{0 -15pt 0 0}{ 
+  \begin{tikzpicture}
+    \node(top){};
+    \node[below=-20px of top] (noVoteImage) {\includegraphics[width=60pt]{--pleaseVoteImage--}};
+    \node[noVotesMessageWidth, align=center, below=10pt of noVoteImage] (title) {\Huge \textbf{Please Vote}};
+    \node[noVotesMessageWidth, align=center, below=10pt of title] (message) {Looking for the voting results and the estimated amount of theft? As of now, no one has voted \\on this problem area. Be the first to weigh in on the matter, and make sure to get others \\involved as well!}; 
+    \node[below=-20px of message](bottom){};
+
+    \begin{scope}[on background layer]
+    \node[fill=noVoteMessageBg, fit=(top)(title)(message)(bottom), inner sep=40pt] (voteMessage) {};
+    \end{scope}
+  \end{tikzpicture}
+}
+\end{document}
