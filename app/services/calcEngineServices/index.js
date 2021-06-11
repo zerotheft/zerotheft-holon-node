@@ -240,8 +240,6 @@ const getAllMultiReportTexs = async (nation, year) => {
         if (regex.test(file)) texsSequence.push(`${multiIssueReportPath}/${file}`)
     })
 
-    const nationPaths = await pathsByNation(nation)
-    delete (nationPaths['Alias'])
     let nationTocReportName = `${year}_${nation}`
     const reportPath = `${multiIssueReportPath}/${nationTocReportName}.tex`
 

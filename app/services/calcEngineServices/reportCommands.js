@@ -563,11 +563,15 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, year, nation, availab
 
     const notes = 'need_votes' in tots && tots['need_votes'] > 0 ? 'Needs ' + tots['need_votes'] + ' more votes for High Confidence' : theft ? '\\$' + theftAbbr : ''
 
-    const filePath = `${year}_${nation}-${fullPath.replace('/', '-')}.tex`
+    const pathMatch = fullPath.match(/^\/?([^*]+)/)
+    if (pathMatch) {
+        fullPath = pathMatch[1]
+    }
+    const filePath = `${year}_${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${(votepct * 100).toFixed(2)}\\%} &
-    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
+    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
 
@@ -598,11 +602,15 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, year, nati
 
 const rowDispNoVote = (prob, indent, year, nation, fullPath, availablePdfsPaths) => {
     const probPretty = startCase(prob)
-    const filePath = `${year}_${nation}-${fullPath.replace('/', '-')}.tex`
+    const pathMatch = fullPath.match(/^\/?([^*]+)/)
+    if (pathMatch) {
+        fullPath = pathMatch[1]
+    }
+    const filePath = `${year}_${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
      &
-    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
+    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
      \\\\ \n`
 }
 
@@ -614,7 +622,7 @@ const walkSubPathNoVote = (prefix, paths, indent, year, nation, availablePdfsPat
         if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
         const pp = prefix + p
         disp += rowDispNoVote(p, indent, year, nation, pp, availablePdfsPaths)
-        disp += walkSubPathNoVote(prefix + p + '/', paths[p], indent + 1, year, nation, availablePdfsPaths)
+        disp += walkSubPathNoVote(pp ? pp + '/' : '', paths[p], indent + 1, year, nation, availablePdfsPaths)
     })
 
     return disp
