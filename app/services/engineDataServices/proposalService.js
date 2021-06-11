@@ -14,7 +14,6 @@ const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
   let lastPid = await lastExportedPid()
-
   await PromisePool
     .withConcurrency(10)
     .for(proposalIds)
@@ -23,7 +22,7 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
         if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
           console.log('Exporting proposalId', pid)
           const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(pid)])
-
+          console.log(proposal)
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 
           if (Object.keys(proposal).length > 0) {
@@ -41,7 +40,6 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
               "theft_amount": proposal.theftAmt,
-              "year": proposal.year,
               "date": proposal.date
             }], proposalsCsv)
 
