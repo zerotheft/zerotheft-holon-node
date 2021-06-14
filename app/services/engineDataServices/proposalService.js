@@ -22,14 +22,13 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
         if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
           console.log('Exporting proposalId', pid)
           const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(pid)])
-          console.log(proposal)
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 
           if (Object.keys(proposal).length > 0) {
             outputFiles = await fetchProposalYaml(proposalContract, proposal.yamlBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
             file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
-            const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/${file.summary_year}/proposals`
+            const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
             await createDir(proposalDir)
             fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
 

@@ -39,7 +39,6 @@ const exportAllVotes = async (req) => {
             //First get the votes info
             let { voter, voteType, proposalID, altTheftAmt, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [parseInt(voteID)])
             const { holon, isFunded, isArchive } = await voterContract.callSmartContractGetFunc('getVoteExtra', [parseInt(voteID)])
-
             //get the voter information
             const { name, linkedin, country } = await getUser(voter, userContract)
 
@@ -47,13 +46,12 @@ const exportAllVotes = async (req) => {
             const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(proposalID)])
             outputFiles = await fetchProposalYaml(proposalContract, proposalInfo.yamlBlock, 1, [], undefined, 1)
             const file = fs.readFileSync(outputFiles[0], 'utf-8')
-            const year = file.match(/summary_year: ([\d]{4})/i)[1]
             const countryReg = file.match(/summary_country: ("|')?([^("|'|\n)]+)("|')?/i)
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
             const hierarchy = file.match(/hierarchy: ("|')?([^("|'|\n)]+)("|')?/i)[2]
 
             //Start writing it in the file
-            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/${year}/votes`
+            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/votes`
             await createDir(voteDir)
             writeCsv([{
               "id": voteID,
@@ -72,9 +70,7 @@ const exportAllVotes = async (req) => {
               "voter_country": country,
               "voter_linkedin": linkedin,
               "proposal_id": proposalID,
-              "proposal_name": proposalInfo.name,
               "proposal_amt": proposalInfo.theftAmt,
-              "proposal_year": proposalInfo.year,
               "proposal_timestamp": proposalInfo.date
 
             }], `${voteDir}/votes.csv`)
