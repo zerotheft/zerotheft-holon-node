@@ -9,7 +9,5 @@
     "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
     "GAS_PRICE": 10,
     "GAS_LIMIT": 4612388,
-    "JUPYTER_PATH": "$HOME/.local/bin/jupyter",
-    "WKPDFTOHTML_PATH": "xvfb-run -- /usr/bin/wkhtmltopdf",
     "REPORT_PATH": "zt_report"
 }
