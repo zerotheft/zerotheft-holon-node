@@ -8,7 +8,7 @@ const fs = require('fs')
 const homedir = require('os').homedir()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
-const { JUPYTER_PATH, WKPDFTOHTML_PATH, APP_PATH } = require('zerotheft-node-utils/config')
+const { APP_PATH } = require('zerotheft-node-utils/config')
 const { getProposalYaml } = require('zerotheft-node-utils').proposals
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
 const { loadSingleIssue, getPathYearProposals, getPathYearVotes, getPathVoteTotals, loadAllIssues, getLeafPaths, getFlatPaths } = require('./inputReader')
@@ -24,20 +24,6 @@ const { pathSummary: analyticsPathSummary,
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
 const singleIssueReportPath = `${getReportPath()}reports/ztReport`
 const pleaseVoteImage = `${APP_PATH}/Zerotheft-Holon/holon-api/app/assets/please_vote.png`
-
-const generateReport = async (noteBookName, fileName, year, isPdf = 'false') => {
-    createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
-    return new Promise((resolve, reject) => {
-        let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
-        // console.log(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${noteBookName}'`)
-        exec(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}, "isPdf": "${isPdf}"}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${newNoteBook}'`, (error, stdout, stderr) => {
-            if (error) {
-                reject({ message: `exec error: ${error}` })
-            }
-            resolve()
-        })
-    })
-}
 
 const generateReportData = async (fileName, year) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
@@ -290,26 +276,6 @@ const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') 
     createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
     const pdfData = await generateReportData(fileName, year)
     return await generateLatexPDF(pdfData, fileName)
-
-    // return new Promise((resolve, reject) => {
-    //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
-
-    // fs.copyFile(`${getReportPath()}input_jsons/corp_tax_evasion.html`, `${singleIssueReportPath}/${fileName}.html`, (err) => {
-    //     if (err) {
-    //         reject({ message: `exec error: ${err}` })
-    //     }
-    //     resolve()
-    // });
-
-    // console.log(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${noteBookName}'`)
-    // TODO: removing jupyter lab integration
-    // exec(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}, "isPdf": "${isPdf}"}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${newNoteBook}'`, (error, stdout, stderr) => {
-    //     if (error) {
-    //         reject({ message: `exec error: ${error}` })
-    //     }
-    //     resolve()
-    // })
-    // })
 }
 
 const generateNoVoteReportData = async (fileName, year, path, holon) => {
@@ -641,39 +607,6 @@ const prepareSourcesOfTheftNoVote = (year, fullPath, nation, subPaths, available
 const generatePDFMultiReport = async (noteBookName, fileName, year, availablePdfsPaths) => {
     const pdfData = generateMultiReportData(fileName, year, availablePdfsPaths)
     return await generateLatexMultiPDF(pdfData, fileName)
-    // return new Promise((resolve, reject) => {
-    //     let newNoteBook = isPdf === 'false' ? noteBookName : `temp_${noteBookName}`
-
-    //     console.log('generatePDFMultiReport===========')
-    //     generateMultiReportData(fileName, year)
-    //     resolve()
-
-    // fs.copyFile(`${getReportPath()}input_jsons/corp_tax_evasion.html`, `${singleIssueReportPath}/${fileName}.html`, (err) => {
-    //     if (err) {
-    //         reject({ message: `exec error: ${err}` })
-    //     }
-    //     resolve()
-    // });
-
-    // console.log(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${noteBookName}'`)
-    // TODO: removing jupyter lab integration
-    // exec(`rm -rf ${getReportPath()}__pycache__ && NB_ARGS='{"file": "${fileName}", "year": ${year}, "isPdf": "${isPdf}"}' ${JUPYTER_PATH} nbconvert --to=html ${getReportPath()}${noteBookName}.ipynb --TagRemovePreprocessor.enabled=True --TagRemovePreprocessor.remove_cell_tags='{"remove_cell"}' --TagRemovePreprocessor.remove_input_tags='{"remove_input"}' --TagRemovePreprocessor.remove_single_output_tags='{"remove_output"}' --execute --output-dir='${getReportPath()}reports/${newNoteBook}'`, (error, stdout, stderr) => {
-    //     if (error) {
-    //         reject({ message: `exec error: ${error}` })
-    //     }
-    //     resolve()
-    // })
-    // })
-}
-
-const generatePDF = async (folder, pdfReportName) => {
-    createLog(MAIN_PATH, `Generating PDF for ${folder}/${pdfReportName}`)
-    return new Promise((resolve, reject) => {
-        // console.log(`${WKPDFTOHTML_PATH} --header-left "Report" --footer-right [page]/[topage] --margin-top 2cm --margin-bottom 2cm --lowquality ${folder}/${pdfReportName}.html ${folder}/${pdfReportName}.pdf`)
-        exec(`${WKPDFTOHTML_PATH} --header-left "Report" --footer-right [page]/[topage] --margin-top 2cm --margin-bottom 2cm --lowquality ${folder}/${pdfReportName}.html ${folder}/${pdfReportName}.pdf`, (error, stdout, stderr) => {
-            resolve()
-        })
-    })
 }
 
 const mergePdfLatex = async (fileName, texsSequence) => {
@@ -727,42 +660,6 @@ const mergePdfForNation = async (folder, pdfFileName, allPdfs) => {
     })
 }
 
-const generatePageNumberFooter = async (folder, noFooterFileName, fileName, footer = 'ZeroTheft Total Theft Report') => {
-    createLog(MAIN_PATH, `Generating Page number footer ${folder}/${fileName}`)
-    return new Promise((resolve, reject) => {
-        exec(`enscript --fancy-header=footer -L1 -b'||' --footer '|| ${footer} - Page $%' -o- < \
-        <(for i in $(seq 1 200); do echo; done) | \
-        ps2pdf - | \
-        java -jar ${APP_PATH}/pdftk/build/jar/pdftk.jar '${folder}/${noFooterFileName}.pdf' multistamp - output '${folder}/${fileName}.pdf'`, { shell: '/bin/bash' }, (error, stdout, stderr) => {
-            resolve()
-        })
-    })
-}
-
-const renameHTMLFile = async (oldFileName, newFileName, filePath = `${getReportPath()}reports/${oldFileName}/`) => {
-    createLog(MAIN_PATH, `Renaming html file from ${filePath}${oldFileName} to ${filePath}${newFileName}`)
-    return new Promise((resolve, reject) => {
-        exec(`rm -rf ${filePath}${newFileName}.html && mv ${filePath}${oldFileName}.html ${filePath}${newFileName}.html`, (error, stdout, stderr) => {
-            if (error) {
-                reject({ message: `exec error: ${error}` })
-            }
-            resolve()
-        })
-    })
-}
-
-const renamePDFFile = async (oldFileName, newFileName, filePath = `${getReportPath()}reports/${oldFileName}/`) => {
-    createLog(MAIN_PATH, `Renaming pdf file from ${filePath}${oldFileName} to ${filePath}${newFileName}`)
-    return new Promise((resolve, reject) => {
-        exec(`rm -rf ${filePath}${newFileName}.pdf ${filePath}${oldFileName}.html && mv ${filePath}${oldFileName}.pdf ${filePath}${newFileName}.pdf`, (error, stdout, stderr) => {
-            if (error) {
-                reject({ message: `exec error: ${error}` })
-            }
-            resolve()
-        })
-    })
-}
-
 const deleteJsonFile = async (fileName) => {
     createLog(MAIN_PATH, `Deleting json file from inpus json with filename:: ${fileName}`)
     return new Promise((resolve, reject) => {
@@ -776,16 +673,11 @@ const deleteJsonFile = async (fileName) => {
 }
 
 module.exports = {
-    generateReport,
     generatePDFReport,
     generateNoVotePDFReport,
     generateNoVoteMultiPDFReport,
     generatePDFMultiReport,
-    generatePDF,
     mergePdfLatex,
     mergePdfForNation,
-    generatePageNumberFooter,
-    renameHTMLFile,
-    renamePDFFile,
     deleteJsonFile,
 }

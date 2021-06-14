@@ -2,6 +2,9 @@ const fs = require("fs")
 const { get, isEmpty } = require('lodash')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
+const config = require('zerotheft-node-utils/config')
+const PUBLIC_PATH = `${config.APP_PATH}/public`
+const cacheDir = `${config.APP_PATH}/.cache/calc_year_data`
 const { getPastYearThefts } = require('./calcLogic')
 const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
@@ -66,10 +69,10 @@ const allYearCachedData = async (nation) => {
     createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
     let allYearData = {}
     for (i = defaultPropYear; i >= firstPropYear; i--) {
-        let tempValue = await cacheServer.hgetallAsync(`${i}`)
-        if (get(tempValue, nation)) {
-            allYearData[`${i}`] = JSON.parse(get(tempValue, nation))
-        }
+        try {
+            const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/${i}.json`)
+            allYearData[`${i}`] = JSON.parse(jsonFile)
+        } catch { }
     }
     return allYearData
 }
@@ -78,10 +81,10 @@ const allYearCachedData = async (nation) => {
 * fetch single year data from cache
 */
 const singleYearCachedData = async (nation, year) => {
-    let tempValue = await cacheServer.hgetallAsync(year)
-    if (get(tempValue, nation)) {
-        return JSON.parse(get(tempValue, nation))
-    }
+    try {
+        const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/${year}.json`)
+        return JSON.parse(jsonFile)
+    } catch { }
 }
 
 const multiIssuesReport = async (path, fromWorker = false, year, availablePdfsPaths) => {
