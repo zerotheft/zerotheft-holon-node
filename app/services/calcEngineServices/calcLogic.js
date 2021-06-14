@@ -131,7 +131,7 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
  * @param {object} votes 
  * @returns JSON object of vote totals indexed to years
  */
-const getPathVoteTotals = async (path, proposals, votes) => {
+const getPathVoteTotals = async (year, path, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Vote Total in ${path}`, path)
     let pvt = {}
     const years = await getPathProposalYears(path, proposals)
@@ -140,12 +140,13 @@ const getPathVoteTotals = async (path, proposals, votes) => {
         .for(years)
         .process(async y => {
             // console.log('getPathVoteTotals', y)
-            pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
+            if (parseInt(year) === parseInt(y))
+                pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
     return pvt
 }
 
-const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
+const getHierarchyTotals = async (year, umbrellaPaths, proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
     if (pathH && pathH.leaf)
         return
     if (pathH && pathH.leaf)
@@ -183,14 +184,13 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         let isLeaf = false
         if (path) {
             // dive into children before doing any processing
-            await getHierarchyTotals(umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
+            await getHierarchyTotals(year, umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby) //TODO: Its not returing anything so might cause issue
         } else {
             path = {}
             isLeaf = true
         }
         // distribute vote totals into path list
-        let pvt = await getPathVoteTotals(fullPath, proposals, votes)
-        console.log(fullPath, Object.keys(pvt).length)
+        let pvt = await getPathVoteTotals(year, fullPath, proposals, votes)
 
         for (y in pvt) {
             // console.log('getHierarchyTotals', 'vitra', y)
@@ -246,6 +246,8 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             ytots['theft'] += theft
         }
     }
+
+    // TODO: save vtby here
     return vtby
 }
 
