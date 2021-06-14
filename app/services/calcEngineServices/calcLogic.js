@@ -137,7 +137,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
     let pvt = {}
     const years = await getPathProposalYears(path, proposals)
     await PromisePool
-        .withConcurrency(1)
+        .withConcurrency(10)
         .for(years)
         .process(async y => {
             // console.log('getPathVoteTotals', y)
