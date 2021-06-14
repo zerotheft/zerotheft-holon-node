@@ -60,9 +60,11 @@ const getPathYearVotes = async (path, year, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Votes in ${path}`, path)
     const pathYearVotes = []
     await PromisePool
-        .withConcurrency(1)
+        .withConcurrency(10)
         .for(votes)
         .process(async v => {
+            console.log('getPathYearVotes')
+
             if (v['path'] === path && (v['votedYears'].includes(parseInt(year)) || !v['voteType'])) { // return only votes comparing with years or if its "no" votes then simply return
                 pathYearVotes.push(v)
             }
@@ -89,6 +91,8 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
         .withConcurrency(10)
         .for(vs)
         .process(async v => {
+            console.log('getPathYearVoteTotals', v['proposalId'])
+
             if (v === undefined) return
             //TODO work on this v 
             let voteProposalId = `${v['proposalId']}`
@@ -135,6 +139,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
         .withConcurrency(10)
         .for(years)
         .process(async y => {
+            console.log('getPathVoteTotals', y)
             pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
     return pvt
@@ -186,7 +191,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(fullPath, proposals, votes)
         for (y in pvt) {
-
+            console.log('getHierarchyTotals', 'vitra', y)
             // walk years in the totals for each path
             let pvty = pvt[y]
 
