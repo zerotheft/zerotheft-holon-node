@@ -453,16 +453,16 @@ const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     let priorTheft
     let firstTheft
 
-    let p = {}
     for (let year = defaultPropYear; year >= firstPropYear; year--) {
         // let tempValue = await cacheServer.hgetallAsync(`${i}`)
         // if (get(tempValue, nation)) {
         //     sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
         // }
         const cachedFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
-        if (fs.existsSync(cachedFile)) {
-            p = JSON.parse(fs.readFileSync(cachedFile))
+        if (!fs.existsSync(cachedFile)) {
+            continue
         }
+        let p = JSON.parse(fs.readFileSync(cachedFile))
         // }
 
         // for (year in sumTotals) {
