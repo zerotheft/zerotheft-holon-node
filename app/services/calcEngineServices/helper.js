@@ -2,7 +2,8 @@ const { min, max } = require("lodash")
 
 const today = new Date()
 const defaultPropYear = today.getFullYear() - 1
-const firstPropYear = defaultPropYear - 19
+const firstPropYear = defaultPropYear - 60
+
 // Number of taxpayers (returns) from 2001
 // source: IRS
 taxpayerMinYear = 2001
@@ -32,6 +33,47 @@ taxpayerCounts = [
 // source: https://www.multpl.com/united-states-population/table/by-year
 citizenMinYear = 2001
 citizenCounts = [
+    180670000,//1960
+    183690000,
+    186540000,
+    189240000,
+    191890000,
+    194300000,
+    196560000,
+    198710000,
+    200710000,
+    202680000,
+    205050000, //1970
+    207660000,
+    209900000,
+    211910000,
+    213850000,
+    215970000,
+    218040000,
+    220240000,
+    222580000,
+    225060000,
+    227220000, //1980
+    229470000,
+    231660000,
+    233790000,
+    235820000,
+    237920000,
+    240130000,
+    242290000,
+    244500000,
+    246820000,
+    249620000, //1990
+    252980000, //1991
+    256510000, //1992
+    259920000,
+    263130000,
+    266280000,
+    269390000,
+    272650000,
+    275850000,
+    279040000,
+    282160000,//2000
     284970000, // 2001
     287630000,
     290110000,

@@ -222,7 +222,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             let avgData = {}
             if (propMax) {
                 //if actual theft amount of proposal differs from voted theft amounts(which is if voter adds custom theft amount)
-                if (propMax['voted_theft_amount'] !== propMax['theftYears'][y]) { reason = 'Actual theft amount differs since proposal got custom theft amounts from voter' }
+                if (propMax['theftYears'][y] && propMax['voted_theft_amount'] !== propMax['theftYears'][y]) { reason = 'Actual theft amount differs since proposal got custom theft amounts from voter' }
                 if ((propMax['voted_theft_amount'] === 0 && votesFor < votesAgainst) || propMax['voted_theft_amount'] > 0)
                     theft = propMax['voted_theft_amount']
                 else {
@@ -449,20 +449,24 @@ const getPastYearThefts = async (nation = 'USA') => {
 
 const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     let yearTh = []
-
-
-    let sumTotals = {}
-    for (i = defaultPropYear; i >= firstPropYear; i--) {
-        let tempValue = await cacheServer.hgetallAsync(`${i}`)
-        if (get(tempValue, nation)) {
-            sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
-        }
-    }
     // simple estimator - use the prior theft until it changes
     let priorTheft
     let firstTheft
-    for (year in sumTotals) {
-        let p = sumTotals[year]
+
+    let p = {}
+    for (let year = defaultPropYear; year >= firstPropYear; year--) {
+        // let tempValue = await cacheServer.hgetallAsync(`${i}`)
+        // if (get(tempValue, nation)) {
+        //     sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
+        // }
+        const cachedFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
+        if (fs.existsSync(cachedFile)) {
+            p = JSON.parse(fs.readFileSync(cachedFile))
+        }
+        // }
+
+        // for (year in sumTotals) {
+        // let p = sumTotals[year]
 
         let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
         if (!p || get(p, 'missing')) {
