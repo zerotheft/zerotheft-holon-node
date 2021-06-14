@@ -84,12 +84,12 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
     let vs = await getPathYearVotes(path, `${year}`, votes)
-    console.log(vs.length)
+    console.log(year, vs.length)
     // if (year === 2019) console.log(vs)
     // let p = proposals //getProposals() // v
     let propIds = proposals.map(x => x['id'])
     await PromisePool
-        .withConcurrency(10)
+        .withConcurrency(20)
         .for(vs)
         .process(async v => {
             // console.log('getPathYearVoteTotals', v['proposalId'])
