@@ -143,6 +143,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
             // console.log('getPathVoteTotals', y)
             pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
+    console.log(path, pvt.length)
     return pvt
 }
 
