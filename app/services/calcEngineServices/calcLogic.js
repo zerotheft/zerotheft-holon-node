@@ -125,7 +125,7 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     return tots
 }
 
-/**
+/**  1111
  * Get Path Vote Totals
  * @param {string} path 
  * @param {object} proposals 
@@ -143,7 +143,7 @@ const getPathVoteTotals = async (path, proposals, votes) => {
             // console.log('getPathVoteTotals', y)
             pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
-    console.log(path, pvt.length)
+    console.log(path, Object.keys(pvt).length)
     return pvt
 }
 
