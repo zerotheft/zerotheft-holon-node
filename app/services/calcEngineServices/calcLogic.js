@@ -3,7 +3,7 @@ const { uniq, mean, isEmpty } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
-const { exportsDir, createAndWrite } = require('../../common')
+const { exportsDir, cacheDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
 const { defaultPropYear, firstPropYear } = require('./helper')
 // let proposals = []
@@ -63,7 +63,7 @@ const getPathYearVotes = async (path, year, votes) => {
         .withConcurrency(10)
         .for(votes)
         .process(async v => {
-            console.log('getPathYearVotes')
+            // console.log('getPathYearVotes')
 
             if (v['path'] === path && (v['votedYears'].includes(parseInt(year)) || !v['voteType'])) { // return only votes comparing with years or if its "no" votes then simply return
                 pathYearVotes.push(v)
@@ -84,6 +84,7 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
     let vs = await getPathYearVotes(path, `${year}`, votes)
+    console.log(vs.length)
     // if (year === 2019) console.log(vs)
     // let p = proposals //getProposals() // v
     let propIds = proposals.map(x => x['id'])
@@ -91,7 +92,7 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
         .withConcurrency(10)
         .for(vs)
         .process(async v => {
-            console.log('getPathYearVoteTotals', v['proposalId'])
+            // console.log('getPathYearVoteTotals', v['proposalId'])
 
             if (v === undefined) return
             //TODO work on this v 
@@ -136,10 +137,10 @@ const getPathVoteTotals = async (path, proposals, votes) => {
     let pvt = {}
     const years = await getPathProposalYears(path, proposals)
     await PromisePool
-        .withConcurrency(10)
+        .withConcurrency(1)
         .for(years)
         .process(async y => {
-            console.log('getPathVoteTotals', y)
+            // console.log('getPathVoteTotals', y)
             pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
     return pvt
@@ -191,7 +192,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(fullPath, proposals, votes)
         for (y in pvt) {
-            console.log('getHierarchyTotals', 'vitra', y)
+            // console.log('getHierarchyTotals', 'vitra', y)
             // walk years in the totals for each path
             let pvty = pvt[y]
 
@@ -433,6 +434,9 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
 
         }
     }
+    //save proposals and votes in temp file
+    // await createAndWrite(`${cacheDir}/calc_year_data/${nation}`, `proposals.json`, JSON.stringify)
+
     return { proposals, votes }
 }
 

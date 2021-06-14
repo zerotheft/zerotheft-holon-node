@@ -74,7 +74,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
             // Save yearData in files
             const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
             // export full data with proposals
-            await createAndWrite(yearDataDir, `${year}.json`, yearData)
+            await createAndWrite(yearDataDir, `${year}.json`, JSON.stringify(yearData))
 
             //JSON with proposals data is huge so removing proposals from every path and then export it seperately
             Object.keys(yearData['paths']).forEach((path) => {
