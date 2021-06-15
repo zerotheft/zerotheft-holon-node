@@ -3,7 +3,7 @@ const PromisePool = require('@supercharge/promise-pool')
 
 const { getUserContract, getProposalContract, getVoterContract, getHolonContract } = require('zerotheft-node-utils').contracts
 const { listVoteIds } = require('zerotheft-node-utils/contracts/votes')
-const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals')
+const { fetchProposalYaml, proposalYearTheftInfo } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const { createDir } = require('../../common')
@@ -49,7 +49,6 @@ const exportAllVotes = async (req) => {
             const countryReg = file.match(/summary_country: ("|')?([^("|'|\n)]+)("|')?/i)
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
             const hierarchy = file.match(/hierarchy: ("|')?([^("|'|\n)]+)("|')?/i)[2]
-
             //Start writing it in the file
             const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/votes`
             await createDir(voteDir)

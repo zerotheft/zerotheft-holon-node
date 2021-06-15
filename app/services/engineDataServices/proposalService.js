@@ -5,7 +5,7 @@ const yaml = require('js-yaml')
 const splitFile = require('split-file');
 const PromisePool = require('@supercharge/promise-pool')
 const { getProposalContract } = require('zerotheft-node-utils').contracts
-const { fetchProposalYaml, listProposalIds } = require('zerotheft-node-utils/contracts/proposals')
+const { fetchProposalYaml, listProposalIds, proposalYearTheftInfo } = require('zerotheft-node-utils/contracts/proposals')
 const { createDir, exportsDir } = require('../../common')
 const { exportsDirNation, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
@@ -28,6 +28,8 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             outputFiles = await fetchProposalYaml(proposalContract, proposal.yamlBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
             file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
+            let { theftYears, theftAmt } = proposalYearTheftInfo(file)
+
             const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
             await createDir(proposalDir)
             fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
@@ -37,6 +39,7 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
               "id": pid,
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
+              "theft_amount": theftAmt,
               "date": proposal.date
             }], proposalsCsv)
 
