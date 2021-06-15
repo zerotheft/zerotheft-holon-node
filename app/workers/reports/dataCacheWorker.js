@@ -58,7 +58,6 @@ const scanDataWorker = new Worker('ScanData', async job => {
         console.log('GHT', year, proposals.length, votes.length)
 
         const mainVal = await getHierarchyTotals(year, umbrellaPaths, proposals, votes, nationPaths)
-        console.log('mainVal', year, Object.keys(mainVal))
         if (mainVal) {
             let yearData = mainVal[`${year}`]
             console.log('DPRFY', year)

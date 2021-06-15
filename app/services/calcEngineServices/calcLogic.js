@@ -63,8 +63,6 @@ const getPathYearVotes = async (path, year, votes) => {
         .withConcurrency(10)
         .for(votes)
         .process(async v => {
-            // console.log('getPathYearVotes')
-
             if (v['path'] === path && (v['votedYears'].includes(parseInt(year)) || !v['voteType'])) { // return only votes comparing with years or if its "no" votes then simply return
                 pathYearVotes.push(v)
             }
@@ -84,28 +82,23 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
     let tots = { 'for': 0, 'against': 0, 'props': {} }
     let vs = await getPathYearVotes(path, `${year}`, votes)
-    // if (year === 2019) console.log(vs)
-    // let p = proposals //getProposals() // v
     let propIds = proposals.map(x => x['id'])
     await PromisePool
         .withConcurrency(20)
         .for(vs)
         .process(async v => {
-            // console.log('getPathYearVoteTotals', v['proposalId'])
 
             if (v === undefined) return
-            //TODO work on this v 
             let voteProposalId = `${v['proposalId']}`
             let prop
             if (voteProposalId) {
                 if (propIds.includes(voteProposalId)) {
-                    prop = proposals.filter(x => parseInt(x.id) === parseInt(voteProposalId))[0]
+                    prop = proposals.filter(x => x.id === voteProposalId)[0]
                     // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
                 }
             }
             // see if voter has own theft amounts else push actual theft amounts of proposal
             let amt = (!v['voteType']) ? 0 : (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year] && v['voteType']) ? v['altTheftAmt'][year] : prop['theftYears'][year]
-            // if (!v['voteType'] && year === 2019) console.log((!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year]), prop['theftYears'], amt)
             if (!voteProposalId || parseInt(prop.theftAmt) <= 0) {
                 tots['against'] += 1
             } else {
@@ -139,7 +132,6 @@ const getPathVoteTotals = async (year, path, proposals, votes) => {
         .withConcurrency(10)
         .for(years)
         .process(async y => {
-            // console.log('getPathVoteTotals', y)
             if (parseInt(year) === parseInt(y))
                 pvt[`${y}`] = await getPathYearVoteTotals(path, y, proposals, votes)
         })
@@ -192,7 +184,6 @@ const getHierarchyTotals = async (year, umbrellaPaths, proposals, votes, pathHie
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(year, fullPath, proposals, votes)
         for (y in pvt) {
-            // console.log('getHierarchyTotals', 'vitra', y)
             // walk years in the totals for each path
             let pvty = pvt[y]
 
