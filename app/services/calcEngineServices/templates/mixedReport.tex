@@ -16,6 +16,8 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
+\usepackage[outline]{contour}
+\contourlength{1pt}
 % \newcommand{\ztHref}[3][blue]{\href{#2}{\color{#1}{#3}}}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
@@ -31,16 +33,24 @@ anchorcolor = blue]{hyperref}
 \definecolor{tableTheftBg}{HTML}{EF6868}
 \definecolor{tableNoTheftBg}{HTML}{71AE70}
 \definecolor{noVoteMessageBg}{HTML}{F9EADD}
+\definecolor{yesNoBarBgColor}{HTML}{EDEDED}
+\definecolor{yesNoBarBorderColor}{HTML}{B2AEAE}
+\definecolor{noProgressBgColor}{HTML}{E26C6C}
 
 
 \tikzset{
 	headerText/.style={text=white},
 	fullWidth/.style={text width=480pt},
+	yesNoBar/.style={minimum width=101pt, minimum height=30pt},
+	yesNoBarBg/.style={yesNoBar, draw=yesNoBarBorderColor, fill=yesNoBarBgColor, rounded corners=3pt, line width=1pt, right},
+	yesNoBarProgress/.style={yesNoBar, fill=primary, minimum height=29pt, rounded corners=2.5pt, right= -101.25pt, inner sep=0},
+	yesNoBarText/.style={yesNoBar, right, white, right= -101.25pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
 	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
 	noVotesMessageWidth/.style={text width=404pt},
+	isTheftBlock/.style={align=left, text width=120pt}
 }
 
 \begin{document}

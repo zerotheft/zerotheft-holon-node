@@ -59,7 +59,6 @@ const generateReportData = async (fileName, year) => {
     pdfData.leafSlug = leafSlug
     pdfData.pathSlug = pathSlug
 
-    const { yesNo, yesNoLabels } = yesNoVoteTotalsSummary(voteTotals)
     const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
 
     const yearTh = getPastYearsTheftForMulti(summaryTotals, path)
@@ -89,28 +88,20 @@ const generateReportData = async (fileName, year) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    let yearThTmp = yearTh
-    yearThTmp[0]['Year'] = 2001
-    // yearThTmp[2]['Determined By'] = 'incomplete voting'
-    // yearThTmp[5]['Determined By'] = 'estimation'
-    // yearThTmp[8]['Determined By'] = 'incomplete voting'
-    // yearThTmp[6]['Determined By'] = 'estimation'
     let theftValueChartData = 'Year theft DeterminedBy Theft\n'
-    yearThTmp.forEach((theft) => {
+    yearTh.forEach((theft) => {
         theftValueChartData += `${theft['Year']} ${theft['theft']} ${theft['Determined By'].replace(/\s/g, '')} ${theft['Theft'].replace(/\s/g, '')}\n`
     })
 
     pdfData.theftValueChartData = theftValueChartData
 
-    let yesNoPieData = []
-    yesNoLabels.forEach((label, index) => {
-        yesNoPieData.push(`${yesNo[index]}/${label}`)
-    });
-
-    // console.log('yesnosfasfasdf', yesNo, yesNoLabels)
-
-    // pdfData.yesNoPieData = '300/No,968/Yes'
-    pdfData.yesNoPieData = yesNoPieData.join(',')
+    const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
+    const totalVotes = yesVotes + noVotes
+    pdfData.yesVotes = yesVotes
+    pdfData.noVotes = noVotes
+    pdfData.totalVotes = totalVotes
+    pdfData.yesVotePercent = ((yesVotes / totalVotes) * 100).toFixed()
+    pdfData.noVotePercent = 100 - pdfData.yesVotePercent
 
     const { bellCurveThefts, bellCurveVotes } = prepareBellCurveData(propThefts, propVotes)
 
@@ -490,14 +481,8 @@ const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    let yearThTmp = yearTh
-    // yearThTmp[0]['Year'] = 2001
-    // yearThTmp[2]['Determined By'] = 'incomplete voting'
-    // yearThTmp[5]['Determined By'] = 'estimation'
-    // yearThTmp[8]['Determined By'] = 'incomplete voting'
-    // yearThTmp[6]['Determined By'] = 'estimation'
     let theftValueChartData = 'Year theft DeterminedBy Theft\n'
-    yearThTmp.forEach((theft) => {
+    yearTh.forEach((theft) => {
         theftValueChartData += `${theft['Year']} ${theft['theft']} ${theft['Determined By'].replace(/\s/g, '')} ${theft['Theft'].replace(/\s/g, '')}\n`
     })
 
