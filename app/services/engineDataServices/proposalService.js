@@ -37,7 +37,6 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
               "id": pid,
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
-              "theft_amount": proposal.theftAmt,
               "date": proposal.date
             }], proposalsCsv)
 

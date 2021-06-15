@@ -70,7 +70,6 @@ const exportAllVotes = async (req) => {
               "voter_country": country,
               "voter_linkedin": linkedin,
               "proposal_id": proposalID,
-              "proposal_amt": proposalInfo.theftAmt,
               "proposal_timestamp": proposalInfo.date
 
             }], `${voteDir}/votes.csv`)

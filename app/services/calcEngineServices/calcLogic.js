@@ -191,7 +191,6 @@ const getHierarchyTotals = async (year, umbrellaPaths, proposals, votes, pathHie
         }
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(year, fullPath, proposals, votes)
-
         for (y in pvt) {
             // console.log('getHierarchyTotals', 'vitra', y)
             // walk years in the totals for each path
@@ -465,7 +464,7 @@ const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     let priorTheft
     let firstTheft
 
-    for (let year = defaultPropYear; year >= firstPropYear; year--) {
+    for (let year = firstPropYear; year <= defaultPropYear; year++) {
         // let tempValue = await cacheServer.hgetallAsync(`${i}`)
         // if (get(tempValue, nation)) {
         //     sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))

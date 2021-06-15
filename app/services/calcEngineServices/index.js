@@ -339,6 +339,7 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
                 } else {
                     maxYr = parseInt(maxYr)
                 }
+
                 totalTh += yr['theft']
             }
             agg['info'] = {}
