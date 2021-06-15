@@ -13,6 +13,8 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
+\usepackage[outline]{contour}
+\contourlength{1pt}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
@@ -23,14 +25,22 @@ anchorcolor = blue]{hyperref}
 \definecolor{theftValueType3Color}{RGB}{125,110,142}
 \definecolor{yesVoteColor}{RGB}{115,54,163}
 \definecolor{noVoteColor}{RGB}{61,38,80}
+\definecolor{yesNoBarBgColor}{HTML}{EDEDED}
+\definecolor{yesNoBarBorderColor}{HTML}{B2AEAE}
+\definecolor{noProgressBgColor}{HTML}{E26C6C}
 
 \tikzset{
 	headerText/.style={text=white},
 	fullWidth/.style={text width=480pt},
+  yesNoBar/.style={minimum width=101pt, minimum height=30pt},
+	yesNoBarBg/.style={yesNoBar, draw=yesNoBarBorderColor, fill=yesNoBarBgColor, rounded corners=3pt, line width=1pt, right},
+	yesNoBarProgress/.style={yesNoBar, fill=primary, minimum height=29pt, rounded corners=2.5pt, right= -101.25pt, inner sep=0},
+	yesNoBarText/.style={yesNoBar, right, white, right= -101.25pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
 	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
+	isTheftBlock/.style={align=left, text width=120pt}
 }
 
 \begin{document}
@@ -131,22 +141,31 @@ anchorcolor = blue]{hyperref}
 }
 
 \trimbox{0 -40pt 0 0}{
-  \begin{tikzpicture}[every label/.style={black}, nodes={white}]
-    \pie[
-      sum=auto,
-      text=legend,
-      style=drop shadow,
-      color={noVoteColor,yesVoteColor},
-      radius=3,
-    ]
-    {
-      % this always need to have data to get the pie chart working
-      --yesNoPieData--
-      % 50/No,30/Yes
-    }
+  \begin{tikzpicture}[scale=1.5, transform shape]
+    \node[isTheftBlock, primary] (isTheft) {\Large \textbf{IS THIS THEFT?}};
+    \node[below=5pt of isTheft, isTheftBlock] (noOfVoters) {\scriptsize Total No of Voters: --totalVotes--};
+    \node[below=-4pt of noOfVoters, isTheftBlock] (votedYesNo) {\scriptsize Voted Yes: --yesVotes-- \quad Voted No: --noVotes--};
+
+    \node[yesNoBarBg, yshift=-30pt, left=-105pt of votedYesNo] (yesBg) {};
+    % \node[right=of yesBg, yesNoBarProgress, minimum width=75pt] (yesBar) {};
+    \node[right=of yesBg, yesNoBarProgress, minimum width= --yesVotePercent--pt] (yesBar) {};
+    \node[right=of yesBg, yesNoBarText] (yesPercent) {\contour{black}{\LARGE \textbf{Yes --yesVotePercent--\%}}};
+ 
+    \begin{scope}[on background layer]
+      \node[fit=(yesBg)(yesBar)(yesPercent), inner sep=0] (yesGraph) {};
+    \end{scope}
+
+    \node[yesNoBarBg, below= 10pt of yesBg] (noBg) {};
+    % \node[right=of noBg, yesNoBarProgress, minimum width=0pt, noProgressBgColor] (noBar) {};
+    \node[right=of noBg, yesNoBarProgress, minimum width= --noVotePercent--pt, noProgressBgColor] (noBar) {};
+    \node[right=of noBg, yesNoBarText] (noPercent) {\contour{black}{\LARGE \textbf{No --noVotePercent--\%}}};
+ 
+    \begin{scope}[on background layer]
+      \node[fit=(noBg)(noBar)(noPercent), inner sep=0] (noGraph) {};
+    \end{scope}
   \end{tikzpicture}
 }
-\trimbox{-30pt -40pt 0 0}{
+\trimbox{-10pt 20pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
       ybar interval,
@@ -156,7 +175,7 @@ anchorcolor = blue]{hyperref}
       ylabel={Votes},
       ymajorgrids = true,
       xmajorgrids = false,
-      width = 0.5\textwidth,
+      width = 0.545\textwidth,
       height = 0.4\textwidth,
       xtick = {}
     ]
