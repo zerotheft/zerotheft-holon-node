@@ -198,9 +198,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
 }
 
 const yesNoVoteTotalsSummary = (voteTotals) => {
-    const yesNo = [voteTotals['against'], voteTotals['for']]
-
-    return { yesNo, yesNoLabels: ['NO', 'YES'] }
+    return { noVotes: voteTotals['against'], yesVotes: voteTotals['for'] }
 }
 
 const splitPath = (path) => {
