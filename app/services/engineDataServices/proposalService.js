@@ -12,16 +12,16 @@ const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { writeCsv } = require('./readWriteCsv')
 const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
-const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
-  let lastPid = await lastExportedPid()
+const processProposalIds = async (proposalContract, proposalIds, count, lastPid, isFailed = false) => {
   await PromisePool
     .withConcurrency(10)
     .for(proposalIds)
     .process(async pid => {
       try {
-        if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
-          console.log('Exporting proposalId', pid)
-          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(pid)])
+        if (count > parseInt(lastPid) || isFailed) {
+          // if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
+          console.log('Exporting proposalId::', count, '::', pid)
+          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [pid])
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 
           if (Object.keys(proposal).length > 0) {
@@ -48,14 +48,15 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             }
           }
         }
-        await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
+        await keepCacheRecord('LAST_EXPORTED_PID', count)
 
       } catch (e) {
-        fs.appendFileSync(failedProposalIDFile, `${parseInt(pid)}\n`);
+        fs.appendFileSync(failedProposalIDFile, `${count}\n`);
         console.log(e.message)
-        createLog(EXPORT_LOG_PATH, `'exportProposal Error:: ${pid} => ${e}`)
+        createLog(EXPORT_LOG_PATH, `'exportProposal Error:: ${count} => ${e}`)
 
       }
+      count++
     })
 
   //write the last exported Proposal ID
@@ -71,12 +72,16 @@ const exportAllProposals = async () => {
     const proposalIds = await listProposalIds(proposalContract)
     console.log('Total proposals::', proposalIds.length)
 
+    let count = 1;
+    let lastPid = await lastExportedPid()
+    console.log('lastPid', lastPid)
 
-    await processProposalIds(proposalContract, proposalIds)
+
+    await processProposalIds(proposalContract, proposalIds, count, lastPid)
 
     console.log('proposals export is completed!!!!')
 
-    let lastPid = await lastExportedPid()
+    lastPid = await lastExportedPid()
 
     createLog(EXPORT_LOG_PATH, `All proposals exported. The last proposal ID exported is ${lastPid}`)
   }

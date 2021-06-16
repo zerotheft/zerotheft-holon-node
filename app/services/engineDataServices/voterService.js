@@ -16,7 +16,6 @@ const exportAllVoters = async () => {
 
     //get all voter addresses
     const userIds = await listUserIds(userContract)
-    // let userIds = ['0xd598D3aB9a4825652842816D637EFEA16BA7b498', '0x6E7191f01055D0c21D5664F0EcaD8F8Da18dA471', '0x465D9a549ad16ca711fa116FF620B9caA72013Ad', '0xC818c1E746e2346C037F792D28e0133B403899Cd', '0x5Ae4CA2beCFE40F02414dC11C21E6E4237EC4f80', '0x01f526DB5F9425bB3ba569F94F3E4AE481aA460D', '0x02c467FaC5b296F0E78Cb7c2cb769A0c7C914F3d']
     console.log('Total Users::', userIds.length)
 
     let count = 1;

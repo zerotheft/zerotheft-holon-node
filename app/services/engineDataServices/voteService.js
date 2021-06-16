@@ -8,6 +8,8 @@ const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const { createDir } = require('../../common')
 const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
+const { convertToAscii } = require('zerotheft-node-utils/utils/web3');
+
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 
@@ -27,23 +29,25 @@ const exportAllVotes = async (req) => {
     // let allVoteIds = [1712, 2182, 2766, 2770, 2769]
     console.log('Total votes::', allVoteIds.length)
 
+    let count = 1;
     let lastVid = await lastExportedVid()
+    console.log('lastVid', lastVid);
     await PromisePool
       .withConcurrency(10)
       .for(allVoteIds)
       .process(async voteID => {
 
         try {
-          if (parseInt(voteID) > parseInt(lastVid)) {
-            console.log('exporting voteID:: ', voteID)
+          if (count > parseInt(lastVid)) {
+            console.log('exporting voteID:: ', count, '::', voteID)
             //First get the votes info
-            let { voter, voteType, proposalID, altTheftAmt, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [parseInt(voteID)])
-            const { holon, isFunded, isArchive } = await voterContract.callSmartContractGetFunc('getVoteExtra', [parseInt(voteID)])
+            let { voter, voteIsTheft, proposalID, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteID])
+            const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteID])
             //get the voter information
             const { name, linkedin, country } = await getUser(voter, userContract)
 
             //get the voted proposal information
-            const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(proposalID)])
+            const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
             outputFiles = await fetchProposalYaml(proposalContract, proposalInfo.yamlBlock, 1, [], undefined, 1)
             const file = fs.readFileSync(outputFiles[0], 'utf-8')
             const countryReg = file.match(/summary_country: ("|')?([^("|'|\n)]+)("|')?/i)
@@ -54,11 +58,12 @@ const exportAllVotes = async (req) => {
             await createDir(voteDir)
             writeCsv([{
               "id": voteID,
-              "vote_type": voteType ? 'yes' : 'no',
-              "alt_theft_amt": altTheftAmt,
+              "vote_type": voteIsTheft ? 'yes' : 'no',
+              "alt_theft_amt": customTheftAmount,
               comment,
-              "is_funded": isFunded ? 'yes' : 'no',
-              "is_archive": isArchive ? 'yes' : 'no',
+              "is_archive": !voteReplacedBy.includes(convertToAscii(0)) ? "yes" : "no",
+              "vote_replaces": voteReplaces,
+              "vote_replaced_by": voteReplacedBy,
               "timestamp": date,
               "holon_name": allHolons[holon].name,
               "holon_url": allHolons[holon].url,
@@ -72,15 +77,16 @@ const exportAllVotes = async (req) => {
               "proposal_timestamp": proposalInfo.date
 
             }], `${voteDir}/votes.csv`)
-            await keepCacheRecord('LAST_EXPORTED_VID', parseInt(voteID))
+            await keepCacheRecord('LAST_EXPORTED_VID', count)
 
           }
         } catch (e) {
 
-          fs.appendFileSync(failedVoteIDFile, `${parseInt(voteID)}\n`);
+          fs.appendFileSync(failedVoteIDFile, `${count}\n`);
           console.log('exportVote Error::', e)
-          createLog(EXPORT_LOG_PATH, `'exportVote Error:: ${voteID} => ${e}`)
+          createLog(EXPORT_LOG_PATH, `'exportVote Error:: ${count} => ${e}`)
         }
+        count++
       })
 
     //write the last exported User ID
