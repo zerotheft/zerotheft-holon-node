@@ -9,6 +9,10 @@ const failedHolonIDFile = `${exportsDir}/.export_failed_hids`
 const userIdFile = `${exportsDir}/.last_exported_uid`
 const failedUserIDFile = `${exportsDir}/.export_failed_uids`
 const exportsDirNation = `${exportsDir}/nation_data`
+const userSpecificVotesFile = `${exportsDirNation}/user_specific_votes.json`
+const proposalVotesFile = `${exportsDirNation}/proposalVotes.json`
+const proposalVotersFile = `${exportsDirNation}/proposalVoters.json`
+const proposalArchiveVotesFile = `${exportsDirNation}/proposalArchiveVotes.json`
 const { cacheServer } = require('../redisService')
 
 
@@ -85,6 +89,27 @@ const cacheToFileRecord = async (key, entity) => {
   cacheServer.del(key)
 }
 
+//returns voting rollups information
+const voteDataRollups = async () => {
+  let userSpecificVotes = {}
+  let proposalVotes = {}
+  let proposalVoters = {}
+  let proposalArchiveVotes = {}
+  try { userSpecificVotes = JSON.parse(fs.readFileSync(userSpecificVotesFile, 'utf-8')); } catch (e) { }
+  try { proposalVotes = JSON.parse(fs.readFileSync(proposalVotesFile, 'utf-8')); } catch (e) { }
+  try { proposalVoters = JSON.parse(fs.readFileSync(proposalVotersFile, 'utf-8')); } catch (e) { }
+  try { proposalArchiveVotes = JSON.parse(fs.readFileSync(proposalArchiveVotesFile, 'utf-8')); } catch (e) { }
+  return { userSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }
+}
+
+//save vote roll ups date
+const saveVoteRollupsData = async (voteData) => {
+  if (voteData.userSpecificVotes) await writeFile(userSpecificVotesFile, voteData.userSpecificVotes)
+  if (voteData.proposalVotes) await writeFile(proposalVotesFile, voteData.proposalVotes)
+  if (voteData.proposalVoters) await writeFile(proposalVotersFile, voteData.proposalVoters)
+  if (voteData.proposalArchiveVotes) await writeFile(proposalArchiveVotesFile, voteData.proposalArchiveVotes)
+}
+
 module.exports = {
   exportsDirNation,
   voteIDFile,
@@ -100,5 +125,7 @@ module.exports = {
   failedUserIDFile,
   lastExportedUid,
   keepCacheRecord,
-  cacheToFileRecord
+  cacheToFileRecord,
+  voteDataRollups,
+  saveVoteRollupsData
 }
