@@ -3,12 +3,13 @@ const { get, uniq, remove } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 
 const { getUserContract, getProposalContract, getVoterContract, getHolonContract } = require('zerotheft-node-utils').contracts
-const { listVoteIds } = require('zerotheft-node-utils/contracts/votes')
+const { listVoteIds, updateVoteDataRollups, saveVoteRollupsData } = require('zerotheft-node-utils/contracts/votes')
+const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
 const { fetchProposalYaml, proposalYearTheftInfo } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const { createDir } = require('../../common')
-const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation, voteDataRollups, saveVoteRollupsData } = require('./utils')
+const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
 const { convertToAscii } = require('zerotheft-node-utils/utils/web3');
 
 const { writeCsv } = require('./readWriteCsv')
@@ -22,7 +23,7 @@ const exportAllVotes = async (req) => {
     const voterContract = await getVoterContract()
     const holonContract = await getHolonContract()
 
-    let { userSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes } = await voteDataRollups()
+    let { userSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes } = await voteDataRollupsFile()
 
     //get all the holons
     const allHolons = await getHolons('object', holonContract)
@@ -116,32 +117,6 @@ const exportAllVotes = async (req) => {
     createLog(EXPORT_LOG_PATH, `exportAllVotes Error:: ${e}`)
 
   }
-}
-const updateVoteDataRollups = (rollups, voteData, proposalInfo) => {
-  // keep the roll ups record in file
-  let _voter = get(rollups.userSpecificVotes, voteData.voter, {})
-  let _vote = get(_voter, proposalInfo.path, voteData.voteID)
-  _voter[proposalInfo.path] = _vote
-  rollups.userSpecificVotes[voteData.voter] = _voter
-
-  // if prior Vote is present
-  if (!voteData.voteReplaces.includes(convertToAscii(0))) {
-    let _priorPVotes = get(rollups.proposalVotes, voteData.proposalID, [])
-    remove(_priorPVotes, (_v) => {
-      return _v === voteData.voteReplaces
-    })
-    let _pArchiveVotes = get(proposalArchiveVotes, voteData.proposalID, [])
-    _pArchiveVotes.push(voteData.voteReplaces)
-    proposalArchiveVotes[voteData.proposalID] = uniq(_pArchiveVotes)
-  }
-
-  let _pvotes = get(rollups.proposalVotes, voteData.proposalID, [])
-  _pvotes.push(voteData.voteID)
-  rollups.proposalVotes[voteData.proposalID] = uniq(_pvotes)
-
-  let _pvoters = get(rollups.proposalVoters, voteData.proposalID, [])
-  _pvoters.push(voteData.voter)
-  rollups.proposalVoters[voteData.proposalID] = uniq(_pvoters)
 }
 
 

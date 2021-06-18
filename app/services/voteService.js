@@ -1,5 +1,5 @@
 const { voteByHolon: voteProposal } = require('zerotheft-node-utils/contracts/proposals')
-const { userPriorVote } = require('zerotheft-node-utils/contracts/votes')
+const { userPriorVote, voteDataRollups } = require('zerotheft-node-utils/contracts/votes')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
 const scrapedin = require('scrapedin')
 const { get } = require('lodash')
@@ -30,10 +30,17 @@ const priorVote = async (req) => {
   return res
 }
 
+const voteRollups = async (req) => {
+  createLog(VOTES_PATH, `voteData rollups ${req}`)
+  let res = await voteDataRollups(req)
+  return res
+}
+
+
 const validate = async (req) => {
   try {
     const user = await getUser(req.voter)
-    createLog(VOTES_PATH, `Checking if use is registered...`)
+    createLog(VOTES_PATH, `Checking if user is registered...`)
 
     if (!user) throw new Error('User is not registered yet.')
 
@@ -81,5 +88,6 @@ const validate = async (req) => {
 }
 module.exports = {
   vote,
-  priorVote
+  priorVote,
+  voteRollups
 }
