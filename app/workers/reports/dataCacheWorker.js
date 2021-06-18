@@ -132,7 +132,7 @@ const singleYearCaching = async (nation, year) => {
  */
 const allDataCache = async () => {
     try {
-        allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })// executes immediately
+        // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })// executes immediately
         allYearData.add('allYearDataCachingCron', { nation: "USA", reSync: true }, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '0 */4 * * *' } })// executes every 4 hrs
     } catch (e) {
         console.log('allDataCache', e)

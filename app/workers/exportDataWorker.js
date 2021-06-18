@@ -100,5 +100,6 @@ const allDataExport = async () => {
 }
 
 module.exports = {
-  allDataExport
+  allDataExport,
+  exportDataQueue
 }

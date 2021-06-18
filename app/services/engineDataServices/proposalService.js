@@ -95,14 +95,16 @@ const exportAllProposals = async () => {
 /*export proposals from failed list*/
 const exportFailedProposals = async () => {
   const proposalContract = await getProposalContract()
+  try {
+    var proposalIds = fs.readFileSync(failedProposalIDFile, 'utf8').trim().split('\n').map(i => parseInt(i))
+    createLog(EXPORT_LOG_PATH, `Processing ${uniq(proposalIds).length} failed proposals.`)
 
-  var proposalIds = fs.readFileSync(failedProposalIDFile, 'utf8').trim().split('\n').map(i => parseInt(i))
-  createLog(EXPORT_LOG_PATH, `Processing ${uniq(proposalIds).length} failed proposals.`)
-
-  //remove failed report file
-  fs.unlinkSync(failedProposalIDFile)
-  await processProposalIds(proposalContract, uniq(proposalIds), true)
-
+    //remove failed report file
+    fs.unlinkSync(failedProposalIDFile)
+    await processProposalIds(proposalContract, uniq(proposalIds), true)
+  } catch (e) {
+    console.log(e.message)
+  }
 }
 
 /*convert csv file to json*/

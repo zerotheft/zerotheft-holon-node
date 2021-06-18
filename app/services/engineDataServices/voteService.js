@@ -30,10 +30,6 @@ const exportAllVotes = async (req) => {
 
     //get all the voteIds
     let allVoteIds = await listVoteIds(voterContract)
-    // let allVoteIds = [1712, 2182, 2766, 2770, 2769]
-    // console.log(allVoteIds)
-    // return
-    //  allVoteIds = ['0xd6d7d417305741d4b50ca199a75dcd38a69083d40013ecac6a294d322befaded']
     console.log('Total votes::', allVoteIds.length)
 
     let count = 1;
