@@ -21,15 +21,22 @@ const allYearDataScheduler = new QueueScheduler('AllYearDataQueue', { connection
 const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
     if (!!job.data.reSync) { //if its from cron
         createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
+        // Reset voting exports
+        fs.unlinkSync(`${exportsDir}/.last_exported_vid`)
+
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
         cacheServer.del('PAST_THEFTS')
-    }
-    for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
-        if (!isYearSynced || !!job.data.reSync)
-            await singleYearCaching(job.data.nation, year)
+
+        //Reset all year synced statuses
+        for (let year = defaultPropYear; year >= firstPropYear; year--) {
+            cacheServer.del(`YEAR_${year}_SYNCED`)
+
+            // const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
+            // if (!isYearSynced || !!job.data.reSync)
+            //     await singleYearCaching(job.data.nation, year)
+        }
     }
 
 }, { connection })

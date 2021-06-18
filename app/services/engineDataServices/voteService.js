@@ -5,6 +5,7 @@ const PromisePool = require('@supercharge/promise-pool')
 const { getUserContract, getProposalContract, getVoterContract, getHolonContract } = require('zerotheft-node-utils').contracts
 const { listVoteIds, updateVoteDataRollups, saveVoteRollupsData } = require('zerotheft-node-utils/contracts/votes')
 const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
+const { getDateTimeDirName } = require('zerotheft-node-utils/utils/helpers')
 const { fetchProposalYaml, proposalYearTheftInfo } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getUser } = require('zerotheft-node-utils/contracts/users')
@@ -35,6 +36,7 @@ const exportAllVotes = async (req) => {
     let count = 1;
     let lastVid = await lastExportedVid()
     console.log('lastVid', lastVid);
+    const fileDir = `votes_${Date.now()}`
     await PromisePool
       .withConcurrency(10)
       .for(allVoteIds)
@@ -58,7 +60,7 @@ const exportAllVotes = async (req) => {
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
             const hierarchy = file.match(/hierarchy: ("|')?([^("|'|\n)]+)("|')?/i)[2]
             //Start writing it in the file
-            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/votes`
+            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/${fileDir}`
             await createDir(voteDir)
             writeCsv([{
               "id": voteID,

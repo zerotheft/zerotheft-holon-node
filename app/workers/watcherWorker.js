@@ -1,12 +1,13 @@
 const IORedis = require('ioredis')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
-const { allYearData } = require('./reports/dataCacheWorker')
+const { singleYearCaching } = require('./reports/dataCacheWorker')
 const { exportDataQueue } = require('./exportDataWorker')
 const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
 const { calculatePastYearThefts } = require('../services/calcEngineServices/calcLogic')
+const { defaultPropYear, firstPropYear } = require('../services/calcEngineServices/helper')
 
 const connection = new IORedis()
 
@@ -76,9 +77,15 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
      * If no data in cache and no sync in progress
      * Initiate data caching
      */
-    if (!isDatainCache && !isSyncing && cachedVid > 0 && !isVotesExporting) {
-      console.log('Cache data missing. Inititated....')
-      allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })
+    if (!isSyncing && cachedVid > 0 && !isVotesExporting) {
+
+      for (let year = defaultPropYear; year >= firstPropYear; year--) {
+        const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
+        if (!isYearSynced) {
+          await singleYearCaching(job.data.nation, year)
+        }
+      }
+      // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })
     } else {
       console.log('Cache Data. OK!!')
     }
@@ -135,7 +142,7 @@ watcherWorker.on("failed", async (job, returnvalue) => {
  */
 const watcherInit = async () => {
   try {
-    watcherQueue.add('heartbeat', {}, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '* * * * *' } })
+    watcherQueue.add('heartbeat', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true, repeat: { cron: '* * * * *' } })
   } catch (e) {
     console.log('watcherWorker', e)
     createLog(WATCHER_LOG_PATH, `watcherWorker ${e}`)

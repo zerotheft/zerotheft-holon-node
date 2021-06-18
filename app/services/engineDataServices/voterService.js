@@ -21,6 +21,7 @@ const exportAllVoters = async () => {
     let count = 1;
     let lastUid = await lastExportedUid()
     console.log('lastUId', lastUid)
+    const fileDir = `${Date.now()}`
 
     await PromisePool
       .withConcurrency(10)
@@ -32,11 +33,14 @@ const exportAllVoters = async () => {
             console.log('exporting UID::', count, '::', uid)
 
             userData = await getUser(uid, userContract)
+            const citizensDir = `${exportsDir}/citizens`
+            await createDir(citizensDir)
+
             //if user found then add in csv
             if (userData.success)
               writeCsv([{
                 id: uid, name: userData.name, country: userData.country, linkedin_url: userData.linkedin
-              }], `${exportsDir}/users.csv`)
+              }], `${citizensDir}/${fileDir}.csv`)
 
             await keepCacheRecord('LAST_EXPORTED_UID', count)
 
