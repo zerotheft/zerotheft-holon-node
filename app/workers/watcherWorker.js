@@ -38,11 +38,11 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)
     console.log(`5. Past year thefts(PAST_THEFTS): ${!!pastThefts}`)
     console.log(`6. Last User ID Exported: ${cachedUid}`)
-    console.log(`6. User Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
-    console.log(`7. Last Proposal ID Exported: ${cachedPid}`)
-    console.log(`8. Proposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}`)
-    console.log(`9. Last Vote ID Exported: ${cachedVid}`)
-    console.log(`10. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
+    console.log(`7. User Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
+    console.log(`8. Last Proposal ID Exported: ${cachedPid}`)
+    console.log(`9. Proposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}`)
+    console.log(`10. Last Vote ID Exported: ${cachedVid}`)
+    console.log(`11. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
 
     const isNotExporting = (!isVotesExporting && !isVotersExporting && !isProposalExporting)
     /**
