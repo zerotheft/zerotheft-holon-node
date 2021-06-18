@@ -80,9 +80,17 @@ const getPathYearVotes = async (path, year, votes) => {
  */
 const getPathYearVoteTotals = async (path, year, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Year Vote Total in ${path}`, path)
+    let propWithIds = {}
+
     let tots = { 'for': 0, 'against': 0, 'props': {} }
-    let vs = await getPathYearVotes(path, `${year}`, votes)
-    let propIds = proposals.map(x => x['id'])
+    let vs = await getPathYearVotes(path, year, votes)
+    // let propIds = proposals.map(x => x['id'])
+    await PromisePool
+        .withConcurrency(20)
+        .for(proposals)
+        .process(async x => {
+            propWithIds[x['id']] = x
+        })
     await PromisePool
         .withConcurrency(20)
         .for(vs)
@@ -92,10 +100,12 @@ const getPathYearVoteTotals = async (path, year, proposals, votes) => {
             let voteProposalId = `${v['proposalId']}`
             let prop
             if (voteProposalId) {
-                if (propIds.includes(voteProposalId)) {
-                    prop = proposals.filter(x => x.id === voteProposalId)[0]
-                    // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
-                }
+                // if (propIds.includes(voteProposalId)) {
+                //     prop = proposals.filter(x => x.id === voteProposalId)[0]
+                //     // prop = p[ p['id'] == voteProposalId ].iloc[0] // CONFUSED!!!!
+                // }
+                prop = propWithIds[voteProposalId]
+
             }
             // see if voter has own theft amounts else push actual theft amounts of proposal
             let amt = (!v['voteType']) ? 0 : (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year] && v['voteType']) ? v['altTheftAmt'][year] : prop['theftYears'][year]
@@ -159,8 +169,9 @@ const getHierarchyTotals = async (year, umbrellaPaths, proposals, votes, pathHie
     if (!vtby) {
         vtby = {}
         // set up yearly totals
-        for (let year = firstPropYear; year < defaultPropYear + 1; year++) {
-            vtby[`${year}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
+        for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
+            if (parseInt(yr) === parseInt(year))
+                vtby[`${yr}`] = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         }
 
     }
