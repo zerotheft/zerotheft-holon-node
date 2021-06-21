@@ -23,6 +23,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
         // Reset voting exports
         fs.unlinkSync(`${exportsDir}/.last_exported_vid`)
+        cacheServer.del('VOTES_EXPORT_INPROGRESS')
 
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')

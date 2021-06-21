@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { get, uniq, remove } = require('lodash')
+const { get } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 
 const { getUserContract, getProposalContract, getVoterContract, getHolonContract } = require('zerotheft-node-utils').contracts
@@ -46,11 +46,11 @@ const exportAllVotes = async (req) => {
             // if (1) {
             console.log('exporting voteID:: ', count, '::', voteID)
             //First get the votes info
-            let { voter, voteIsTheft, proposalID, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteID])
+            let { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteID])
             const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteID])
             //get the voter information
             const { name, linkedin, country } = await getUser(voter, userContract)
-
+            let proposalID = (voteIsTheft) ? yesTheftProposal : noTheftProposal
             //get the voted proposal information
             const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
             outputFiles = await fetchProposalYaml(proposalContract, proposalInfo.yamlBlock, 1, [], undefined, 1)
@@ -84,7 +84,7 @@ const exportAllVotes = async (req) => {
             }], `${voteDir}/votes.csv`)
 
             // keep the roll ups record in file
-            updateVoteDataRollups({ userSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID, proposalID, voteReplaces }, proposalInfo)
+            updateVoteDataRollups({ userSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID, proposalID, voteReplaces }, proposalInfo, voterContract)
 
             await keepCacheRecord('LAST_EXPORTED_VID', count)
           }
