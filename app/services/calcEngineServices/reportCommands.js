@@ -21,9 +21,28 @@ const { pathSummary: analyticsPathSummary,
     assignPageNumbers
 } = require('./reportAnalytics')
 
+var currentDate = new Date();
+var currentYear = currentDate.getFullYear();
+
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
 const singleIssueReportPath = `${getReportPath()}reports/ztReport`
-const pleaseVoteImage = `${APP_PATH}/Zerotheft-Holon/holon-api/app/assets/please_vote.png`
+const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
+const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
+const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedValues.json`
+
+if (!fs.existsSync(inflatedValuesPath)) {
+    const yearlyAverageUSInflationRate = require('./yearlyAverageUSInflationRate.json')
+    const years = Object.keys(yearlyAverageUSInflationRate).sort().reverse()
+
+    let inflatedValues = {}
+    inflatedValues[currentYear] = 1
+    years.forEach((year, index) => {
+        inflatedValues[year] = inflatedValues[parseInt(year) + 1] * (1 + (yearlyAverageUSInflationRate[year] / 100))
+    })
+
+    fs.writeFileSync(inflatedValuesPath, JSON.stringify(inflatedValues))
+}
+const inflatedValues = require(inflatedValuesPath)
 
 const generateReportData = async (fileName, year) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
@@ -113,6 +132,32 @@ const generateReportData = async (fileName, year) => {
     })
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
+    const stolenByYear = {
+        "2021": "820B",
+        "2020": "819B",
+        "2019": "818B",
+        "2018": "817B",
+        "2017": "816B",
+        "2016": "815B",
+        "2015": "815B",
+        "2014": "814B",
+        "2013": "813B",
+        "2012": "812B",
+        "2011": "811B",
+        "2010": "810B",
+        "2009": "809B",
+        "2008": "808B",
+        "2007": "807B",
+        "2006": "806B",
+        "2005": "805B",
+        "2004": "804B",
+        "2003": "803B",
+        "2002": "802B",
+        "2001": "801B",
+    }
+    pdfData.stolenByYearTableData = prepareStolenByYear(stolenByYear)
+    pdfData.inflationYear = currentYear
+
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
     const yamlJSON = await getProposalYaml(proposalID, path, year)
@@ -128,6 +173,33 @@ const generateReportData = async (fileName, year) => {
     // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
+}
+
+const prepareStolenByYearSingle = (year, stolenByYear, inflated = false) => {
+    if (!year) return ` & `
+    return `${year} & \\$${inflated ? theftAmountAbbr(realTheftAmount(stolenByYear[year]) * inflatedValues[year]) : stolenByYear[year]}`
+}
+
+const prepareStolenByYear = (stolenByYear) => {
+    let stolenByYearTableData = ''
+    const stolenByYearYears = Object.keys(stolenByYear).sort().reverse()
+    const columns = 3
+    const numberOfRows = Math.ceil(stolenByYearYears.length / columns)
+
+    for (var i = 0; i < numberOfRows; i++) {
+        const year1 = stolenByYearYears[i]
+        const year2 = stolenByYearYears[i + numberOfRows]
+        const year3 = stolenByYearYears[i + (numberOfRows * 2)]
+        stolenByYearTableData += `
+            ${prepareStolenByYearSingle(year1, stolenByYear)} &
+            ${prepareStolenByYearSingle(year2, stolenByYear)} &
+            ${prepareStolenByYearSingle(year3, stolenByYear)} & &
+            ${prepareStolenByYearSingle(year1, stolenByYear, true)} &
+            ${prepareStolenByYearSingle(year2, stolenByYear, true)} &
+            ${prepareStolenByYearSingle(year3, stolenByYear, true)} \\\\ \n`
+    }
+
+    return stolenByYearTableData
 }
 
 const wordLengthThreshold = 15
@@ -521,7 +593,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, year, nation, availab
     const filePath = `${year}_${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn} ${(votepct * 100).toFixed(2)}\\%} &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) : ''}}\\%} &
     ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
