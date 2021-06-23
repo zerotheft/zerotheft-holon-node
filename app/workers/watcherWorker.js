@@ -24,7 +24,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
     // const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
-    const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
+    // const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
     const isDatainCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
     const cachedUid = await lastExportedUid()
     const cachedPid = await lastExportedPid()
@@ -87,11 +87,11 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     * If sync is complete and no past year thefts collected
     * calculate past year thefts
     */
-    if (isDatainCache && !isSyncing && !pastThefts) {
-      console.log('Past year thefts missing. Initiated...')
-      // when all year data got sycned get past year thefts
-      // await calculatePastYearThefts()
-    }
+    // if (isDatainCache && !isSyncing && !pastThefts) {
+    //   console.log('Past year thefts missing. Initiated...')
+    //   // when all year data got sycned get past year thefts
+    //   // await calculatePastYearThefts()
+    // }
     /**
      * If sync is complete and full report is not present.
      * Initiate full report

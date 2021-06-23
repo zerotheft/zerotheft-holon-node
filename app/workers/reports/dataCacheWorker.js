@@ -28,7 +28,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
-        cacheServer.del('PAST_THEFTS')
+        // cacheServer.del('PAST_THEFTS')
 
         //Reset all year synced statuses
         // for (let year = defaultPropYear; year >= firstPropYear; year--) {
