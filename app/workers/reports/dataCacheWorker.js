@@ -65,14 +65,13 @@ const scanDataWorker = new Worker('ScanData', async job => {
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
         console.log('GHT', year, proposals.length, votes.length)
 
-        const mainVal = await getHierarchyTotals(year, umbrellaPaths, proposals, votes, nationPaths)
-        if (mainVal) {
-            let yearData = mainVal[`${year}`]
+        const yearData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
+        if (yearData) {
             console.log('DPRFY', year)
             doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
 
             // check if its valid before caching
-            let isCached = fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`)
+            // let isCached = fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`)
             // only if there is no cached data and if total theft is not zero   
             // if ((yearData['_totals']['theft'] === 0 && yearData['_totals']['against'] > yearData['_totals']['for']) ||
             //     (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0) ||
@@ -82,7 +81,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
             // Save yearData in files
             const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
             // export full data with proposals
-            await createAndWrite(yearDataDir, `${year}.json`, JSON.stringify(yearData))
+            await createAndWrite(yearDataDir, `${year}.json`, yearData)
 
             //JSON with proposals data is huge so removing proposals from every path and then export it seperately
             Object.keys(yearData['paths']).forEach((path) => {
@@ -123,7 +122,8 @@ scanDataWorker.on("failed", async (job, returnvalue) => {
 const singleYearCaching = async (nation, year) => {
     try {
         const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
-        if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
+        // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
+        if (!syncProgressYear) {
             scanData.add('saveDatainCache', { nation, year }, { removeOnComplete: true, removeOnFail: true })
             return { message: `caching initiated for year ${year}. Please wait...` }
         } else
