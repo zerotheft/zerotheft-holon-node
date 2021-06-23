@@ -316,7 +316,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
     const exportFile = `${exportsDir}/calc_data/${nation}/calc_summary.json`
 
     try {
-        if (await cacheServer.getAsync('PATH_SYNCHRONIZED') && !fromWorker && (await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)) && fs.existsSync(exportFile)) { //if path has been sychrnoized and not from worker
+        if (!fromWorker && await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`) && fs.existsSync(exportFile)) { //if path has been sychrnoized and not from worker
             // const result = await cacheServer.getAsync(nation)
             const nationData = JSON.parse(fs.readFileSync(exportFile))
             // = JSON.parse(result[nation])

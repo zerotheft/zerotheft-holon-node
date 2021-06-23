@@ -87,7 +87,6 @@ const scanDataWorker = new Worker('ScanData', async job => {
                 delete hierarchyData['paths'][path]['props']
             })
             await createAndWrite(`${exportsDir}/calc_data/${nation}`, 'calc_summary.json', hierarchyData)
-            cacheServer.set(`CALC_SUMMARY_SYNCED`, true)
             // }
         }
     } catch (e) {
@@ -98,7 +97,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
 
 // raise flag when scanning and saving is completed
 scanDataWorker.on("completed", async () => {
-    cacheServer.set('PATH_SYNCHRONIZED', true)
+    cacheServer.set('CALC_SUMMARY_SYNCED', true)
     cacheServer.del('SYNC_INPROGRESS')
     console.log(`Caching completed.`)
     createLog(MAIN_PATH, `Caching completed.`)
@@ -121,15 +120,18 @@ scanDataWorker.on("failed", async () => {
 const singleYearCaching = async (nation) => {
     try {
         const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
+        const isVotesExporting = await cacheServer.getAsync(`VOTES_EXPORT_INPROGRESS`)
         // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
-        if (!syncProgressYear) {
+        if (!syncProgressYear && !isVotesExporting) {
             scanData.add('saveDatainCache', { nation }, { removeOnComplete: true, removeOnFail: true })
             return { message: `caching initiated. Please wait...` }
         } else
-            return { message: `caching ongoing. Status: ${syncProgressYear}` }
+            return { message: `Process ongoing. Status: ${!!syncProgressYear} vote export: ${!!isVotesExporting}` }
 
     } catch (e) {
         console.log('singleYearCaching', e)
+        createLog(MAIN_PATH, `singleYearCaching:: ${e}`)
+
         throw e
     }
 }

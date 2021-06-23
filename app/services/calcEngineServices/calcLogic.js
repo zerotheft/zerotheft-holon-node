@@ -130,7 +130,7 @@ const getPathYearVoteTotals = async (path, proposals, votes, years) => {
 
             // see if voter has own theft amounts else push actual theft amounts of proposal
             await PromisePool
-                .withConcurrency(1)
+                .withConcurrency(10)
                 .for(years)
                 .process(async year => {
                     let yrAmt = (!v['voteType']) ? 0 : (!isEmpty(v['altTheftAmt']) && v['altTheftAmt'][year] && v['voteType']) ? v['altTheftAmt'][year] : prop['theftYears'][year]
