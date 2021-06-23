@@ -66,11 +66,13 @@ const generateReportData = async (fileName, year) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
+    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
+        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
 
     const leadingTheft = get(pathSummary, 'leading_theft', '$0')
@@ -79,7 +81,7 @@ const generateReportData = async (fileName, year) => {
     const xYrs = (parseInt(maxYr) - parseInt(minYr)) + 1
     const manyYearsPerCit = theftAmountAbbr(totalTh / cts['citizens'])
 
-    pdfData.theft = leadingTheft
+    pdfData.theft = yearTheft || leadingTheft
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCitTheft
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
@@ -458,11 +460,13 @@ const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
+    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
+        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
 
     const totalTheft = sumTotals['theft'].toFixed(1)
@@ -472,7 +476,7 @@ const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
     const perCit = theftAmountAbbr((totalTheft / cts['citizens']).toFixed(1))
     const manyYearsPerCit = theftAmountAbbr((totalTh / cts['citizens']).toFixed(1))
 
-    pdfData.theft = theftAmountAbbr(totalTheft)
+    pdfData.theft = yearTheft || theftAmountAbbr(totalTheft)
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCit
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
