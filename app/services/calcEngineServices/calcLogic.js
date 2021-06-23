@@ -50,7 +50,7 @@ const getPathProposalYears = async (path, proposals) => {
 }
 
 
-/**  1111
+/**  
  * Get Path Vote Totals
  * @param {string} path 
  * @param {object} proposals 
@@ -61,16 +61,18 @@ const getPathVoteTotals = async (path, proposals, votes) => {
     createLog(CALC_STATUS_PATH, `Getting Path Vote Total in ${path}`, path)
     let pvt = {}
     const years = await getPathProposalYears(path, proposals)
+
     // await PromisePool
     //     .withConcurrency(10)
     //     .for(years)
     //     .process(async y => {
     // if (parseInt(year) === parseInt(y))
-    pvt = await getPathYearVoteTotals(path, proposals, votes, years)
+    if (years.length > 0)
+        pvt = await getPathYearVoteTotals(path, proposals, votes, years)
     // })
     return pvt
 }
-/**22222
+/**
  * Get Path Year vote totals
  * @param {string} path 
  * @param {integer} year 
@@ -210,19 +212,15 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         }
         // distribute vote totals into path list
         let pvt = await getPathVoteTotals(fullPath, proposals, votes)
-        if (fullPath === 'industries/finance') {
-            console.log("=*****==", pvt)
-        }
+        if (isEmpty(pvt)) continue
         // for (y in pvt) {
-        // walk years in the totals for each path
-        let pvty = pvt
 
         let ytots = vtby['_totals']
 
-        let votesFor = pvty['for']
-        let votesAgainst = pvty['against']
+        let votesFor = pvt['for']
+        let votesAgainst = pvt['against']
         let tVotes = votesFor + votesAgainst
-        let vprops = Object.keys(pvty['props']).length
+        let vprops = Object.keys(pvt['props']).length
         ytots['votes'] += tVotes
         ytots['proposals'] += vprops
         ytots['for'] += votesFor
@@ -231,9 +229,9 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // find winning theft for the year
         let propMax
         let yesTheftAmts = []
-        if ('props' in pvty) {
-            for (pid in pvty['props']) {
-                let p = pvty['props'][pid]
+        if ('props' in pvt) {
+            for (pid in pvt['props']) {
+                let p = pvt['props'][pid]
                 let actlVotedAmt = 0
                 Object.keys(p['all_theft_amounts']).forEach((yr) => {
                     actlVotedAmt += mean(p['all_theft_amounts'][yr])
@@ -276,7 +274,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         let need_votes = (legit) ? 0 : legitimiateThreshold - tVotes;
         vtby['paths'][fullPath] = {
             '_totals': { 'legit': legit, 'votes': tVotes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_theft_amts': propMax ? propMax['all_theft_amounts'] : {}, 'need_votes': need_votes, ...avgData },
-            'props': pvty['props']
+            'props': pvt['props']
         }
         ytots['theft'] += theft
 
@@ -373,9 +371,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
 
         let totalsData = pathData['_totals']
         let secondaryData
-        if (fullPath === 'industries/finance') {
-            console.log("=*****==", pathData, childrenSum)
-        }
+
         // see if we've got an umbrella total
         if (get(pathData, 'missing')) {
             totalsData = childrenSum
@@ -383,11 +379,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         } else if (umbrellaPaths.includes(nation + '/' + fullPath)) {
             // set its method
             totalsData['method'] = 'Umbrella Totals'
-            // if (fullPath === 'industries/finance') {
-            //     console.log(fullPath)
-            //     console.log(totalsData, childrenSum)
 
-            // }
             // if umbrella total is legit, and roll-up total is legit, and roll-up total theft greater than umbrella, use roll-up data
             if (totalsData['legit'] && childrenSum['legit'] && childrenSum['theft'] > totalsData['theft']) {
                 secondaryData = totalsData
@@ -410,8 +402,8 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
             }
         }
         if (totalsData['theft'] > 0) {
-            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
-            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+            // yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+            // yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
             if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
                 yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
                 yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
@@ -432,7 +424,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
     return yearData
 }
 
-const manipulatePaths = async (paths, proposalContract, voterContract, currentPath, theftVotesSum = {}, umbrellaPaths, parentPaths = [], year, proposals = [], votes = []) => {
+const manipulatePaths = async (paths, proposalContract, voterContract, currentPath, theftVotesSum = {}, umbrellaPaths, parentPaths = [], proposals = [], votes = []) => {
     createLog(CALC_STATUS_PATH, `Manipulating Path for ${currentPath}`, currentPath)
     let nestedKeys = Object.keys(paths)
     for (let i = 0; i < nestedKeys.length; i++) {
@@ -444,7 +436,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
         let nextPath = `${currentPath}/${key}`
         if (nestedValues['leaf']) {
             try {
-                let details = await getPathDetail(nextPath, year, proposalContract, voterContract, true)
+                let details = await getPathDetail(nextPath, proposalContract, voterContract, true)
                 if (details.success) {
                     proposals = proposals.concat(details.pathDetails)
                     votes = votes.concat(details.allVotesInfo)
@@ -460,7 +452,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
         else {
             if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
                 try {
-                    let details = await getPathDetail(nextPath, year, proposalContract, voterContract, true)
+                    let details = await getPathDetail(nextPath, proposalContract, voterContract, true)
                     if (details.success) {
                         proposals = proposals.concat(details.pathDetails)
                         votes = votes.concat(details.allVotesInfo)
@@ -473,14 +465,14 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
                     console.log("manipulatePaths(nested) Error::", e)
                 }
             }
-            const pvData = await manipulatePaths(nestedValues, proposalContract, voterContract, nextPath, theftVotesSum, umbrellaPaths, parentPaths, year, proposals, votes)
+            const pvData = await manipulatePaths(nestedValues, proposalContract, voterContract, nextPath, theftVotesSum, umbrellaPaths, parentPaths, proposals, votes)
             proposals = pvData.proposals
             votes = pvData.votes
 
         }
     }
     //save proposals and votes in temp file
-    // await createAndWrite(`${cacheDir}/calc_year_data/${nation}`, `proposals.json`, JSON.stringify)
+    // await createAndWrite(`${cacheDir}/calc_data/${nation}`, `proposals.json`, JSON.stringify)
 
     return { proposals, votes }
 }
@@ -490,7 +482,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
  * @param {string} nation Name of a country
  */
 const getPastYearThefts = async (nation = 'USA') => {
-    const theftFile = `${exportsDir}/calc_year_data/${nation}/past_year_thefts.json`
+    const theftFile = `${exportsDir}/calc_data/${nation}/past_year_thefts.json`
     const syncInprogress = await cacheServer.getAsync('SYNC_INPROGRESS')
     const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
 
@@ -507,40 +499,43 @@ const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     let priorTheft
     let firstTheft
 
-    for (let year = firstPropYear; year <= defaultPropYear; year++) {
-        // let tempValue = await cacheServer.hgetallAsync(`${i}`)
-        // if (get(tempValue, nation)) {
-        //     sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
-        // }
-        const cachedFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
-        if (!fs.existsSync(cachedFile)) {
-            continue
-        }
-        let p = JSON.parse(fs.readFileSync(cachedFile))
-        // }
+    // for (let year = firstPropYear; year <= defaultPropYear; year++) {
+    // let tempValue = await cacheServer.hgetallAsync(`${i}`)
+    // if (get(tempValue, nation)) {
+    //     sumTotals[`${i}`] = JSON.parse(get(tempValue, nation))
+    // }
+    const cachedFile = `${exportsDir}/calc_data/${nation}/calc_summary.json`
 
-        // for (year in sumTotals) {
-        // let p = sumTotals[year]
-
-        let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
-        if (!p || get(p, 'missing')) {
-            yearTh.push(yd)
-            continue
-        } else if (p['_totals']['legit']) {
-            yd['Determined By'] = 'voting'
-            yd['theft'] = p['_totals']['theft']
-        } else { // not legit
-            yd['Determined By'] = 'incomplete voting'
-            yd['theft'] = p['_totals']['theft']
-        }
-
-        if (!firstTheft) {
-            firstTheft = yd['theft']
-        }
-        priorTheft = yd['theft']
-
-        yearTh.push(yd)
+    if (!fs.existsSync(cachedFile)) {
+        throw new Error('no calc summary file')
     }
+    let p = JSON.parse(fs.readFileSync(cachedFile))
+    // }
+
+    // for (year in sumTotals) {
+    // let p = sumTotals[year]
+
+    let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
+    if (!p || get(p, 'missing')) {
+        yearTh.push(yd)
+        // continue
+        throw new Error('missing')
+
+    } else if (p['_totals']['legit']) {
+        yd['Determined By'] = 'voting'
+        yd['theft'] = p['_totals']['theft']
+    } else { // not legit
+        yd['Determined By'] = 'incomplete voting'
+        yd['theft'] = p['_totals']['theft']
+    }
+
+    if (!firstTheft) {
+        firstTheft = yd['theft']
+    }
+    priorTheft = yd['theft']
+
+    yearTh.push(yd)
+    // }
 
     // second pass - back-fill any early years with firstTheft estimate
     for (yd in yearTh) {
@@ -612,7 +607,7 @@ const calculatePastYearThefts = async (nation = 'USA', isSyncing = false) => {
     // save in cache only when sync is not happening
     if (!isSyncing) {
         cacheServer.hmset('PAST_THEFTS', nation, JSON.stringify(yearTh))
-        await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `past_year_thefts.json`, yearTh)
+        await createAndWrite(`${exportsDir}/calc_data/${nation}`, `past_year_thefts.json`, yearTh)
     }
     return yearTh
 }

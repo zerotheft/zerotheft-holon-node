@@ -78,14 +78,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
      * Initiate data caching
      */
     if (!isSyncing && cachedVid > 0 && !isVotesExporting) {
-
-      // for (let year = defaultPropYear; year >= firstPropYear; year--) {
-      // const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
-      // if (!isYearSynced) {
-      await singleYearCaching(job.data.nation, 2020)
-      // }
-      // }
-      // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })
+      await singleYearCaching(job.data.nation)
     } else {
       console.log('Cache Data. OK!!')
     }
@@ -96,7 +89,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     if (isDatainCache && !isSyncing && !pastThefts) {
       console.log('Past year thefts missing. Initiated...')
       // when all year data got sycned get past year thefts
-      await calculatePastYearThefts()
+      // await calculatePastYearThefts()
     }
     /**
      * If sync is complete and full report is not present.
@@ -104,7 +97,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
      */
     if (!isSyncing && !isFullReport && isDatainCache && !isGeneratingReports && isNotExporting) {
       console.log('Full reports missing. Inititated....')
-      // allReportWorker()
+      allReportWorker()
     } else if (isGeneratingReports) {
       console.log('Reports in progress!!')
     }

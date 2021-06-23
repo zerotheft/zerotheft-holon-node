@@ -31,13 +31,13 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('PAST_THEFTS')
 
         //Reset all year synced statuses
-        for (let year = defaultPropYear; year >= firstPropYear; year--) {
-            cacheServer.del(`YEAR_${year}_SYNCED`)
+        // for (let year = defaultPropYear; year >= firstPropYear; year--) {
+        cacheServer.del(CALC_SUMMARY_SYNCED)
 
-            // const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
-            // if (!isYearSynced || !!job.data.reSync)
-            //     await singleYearCaching(job.data.nation, year)
-        }
+        // const isYearSynced = await cacheServer.getAsync(CALC_SUMMARY_SYNCED)
+        // if (!isYearSynced || !!job.data.reSync)
+        //     await singleYearCaching(job.data.nation, year)
+        // }
     }
 
 }, { connection })
@@ -47,12 +47,11 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
  */
 const scanDataWorker = new Worker('ScanData', async job => {
     try {
-        const year = job.data.year
         const nation = job.data.nation
-        console.log(`Caching initiated for year ${year}`)
-        createLog(MAIN_PATH, `Caching initiated for year ${year}`)
+        console.log(`Caching initiated`)
+        createLog(MAIN_PATH, `Caching initiated`)
 
-        cacheServer.set('SYNC_INPROGRESS', year)
+        cacheServer.set('SYNC_INPROGRESS', true)
 
         const nationPaths = await pathsByNation(nation)
         const proposalContract = getProposalContract()
@@ -62,33 +61,33 @@ const scanDataWorker = new Worker('ScanData', async job => {
         *umbrellaPaths=["macroeconomics","workers","industries/finance","economic_crisis/2008_mortgage","industries/healthcare/pharma"]
         */
         umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
-        const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [], year)
-        console.log('GHT', year, proposals.length, votes.length)
+        const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [])
+        console.log('GHT', proposals.length, votes.length)
 
-        const yearData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
-        if (yearData) {
-            console.log('DPRFY', year)
-            doPathRollUpsForYear(yearData, umbrellaPaths, nationPaths)
+        const hierarchyData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
+        if (hierarchyData) {
+            console.log('DPRFY')
+            doPathRollUpsForYear(hierarchyData, umbrellaPaths, nationPaths)
 
             // check if its valid before caching
-            // let isCached = fs.existsSync(`${exportsDir}/calc_year_data/${nation}/${year}.json`)
+            // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
             // only if there is no cached data and if total theft is not zero   
-            // if ((yearData['_totals']['theft'] === 0 && yearData['_totals']['against'] > yearData['_totals']['for']) ||
-            //     (!isCached && proposals.length === 0 && votes.length === 0 && yearData['_totals']['theft'] === 0) ||
-            //     yearData['_totals']['theft'] !== 0
+            // if ((hierarchyData['_totals']['theft'] === 0 && hierarchyData['_totals']['against'] > hierarchyData['_totals']['for']) ||
+            //     (!isCached && proposals.length === 0 && votes.length === 0 && hierarchyData['_totals']['theft'] === 0) ||
+            //     hierarchyData['_totals']['theft'] !== 0
             // ) {
-            cacheServer.hmset(`${year}`, nation, JSON.stringify(yearData)) //this will save yearData in redis-cache
-            // Save yearData in files
-            const yearDataDir = `${cacheDir}/calc_year_data/${nation}/`
+            cacheServer.set(nation, JSON.stringify(hierarchyData)) //this will save hierarchyData in redis-cache
+            // Save hierarchyData in files
+            const hierarchyDataDir = `${cacheDir}/calc_data/${nation}/`
             // export full data with proposals
-            await createAndWrite(yearDataDir, `${year}.json`, yearData)
+            await createAndWrite(hierarchyDataDir, 'calc_summary.json', hierarchyData)
 
             //JSON with proposals data is huge so removing proposals from every path and then export it seperately
-            Object.keys(yearData['paths']).forEach((path) => {
-                delete yearData['paths'][path]['props']
+            Object.keys(hierarchyData['paths']).forEach((path) => {
+                delete hierarchyData['paths'][path]['props']
             })
-            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, yearData)
-            cacheServer.set(`YEAR_${year}_SYNCED`, true)
+            await createAndWrite(`${exportsDir}/calc_data/${nation}`, 'calc_summary.json', hierarchyData)
+            cacheServer.set(`CALC_SUMMARY_SYNCED`, true)
             // }
         }
     } catch (e) {
@@ -98,18 +97,18 @@ const scanDataWorker = new Worker('ScanData', async job => {
 }, { connection })
 
 // raise flag when scanning and saving is completed
-scanDataWorker.on("completed", async (job, returnvalue) => {
+scanDataWorker.on("completed", async () => {
     cacheServer.set('PATH_SYNCHRONIZED', true)
     cacheServer.del('SYNC_INPROGRESS')
-    console.log(`Caching completed for year ${job.data.year}`)
-    createLog(MAIN_PATH, `Caching completed for year ${job.data.year}`)
+    console.log(`Caching completed.`)
+    createLog(MAIN_PATH, `Caching completed.`)
 }, { connection });
 
 // raise flag when scanning and saving failed
-scanDataWorker.on("failed", async (job, returnvalue) => {
+scanDataWorker.on("failed", async () => {
     cacheServer.del('SYNC_INPROGRESS')
-    console.log(`Caching failed for year ${job.data.year}`)
-    createLog(MAIN_PATH, `Caching failed for year ${job.data.year}`)
+    console.log(`Caching failed.`)
+    createLog(MAIN_PATH, `Caching failed.`)
 }, { connection });
 
 
@@ -119,15 +118,15 @@ scanDataWorker.on("failed", async (job, returnvalue) => {
  * @param {int} year 
  * @returns JSON with success or failure
  */
-const singleYearCaching = async (nation, year) => {
+const singleYearCaching = async (nation) => {
     try {
         const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
         // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
         if (!syncProgressYear) {
-            scanData.add('saveDatainCache', { nation, year }, { removeOnComplete: true, removeOnFail: true })
-            return { message: `caching initiated for year ${year}. Please wait...` }
+            scanData.add('saveDatainCache', { nation }, { removeOnComplete: true, removeOnFail: true })
+            return { message: `caching initiated. Please wait...` }
         } else
-            return { message: `caching ongoing for year ${syncProgressYear}` }
+            return { message: `caching ongoing. Status: ${syncProgressYear}` }
 
     } catch (e) {
         console.log('singleYearCaching', e)
