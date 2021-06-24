@@ -1,4 +1,4 @@
-const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByYear } = require('../services/proposalsService');
+const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByPath } = require('../services/proposalsService');
 
 const getProposalWithDetail = async (req, res, next) => {
   const response = await proposalWithDetails(req.params.id, true)
@@ -16,9 +16,9 @@ const getTemplateDetail = async (req, res, next) => {
   return res.send(response)
 }
 
-const pathProposalsByYear = async (req, res, next) => {
+const pathProposalsByPath = async (req, res, next) => {
   try {
-    const response = await getPathProposalsByYear(req.query.path, req.query.year)
+    const response = await getPathProposalsByPath(req.query.path)
     var votes = [],
       theftAmt = []
     response.map((proposal) => {
@@ -37,5 +37,5 @@ const pathProposalsByYear = async (req, res, next) => {
 module.exports = {
   getProposalWithDetail,
   getTemplateDetail,
-  pathProposalsByYear
+  pathProposalsByPath
 }
