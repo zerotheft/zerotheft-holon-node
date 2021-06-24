@@ -34,7 +34,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
 
         //Reset all year synced statuses
         // for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        cacheServer.del(CALC_SUMMARY_SYNCED)
+        cacheServer.del('CALC_SUMMARY_SYNCED')
 
         // const isYearSynced = await cacheServer.getAsync(CALC_SUMMARY_SYNCED)
         // if (!isYearSynced || !!job.data.reSync)
