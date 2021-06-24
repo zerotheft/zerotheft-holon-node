@@ -124,7 +124,7 @@ const getPathYearVoteTotals = async (path, proposals, votes, years) => {
                 // tots['props'][voteProposalId]['all_theft_amounts'] = amt
             } else {
                 // tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': amt }
-                tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': {} }
+                tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': {}, 'year_thefts': {} }
             }
             let propAllTheftAmts = tots['props'][voteProposalId]['all_theft_amounts']
 
@@ -234,7 +234,9 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
                 let p = pvt['props'][pid]
                 let actlVotedAmt = 0
                 Object.keys(p['all_theft_amounts']).forEach((yr) => {
-                    actlVotedAmt += mean(p['all_theft_amounts'][yr])
+                    let avgYrTheft = mean(p['all_theft_amounts'][yr])
+                    actlVotedAmt += avgYrTheft
+                    p['year_thefts'][yr] = avgYrTheft
                 })
                 p['wining_theft_amt'] = actlVotedAmt > 0 ? actlVotedAmt : p['theftAmt']
                 // p['voted_theft_amount'] = p['all_theft_amounts'].length > 0 ? mean(p['all_theft_amounts']) : p['theftAmt']
@@ -273,7 +275,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         let legit = (tVotes >= legitimiateThreshold)
         let need_votes = (legit) ? 0 : legitimiateThreshold - tVotes;
         vtby['paths'][fullPath] = {
-            '_totals': { 'legit': legit, 'votes': tVotes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_theft_amts': propMax ? propMax['all_theft_amounts'] : {}, 'need_votes': need_votes, ...avgData },
+            '_totals': { 'legit': legit, 'votes': tVotes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_year_thefts': propMax ? propMax['year_thefts'] : {}, 'need_votes': need_votes, ...avgData },
             'props': pvt['props']
         }
         ytots['theft'] += theft

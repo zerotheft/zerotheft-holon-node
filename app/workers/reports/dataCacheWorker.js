@@ -7,8 +7,10 @@ const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
+// const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
+const { lastExportedVid } = require('../../services/engineDataServices/utils')
+
 
 const connection = new IORedis()
 const scanData = new Queue('ScanData', { connection })
@@ -121,8 +123,10 @@ const singleYearCaching = async (nation) => {
     try {
         const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
         const isVotesExporting = await cacheServer.getAsync(`VOTES_EXPORT_INPROGRESS`)
+        const cachedVid = await lastExportedVid()
+
         // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
-        if (!syncProgressYear && !isVotesExporting) {
+        if (!syncProgressYear && !isVotesExporting && cachedVid > 0) {
             scanData.add('saveDatainCache', { nation }, { removeOnComplete: true, removeOnFail: true })
             return { message: `caching initiated. Please wait...` }
         } else
