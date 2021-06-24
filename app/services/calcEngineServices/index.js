@@ -328,7 +328,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
                 if (totals.votes !== 0) {
                     agg[`${nation}/${path}`] = totals
                 }
-                allTheftYears = allTheftYears.concat(Object.keys(get(totals, 'voted_theft_amts', [])))
+                allTheftYears = allTheftYears.concat(Object.keys(get(totals, 'voted_year_thefts', [])))
             })
             // check cache for past 
             // let yearTh = await getPastYearThefts(nation)
