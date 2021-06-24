@@ -31,7 +31,7 @@ const getNationReport = async (req, res, next) => {
 }
 
 const getTheftInfo = async (req, res, next) => {
-    const response = await theftInfo(false, req.params.year)
+    const response = await theftInfo(false)
     if (response) {
         return res.send(response)
     }

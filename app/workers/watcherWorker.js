@@ -23,8 +23,9 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isSyncing = await cacheServer.getAsync(`SYNC_INPROGRESS`)
     const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
-    const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
-    const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
+    // const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
+    // const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
+    const isDatainCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
     const cachedUid = await lastExportedUid()
     const cachedPid = await lastExportedPid()
     const cachedVid = await lastExportedVid()
@@ -32,11 +33,11 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isVotersExporting = await cacheServer.getAsync(`VOTERS_EXPORT_INPROGRESS`)
     const isVotesExporting = await cacheServer.getAsync(`VOTES_EXPORT_INPROGRESS`)
 
-    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing} (${isSyncing})`)
+    console.log(`1. Caching in progress(SYNC_INPROGRESS): ${!!isSyncing}`)
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
-    console.log(`4. Data in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}`)
-    console.log(`5. Past year thefts(PAST_THEFTS): ${!!pastThefts}`)
+    console.log(`4. Data in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}`)
+    // console.log(`5. Past year thefts(PAST_THEFTS): ${!!pastThefts}`)
     console.log(`6. Last User ID Exported: ${cachedUid}`)
     console.log(`7. User Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
     console.log(`8. Last Proposal ID Exported: ${cachedPid}`)
@@ -77,15 +78,8 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
      * If no data in cache and no sync in progress
      * Initiate data caching
      */
-    if (!isSyncing && cachedVid > 0 && !isVotesExporting) {
-
-      for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        const isYearSynced = await cacheServer.getAsync(`YEAR_${year}_SYNCED`)
-        if (!isYearSynced) {
-          await singleYearCaching(job.data.nation, year)
-        }
-      }
-      // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })
+    if (!isSyncing && cachedVid > 0 && !isVotesExporting && !isDatainCache) {
+      await singleYearCaching(job.data.nation)
     } else {
       console.log('Cache Data. OK!!')
     }
@@ -93,11 +87,11 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     * If sync is complete and no past year thefts collected
     * calculate past year thefts
     */
-    if (isDatainCache && !isSyncing && !pastThefts) {
-      console.log('Past year thefts missing. Initiated...')
-      // when all year data got sycned get past year thefts
-      await calculatePastYearThefts()
-    }
+    // if (isDatainCache && !isSyncing && !pastThefts) {
+    //   console.log('Past year thefts missing. Initiated...')
+    //   // when all year data got sycned get past year thefts
+    //   // await calculatePastYearThefts()
+    // }
     /**
      * If sync is complete and full report is not present.
      * Initiate full report
@@ -112,7 +106,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log('*****HEARTBEAT Report*****')
 
     // Print heatbeat in log file
-    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(PATH_SYNCHRONIZED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nUser Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}\nLast Proposal ID Exported: ${cachedPid}\nProposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}\nLast Vote ID Exported: ${cachedVid}\n Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}\nser ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
+    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nUser Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}\nLast Proposal ID Exported: ${cachedPid}\nProposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}\nLast Vote ID Exported: ${cachedVid}\n Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}\nser ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
     createLog(WATCHER_LOG_PATH, logContent)
 
   } catch (e) {

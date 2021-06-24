@@ -17,8 +17,8 @@ const reportWorker = new Worker('ReportQueue', async job => {
             cacheServer.set('REPORTS_INPROGRESS', true)
 
             // await theftInfo(true, null)
-            const pathSync = await cacheServer.getAsync('PATH_SYNCHRONIZED')
-            if (pathSync) {
+            const isDatainCache = await cacheServer.getAsync('CALC_SUMMARY_SYNCED')
+            if (isDatainCache) {
                 console.log('Report generation initiated')
                 createLog(FULL_REPORT_PATH, `All path reports generation worker initiated`)
                 let nationPaths = await allNations()

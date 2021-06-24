@@ -1,10 +1,10 @@
 const fs = require("fs")
-const { get, isEmpty } = require('lodash')
+const { get, min, max, isEmpty } = require('lodash')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 const { convertStringToHash } = require('zerotheft-node-utils').web3
 const config = require('zerotheft-node-utils/config')
 const PUBLIC_PATH = `${config.APP_PATH}/public`
-const cacheDir = `${config.APP_PATH}/.cache/calc_year_data`
+const cacheDir = `${config.APP_PATH}/.cache/calc_data`
 const { getPastYearThefts } = require('./calcLogic')
 const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config');
@@ -312,44 +312,49 @@ const texPathTraverse = async (path, currPath, texsSequence, year, umbrellaPaths
 }
 
 
-const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
+const theftInfo = async (fromWorker = false, nation = 'USA') => {
+    const exportFile = `${exportsDir}/calc_data/${nation}/calc_summary.json`
+
     try {
-        if (await cacheServer.getAsync('PATH_SYNCHRONIZED') && !fromWorker && (await cacheServer.getAsync(`YEAR_${year}_SYNCED`))) { //if path has been sychrnoized and not from worker
-            const result = await cacheServer.hgetallAsync(year)
-            const nationData = JSON.parse(result[nation])
+        if (!fromWorker && await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`) && fs.existsSync(exportFile)) { //if path has been sychrnoized and not from worker
+            // const result = await cacheServer.getAsync(nation)
+            const nationData = JSON.parse(fs.readFileSync(exportFile))
+            // = JSON.parse(result[nation])
             const paths = nationData.paths
             const agg = { [nation]: nationData._totals }
+            let allTheftYears = []
             Object.keys(paths).forEach((path) => {
                 const totals = paths[path]._totals
                 if (totals.votes !== 0) {
                     agg[`${nation}/${path}`] = totals
                 }
+                allTheftYears = allTheftYears.concat(Object.keys(get(totals, 'voted_theft_amts', [])))
             })
             // check cache for past 
-            let yearTh = await getPastYearThefts(nation)
-            if (yearTh.length == 0) throw new Error('no past thefts data in cache')
-            let minYr, maxYr
-            let totalTh = 0
-            for (i = 0; i < yearTh.length; i++) {
-                yr = yearTh[i]
-                if (!minYr || parseInt(yr['Year']) < parseInt(minYr)) {
-                    minYr = parseInt(yr['Year'])
-                } else {
-                    minYr = parseInt(minYr)
-                }
-                if (!maxYr || parseInt(yr['Year'])) {
-                    maxYr = parseInt(yr['Year'])
-                } else {
-                    maxYr = parseInt(maxYr)
-                }
+            // let yearTh = await getPastYearThefts(nation)
+            // if (yearTh.length == 0) throw new Error('no past thefts data in cache')
+            let minYr = min(allTheftYears)
+            let maxYr = max(allTheftYears)
+            // for (i = 0; i < yearTh.length; i++) {
+            //     yr = yearTh[i]
+            //     if (!minYr || parseInt(yr['Year']) < parseInt(minYr)) {
+            //         minYr = parseInt(yr['Year'])
+            //     } else {
+            //         minYr = parseInt(minYr)
+            //     }
+            //     if (!maxYr || parseInt(yr['Year'])) {
+            //         maxYr = parseInt(yr['Year'])
+            //     } else {
+            //         maxYr = parseInt(maxYr)
+            //     }
 
-                totalTh += yr['theft']
-            }
+            //     totalTh += yr['theft']
+            // }
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
-            agg['info']['each_year'] = nationData['_totals']['theft'] / usaPopulation(year)
-            agg['info']['population'] = usaPopulation(year)
-            agg['info']['many_years'] = totalTh
+            // agg['info']['each_year'] = nationData['_totals']['theft'] / usaPopulation(year)
+            // agg['info']['population'] = usaPopulation(year)
+            agg['info']['many_years'] = nationData['_totals']['theft']
             agg['info']['max_year'] = maxYr
             agg['info']['min_year'] = minYr
             agg['info']['between_years'] = (maxYr - minYr) + 1
@@ -357,20 +362,19 @@ const theftInfo = async (fromWorker = false, year, nation = 'USA') => {
             agg['info']['proposals'] = nationData['_totals']['proposals']
 
             //log the aggregated data in file inside exports directory
-            const exportFile = `${exportsDir}/calc_year_data/${nation}/${year}.json`
             let exportFileData = {}
             if (fs.existsSync(exportFile)) {
                 exportFileData = JSON.parse(fs.readFileSync(exportFile))
             }
             exportFileData['info'] = agg['info']
-            await createAndWrite(`${exportsDir}/calc_year_data/${nation}`, `${year}.json`, exportFileData)
+            await createAndWrite(`${exportsDir}/calc_data/${nation}`, `calc_summary.json`, exportFileData)
 
             return agg;
         }
         else {
-            cacheServer.del('PAST_THEFTS')
-            const response = singleYearCaching(nation, year) // Background task for processing and saving data into cache
-            createLog(MAIN_PATH, `Background task for processing and saving data into cache for ${nation} in ${year}`)
+            // cacheServer.del('PAST_THEFTS')
+            const response = singleYearCaching(nation) // Background task for processing and saving data into cache
+            createLog(MAIN_PATH, `Background task for processing and saving data into cache for ${nation}`)
             return response
         }
     } catch (e) {
