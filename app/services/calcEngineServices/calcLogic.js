@@ -379,7 +379,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
             }
         }
 
-        if (totalsData['theft'] > 0) {
+        if (totalsData['theft'] > 0 && fullPath !== "industries") {
             yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
             yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
             if (Object.keys(umbrellaPaths).includes(fullPath)) {
