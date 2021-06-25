@@ -17,9 +17,9 @@ const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERRO
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
 const singleIssueReportPath = `${getReportPath()}reports/ztReport`
 
-const singleIssueReport = async (leafPath, fromWorker = false, year) => {
+const singleIssueReport = async (leafPath, fromWorker = false) => {
     createLog(SINGLE_REPORT_PATH, 'Single report generation initiation......', leafPath)
-    const fileName = `${year}_${leafPath.replace(/\//g, '-')}`
+    const fileName = `${leafPath.replace(/\//g, '-')}`
     try {
         const filePath = singleIssueReportPath
         if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
@@ -31,17 +31,17 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
             let allYearData = await allYearCachedData(nation)
 
             let lPath = leafPath.split('/').slice(1).join('/')
-            if (!isEmpty(allYearData) && get(allYearData, `${year}.paths.${lPath}`) && !get(allYearData, `${year}.paths.${lPath}.missing`)) {
+            if (!isEmpty(allYearData) && get(allYearData, `paths.${lPath}`) && !get(allYearData, `paths.${lPath}.missing`)) {
                 const leafJson = { yearData: allYearData, holon: getAppRoute(false), leafPath, actualPath: lPath, allPaths: nationPaths }
                 createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
-                createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName} with year:${year}`, leafPath)
-                await generatePDFReport('ztReport', fileName, year)
+                createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName}`, leafPath)
+                await generatePDFReport('ztReport', fileName)
                 return { report: `${fileName}.pdf` }
             } else {
-                await generateNoVotePDFReport('ztReport', fileName, year, leafPath, getAppRoute(false))
+                await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false))
                 return { report: `${fileName}.pdf` }
                 // return { message: 'Issue not present' }
             }
@@ -51,7 +51,7 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
             return { message: 'Issue not present' }
         }
     } catch (e) {
-        console.log(`year: ${year} and path: ${leafPath}`, e)
+        console.log(`path: ${leafPath}`, e)
         createLog(SINGLE_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, leafPath)
         createLog(ERROR_PATH, `calcEngineServices=>singleIssueReport()::Exceptions in single report generation for ${leafPath} with Exception: ${e.message}`)
         return { error: e.message }
@@ -67,14 +67,10 @@ const singleIssueReport = async (leafPath, fromWorker = false, year) => {
 */
 const allYearCachedData = async (nation) => {
     createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
-    let allYearData = {}
-    for (i = defaultPropYear; i >= firstPropYear; i--) {
-        try {
-            const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/${i}.json`)
-            allYearData[`${i}`] = JSON.parse(jsonFile)
-        } catch { }
-    }
-    return allYearData
+    try {
+        const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/calc_summary.json`)
+        return JSON.parse(jsonFile)
+    } catch { }
 }
 
 /*

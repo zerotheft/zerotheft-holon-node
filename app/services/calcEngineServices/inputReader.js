@@ -12,9 +12,8 @@ const loadSingleIssue = (fileName) => {
     return leafJson;
 }
 
-const getPathYearProposals = (summaryTotals, path, year) => {
-    const yearData = summaryTotals[year]
-    return get(yearData, `paths.${path}.props`, {})
+const getPathYearProposals = (summaryTotals, path) => {
+    return get(summaryTotals, `paths.${path}.props`, {})
 }
 
 const getPathYearVotes = (proposals) => {
