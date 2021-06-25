@@ -44,9 +44,10 @@ if (!fs.existsSync(inflatedValuesPath)) {
 }
 const inflatedValues = require(inflatedValuesPath)
 
-const generateReportData = async (fileName, year) => {
+const generateReportData = async (fileName) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
+    const year = (new Date()).getFullYear() - 1
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
     pdfData.year = year
@@ -55,10 +56,10 @@ const generateReportData = async (fileName, year) => {
     pdfData.pageID = path
 
     const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
-    const props = getPathYearProposals(summaryTotals, path, year)
+    const props = getPathYearProposals(summaryTotals, path)
     const votes = getPathYearVotes(props)
-    const vt = getPathVoteTotals(summaryTotals[year], path)
-    if (vt['missing']) throw new Error(`generateReportData: Proposals not available for path: ${path} and year ${year}`);
+    const vt = getPathVoteTotals(summaryTotals, path)
+    if (vt['missing']) throw new Error(`generateReportData: Proposals not available for path: ${path}`);
 
     const voteTotals = {
         'for': get(vt, '_totals.for', 0),
@@ -92,6 +93,7 @@ const generateReportData = async (fileName, year) => {
         totalTh += yr['theft']
     }
 
+    const votedYearThefts = get(vt, `_totals.voted_year_thefts`, {})
     const leadingTheft = get(pathSummary, 'leading_theft', '$0')
     const cts = getCitizenAmounts(year)
     const perCitTheft = theftAmountAbbr((realTheftAmount(leadingTheft) / cts['citizens']).toFixed(2))
@@ -99,7 +101,7 @@ const generateReportData = async (fileName, year) => {
 
     const manyYearsPerCit = theftAmountAbbr(totalTh / cts['citizens'])
 
-    pdfData.theft = leadingTheft
+    pdfData.theft = theftAmountAbbr(get(votedYearThefts, year, 0))
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCitTheft
 
@@ -132,35 +134,12 @@ const generateReportData = async (fileName, year) => {
     })
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
-    const stolenByYear = {
-        "2021": "820B",
-        "2020": "819B",
-        "2019": "818B",
-        "2018": "817B",
-        "2017": "816B",
-        "2016": "815B",
-        "2015": "815B",
-        "2014": "814B",
-        "2013": "813B",
-        "2012": "812B",
-        "2011": "811B",
-        "2010": "810B",
-        "2009": "809B",
-        "2008": "808B",
-        "2007": "807B",
-        "2006": "806B",
-        "2005": "805B",
-        "2004": "804B",
-        "2003": "803B",
-        "2002": "802B",
-        "2001": "801B",
-    }
-    pdfData.stolenByYearTableData = prepareStolenByYear(stolenByYear)
+    pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = currentYear
 
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
-    const yamlJSON = await getProposalYaml(proposalID, path, year)
+    const yamlJSON = await getProposalYaml(proposalID, path)
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = leadingProp['date']
@@ -177,7 +156,7 @@ const generateReportData = async (fileName, year) => {
 
 const prepareStolenByYearSingle = (year, stolenByYear, inflated = false) => {
     if (!year) return ` & `
-    return `${year} & \\$${inflated ? theftAmountAbbr(realTheftAmount(stolenByYear[year]) * inflatedValues[year]) : stolenByYear[year]}`
+    return `${year} & \\$${theftAmountAbbr(inflated ? stolenByYear[year] * inflatedValues[year] : stolenByYear[year])}`
 }
 
 const prepareStolenByYear = (stolenByYear) => {
@@ -336,20 +315,19 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
     })
 }
 
-const generatePDFReport = async (noteBookName, fileName, year, isPdf = 'false') => {
-    createLog(MAIN_PATH, `Generating Report for the year ${year} with filename: ${fileName}`)
-    const pdfData = await generateReportData(fileName, year)
+const generatePDFReport = async (noteBookName, fileName, isPdf = 'false') => {
+    createLog(MAIN_PATH, `Generating Report with filename: ${fileName}`)
+    const pdfData = await generateReportData(fileName)
     return await generateLatexPDF(pdfData, fileName)
 }
 
-const generateNoVoteReportData = async (fileName, year, path, holon) => {
+const generateNoVoteReportData = async (fileName, path, holon) => {
     const pathData = path.split('/')
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
-    pdfData.year = year
     pdfData.country = nation
     pdfData.holonUrl = holon
     pdfData.pageID = noNationPath
@@ -398,9 +376,9 @@ const generateNoVoteLatexPDF = async (pdfData, fileName) => {
     })
 }
 
-const generateNoVotePDFReport = async (noteBookName, fileName, year, path, holon) => {
-    createLog(MAIN_PATH, `Generating No Vote Report for the year ${year} with filename: ${fileName}`)
-    const pdfData = await generateNoVoteReportData(fileName, year, path, holon)
+const generateNoVotePDFReport = async (noteBookName, fileName, path, holon) => {
+    createLog(MAIN_PATH, `Generating No Vote Report with filename: ${fileName}`)
+    const pdfData = await generateNoVoteReportData(fileName, path, holon)
     return await generateNoVoteLatexPDF(pdfData, fileName)
 }
 
