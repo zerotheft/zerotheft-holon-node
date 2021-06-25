@@ -1,29 +1,12 @@
 const fs = require('fs')
-const { uniq, mean, isEmpty, sum } = require('lodash')
+const { uniq, mean, isEmpty } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
-const { exportsDir, cacheDir, createAndWrite } = require('../../common')
+const { exportsDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
-const { defaultPropYear, firstPropYear } = require('./helper')
-// let proposals = []
-// let votes = []
-let yearCacheData = []
+const { defaultPropYear } = require('./helper')
 
-
-for (let yr = firstPropYear; yr <= defaultPropYear; yr++) {
-    yearCacheData.push(`YEAR_${yr}_SYNCED`)
-}
-
-
-const checkAllYearDataSynced = async () => {
-    for (var j = 0; j < yearCacheData.length; j++) {
-        const synced = await cacheServer.getAsync(yearCacheData[j])
-        if (synced !== "true")
-            return false
-    }
-    return true
-}
 
 /**
  * Get Path Proposal Years of a specific path
@@ -189,7 +172,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // set up yearly totals
         // for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
         // if (parseInt(yr) === parseInt(year))
-        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
+        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'last_year_theft': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         // }
 
     }
@@ -229,6 +212,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // find winning theft for the year
         let propMax
         let yesTheftAmts = []
+
         if ('props' in pvt) {
             for (pid in pvt['props']) {
                 let p = pvt['props'][pid]
@@ -279,6 +263,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             'props': pvt['props']
         }
         ytots['theft'] += theft
+        ytots['last_year_theft'] += propMax['year_thefts'][defaultPropYear]
 
     }
 
@@ -622,5 +607,4 @@ module.exports = {
     manipulatePaths,
     getHierarchyTotals,
     doPathRollUpsForYear,
-    checkAllYearDataSynced,
 }

@@ -352,6 +352,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
             // }
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
+            agg['info']['last_year_theft'] = nationData['_totals']['last_year_theft']
             // agg['info']['each_year'] = nationData['_totals']['theft'] / usaPopulation(year)
             // agg['info']['population'] = usaPopulation(year)
             agg['info']['many_years'] = nationData['_totals']['theft']
