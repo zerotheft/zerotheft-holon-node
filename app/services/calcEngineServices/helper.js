@@ -121,7 +121,7 @@ const theftAmountAbbr = (amt, pos) => {
 }
 
 const realTheftAmount = (dollar) => {
-    let values = dollar.match(/^\$?\s?([\d]+|([\d]{1,3},(([\d]{3},)+)?[\d]{3}))(\.[\d]+)?\s?([KMBT])?$/)
+    let values = (dollar + '').match(/^\$?\s?([\d]+|([\d]{1,3},(([\d]{3},)+)?[\d]{3}))(\.[\d]+)?\s?([KMBT])?$/)
     let baseValue = values[1].replace(/,/g, '')
     let multiplier = 1
     if (values[6]) {

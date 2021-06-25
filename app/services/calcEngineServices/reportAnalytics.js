@@ -1,11 +1,11 @@
-const { get, max, startCase } = require("lodash")
+const { get, max, startCase, isEmpty } = require("lodash")
 const { paths } = require("zerotheft-node-utils")
 const { theftAmountAbbr, realTheftAmount } = require("./helper")
 const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true) => {
     let sums = {}
     Object.keys(voteTotals.props).forEach((key) => {
         const prop = voteTotals.props[key]
-        const theft = prop.voted_theft_amount
+        const theft = prop.theftAmt
         if (theft <= 0) {
             return
         }
@@ -78,42 +78,42 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
     // simple estimator - use the prior theft until it changes
     let priorTheft = null
     let firstTheft = null
-    Object.keys(sumtotals).forEach((year) => {
+    let p
+    if (path === nation) {
+        p = sumtotals
+    } else {
+        p = get(sumtotals, `paths.${path}`)
+    }
 
-        let p
-        if (path === nation) {
-            p = sumtotals[year]
-        } else {
-            p = get(sumtotals, `${year}.paths.${path}`)
-        }
+    const yearlyThefts = get(p, '_totals.voted_year_thefts')
+    if (!get(p, 'missing') && !isEmpty(yearlyThefts)) {
+        Object.keys(yearlyThefts).forEach((year) => {
+            const theft = yearlyThefts[year]
+            let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
 
-        yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
-        if (get(p, 'missing')) {
+            if (get(p, '_totals.legit')) {
+                if (theft <= 0) {
+                    yd['Determined By'] = 'incomplete voting'
+                    yd['theft'] = 0
+                } else {
+                    yd['Determined By'] = 'voting'
+                    yd['theft'] = theft
+                }
+            } else { // not legit
+                if (theft <= 0) {
+                    yd['theft'] = 0
+                } else {
+                    yd['theft'] = theft
+                }
+                yd['Determined By'] = 'incomplete voting'
+            }
+
+            firstTheft = firstTheft ? firstTheft : yd['theft']
+            priorTheft = yd['theft']
+
             yearTh.push(yd)
-            return
-        } else if (get(p, '_totals.legit')) {
-            if (get(p, '_totals.theft') <= 0) {
-                yd['Determined By'] = 'incomplete voting'
-                yd['theft'] = 0
-            } else {
-                yd['Determined By'] = 'voting'
-                yd['theft'] = get(p, '_totals.theft')
-            }
-        } else { // not legit
-            if (get(p, '_totals.theft') <= 0) {
-                yd['Determined By'] = 'incomplete voting'
-                yd['theft'] = 0
-            } else {
-                yd['Determined By'] = 'incomplete voting'
-                yd['theft'] = get(p, '_totals.theft')
-            }
-        }
-
-        firstTheft = firstTheft ? firstTheft : yd['theft']
-        priorTheft = yd['theft']
-
-        yearTh.push(yd)
-    })
+        })
+    }
 
     // second pass - back-fill any early years with first_theft estimate
     Object.keys(yearTh).forEach((key) => {

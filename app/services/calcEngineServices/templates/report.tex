@@ -2,6 +2,8 @@
 % update mixedReport hedsection if any changes done in this headsection
 \documentclass{article}
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
@@ -13,7 +15,7 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
-\usepackage[outline]{contour}
+\usepackage{contour}
 \contourlength{1pt}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
@@ -28,6 +30,7 @@ anchorcolor = blue]{hyperref}
 \definecolor{yesNoBarBgColor}{HTML}{EDEDED}
 \definecolor{yesNoBarBorderColor}{HTML}{B2AEAE}
 \definecolor{noProgressBgColor}{HTML}{E26C6C}
+\definecolor{tableHeaderBg}{HTML}{F0EAFA}
 
 \tikzset{
 	headerText/.style={text=white},
@@ -55,7 +58,7 @@ anchorcolor = blue]{hyperref}
       \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
       \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
 
-      \node[rightHeaderText, right=10pt of subtitle] (year) {--year--};
+      \node[rightHeaderText, right=10pt of subtitle] (year) {};
       \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
       \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
@@ -192,6 +195,19 @@ anchorcolor = blue]{hyperref}
         };
     \end{axis}
     \end{tikzpicture}
+}
+
+\pagebreak
+\setlength{\tabcolsep}{10pt} % for the horizontal padding
+{\renewcommand{\arraystretch}{2}% for the vertical padding
+  \begin{longtable}{p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt} p{0pt} p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt}} 
+    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Not Translated into --inflationYear-- Dollar Values} & &
+    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Translated into --inflationYear-- Dollar Values} \\ 
+
+    --stolenByYearTableData--
+    % 2021 & \$800B & 2019 & \$650B & 2019 & \$650B & & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
+    % 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
+\end{longtable}
 }
 
 \newpage 
