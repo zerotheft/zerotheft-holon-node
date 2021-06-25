@@ -7,8 +7,10 @@ const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
+// const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
+const { lastExportedVid } = require('../../services/engineDataServices/utils')
+
 
 const connection = new IORedis()
 const scanData = new Queue('ScanData', { connection })
@@ -32,7 +34,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
 
         //Reset all year synced statuses
         // for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        cacheServer.del(CALC_SUMMARY_SYNCED)
+        cacheServer.del('CALC_SUMMARY_SYNCED')
 
         // const isYearSynced = await cacheServer.getAsync(CALC_SUMMARY_SYNCED)
         // if (!isYearSynced || !!job.data.reSync)
@@ -56,18 +58,18 @@ const scanDataWorker = new Worker('ScanData', async job => {
         const nationPaths = await pathsByNation(nation)
         const proposalContract = getProposalContract()
         const voterContract = getVoterContract()
-        let umbrellaPaths = await getUmbrellaPaths()// get all umbrella paths and return array of umbrella paths
+        const umbrellaInfo = await getUmbrellaPaths()// get all umbrella paths and return array of umbrella paths
         /*
         *umbrellaPaths=["macroeconomics","workers","industries/finance","economic_crisis/2008_mortgage","industries/healthcare/pharma"]
         */
-        umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+        let umbrellaPaths = Object.keys(umbrellaInfo).map(x => `${nation}/${x}`)
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [])
         console.log('GHT', proposals.length, votes.length)
 
         const hierarchyData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
         if (hierarchyData) {
             console.log('DPRFY')
-            doPathRollUpsForYear(hierarchyData, umbrellaPaths, nationPaths)
+            doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
 
             // check if its valid before caching
             // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
@@ -121,8 +123,10 @@ const singleYearCaching = async (nation) => {
     try {
         const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
         const isVotesExporting = await cacheServer.getAsync(`VOTES_EXPORT_INPROGRESS`)
+        const cachedVid = await lastExportedVid()
+
         // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
-        if (!syncProgressYear && !isVotesExporting) {
+        if (!syncProgressYear && !isVotesExporting && cachedVid > 0) {
             scanData.add('saveDatainCache', { nation }, { removeOnComplete: true, removeOnFail: true })
             return { message: `caching initiated. Please wait...` }
         } else

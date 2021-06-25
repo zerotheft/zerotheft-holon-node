@@ -80,8 +80,6 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
      */
     if (!isSyncing && cachedVid > 0 && !isVotesExporting && !isDatainCache) {
       await singleYearCaching(job.data.nation)
-    } else {
-      console.log('Cache Data. OK!!')
     }
     /**
     * If sync is complete and no past year thefts collected

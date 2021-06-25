@@ -1,4 +1,4 @@
-const { getProposalDetails, getProposalTemplate, getPathProposalsByYear } = require('zerotheft-node-utils').proposals
+const { getProposalDetails, getProposalTemplate, getPathProposalsByPath } = require('zerotheft-node-utils').proposals
 const { convertToAscii } = require('zerotheft-node-utils/utils/web3')
 
 const proposalWithDetails = async (id) => {
@@ -25,5 +25,5 @@ const fetchProposalTemplate = async (path) => {
 module.exports = {
   proposalWithDetails,
   fetchProposalTemplate,
-  getPathProposalsByYear,
+  getPathProposalsByPath,
 }

@@ -141,7 +141,7 @@ const getTexsSequence = async (year, path) => {
 
     // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
     let umbrellaPaths = await getUmbrellaPaths()
-    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+    umbrellaPaths = Object.keys(umbrellaPaths).map(x => `${nation}/${x}`)
 
     let texsSequence = await texPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
 
@@ -328,7 +328,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
                 if (totals.votes !== 0) {
                     agg[`${nation}/${path}`] = totals
                 }
-                allTheftYears = allTheftYears.concat(Object.keys(get(totals, 'voted_theft_amts', [])))
+                allTheftYears = allTheftYears.concat(Object.keys(get(totals, 'voted_year_thefts', [])))
             })
             // check cache for past 
             // let yearTh = await getPastYearThefts(nation)
@@ -352,6 +352,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
             // }
             agg['info'] = {}
             agg['info']['total'] = nationData['_totals']['theft']
+            agg['info']['last_year_theft'] = nationData['_totals']['last_year_theft']
             // agg['info']['each_year'] = nationData['_totals']['theft'] / usaPopulation(year)
             // agg['info']['population'] = usaPopulation(year)
             agg['info']['many_years'] = nationData['_totals']['theft']

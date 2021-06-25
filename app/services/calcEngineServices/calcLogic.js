@@ -1,29 +1,12 @@
 const fs = require('fs')
-const { uniq, mean, isEmpty, sum } = require('lodash')
+const { uniq, mean, isEmpty } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
-const { getPathDetail } = require('zerotheft-node-utils/contracts/paths')
+const { getPathDetail, getUmbrellaPaths } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
-const { exportsDir, cacheDir, createAndWrite } = require('../../common')
+const { exportsDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
-const { defaultPropYear, firstPropYear } = require('./helper')
-// let proposals = []
-// let votes = []
-let yearCacheData = []
+const { defaultPropYear } = require('./helper')
 
-
-for (let yr = firstPropYear; yr <= defaultPropYear; yr++) {
-    yearCacheData.push(`YEAR_${yr}_SYNCED`)
-}
-
-
-const checkAllYearDataSynced = async () => {
-    for (var j = 0; j < yearCacheData.length; j++) {
-        const synced = await cacheServer.getAsync(yearCacheData[j])
-        if (synced !== "true")
-            return false
-    }
-    return true
-}
 
 /**
  * Get Path Proposal Years of a specific path
@@ -124,7 +107,7 @@ const getPathYearVoteTotals = async (path, proposals, votes, years) => {
                 // tots['props'][voteProposalId]['all_theft_amounts'] = amt
             } else {
                 // tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': amt }
-                tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': {} }
+                tots['props'][voteProposalId] = { ...prop, 'count': 1, 'all_theft_amounts': {}, 'voted_year_thefts': {} }
             }
             let propAllTheftAmts = tots['props'][voteProposalId]['all_theft_amounts']
 
@@ -169,14 +152,8 @@ const getPathYearVotes = async (path, votes) => {
 const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy, pathH = null, pathPrefix = null, vtby = null, legitimiateThreshold = 25, nation = 'USA') => {
     if (pathH && pathH.leaf)
         return
-    if (pathH && pathH.leaf)
-        delete pathH.leaf
-    if (pathH && pathH.umbrella)
-        delete pathH.umbrella
-    if (pathH && pathH.display_name)
-        delete pathH.display_name
-    if (pathH && pathH.parent)
-        delete pathH.parent
+    pathH && ['leaf', 'umbrella', 'display_name', 'parent', 'metadata'].forEach((k) => { delete pathH[k] })
+
     createLog(CALC_STATUS_PATH, `Getting Hierarchy Total`)
     let isRoot = false
     if (!pathH) {
@@ -189,7 +166,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // set up yearly totals
         // for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
         // if (parseInt(yr) === parseInt(year))
-        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
+        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'last_year_theft': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         // }
 
     }
@@ -204,6 +181,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         let path = pathH[pathName]
         let isLeaf = false
         if (path) {
+            // console.log(pathHierarchy, path, fullPath)
             // dive into children before doing any processing
             await getHierarchyTotals(umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby)
         } else {
@@ -229,12 +207,15 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // find winning theft for the year
         let propMax
         let yesTheftAmts = []
+
         if ('props' in pvt) {
             for (pid in pvt['props']) {
                 let p = pvt['props'][pid]
                 let actlVotedAmt = 0
                 Object.keys(p['all_theft_amounts']).forEach((yr) => {
-                    actlVotedAmt += mean(p['all_theft_amounts'][yr])
+                    let avgYrTheft = mean(p['all_theft_amounts'][yr])
+                    actlVotedAmt += avgYrTheft
+                    p['voted_year_thefts'][yr] = avgYrTheft // average theft amount from every year. Theft amount can be custom theft amount entered.
                 })
                 p['wining_theft_amt'] = actlVotedAmt > 0 ? actlVotedAmt : p['theftAmt']
                 // p['voted_theft_amount'] = p['all_theft_amounts'].length > 0 ? mean(p['all_theft_amounts']) : p['theftAmt']
@@ -273,10 +254,11 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         let legit = (tVotes >= legitimiateThreshold)
         let need_votes = (legit) ? 0 : legitimiateThreshold - tVotes;
         vtby['paths'][fullPath] = {
-            '_totals': { 'legit': legit, 'votes': tVotes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_theft_amts': propMax ? propMax['all_theft_amounts'] : {}, 'need_votes': need_votes, ...avgData },
+            '_totals': { 'legit': legit, 'votes': tVotes, 'for': votesFor, 'against': votesAgainst, 'proposals': vprops, 'theft': theft, 'reason': reason, 'voted_year_thefts': propMax ? propMax['voted_year_thefts'] : {}, 'need_votes': need_votes, ...avgData },
             'props': pvt['props']
         }
         ytots['theft'] += theft
+        ytots['last_year_theft'] += propMax['voted_year_thefts'][defaultPropYear]
 
     }
 
@@ -284,14 +266,8 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
 }
 
 const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = null, pathPrefix = null, nation = 'USA') => {
-    if (pathH && pathH.leaf)
-        delete pathH.leaf
-    if (pathH && pathH.umbrella)
-        delete pathH.umbrella
-    if (pathH && pathH.display_name)
-        delete pathH.display_name
-    if (pathH && pathH.parent)
-        delete pathH.parent
+
+    pathH && ['leaf', 'umbrella', 'display_name', 'parent', 'metadata'].forEach((k) => { delete pathH[k] })
 
     createLog(CALC_STATUS_PATH, `Rolling up report for year`)
     let isRoot = false
@@ -371,16 +347,17 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
 
         let totalsData = pathData['_totals']
         let secondaryData
+        let isUmbrella = Object.keys(umbrellaPaths).includes(fullPath)
 
-        // see if we've got an umbrella total
-        if (get(pathData, 'missing')) {
+        // if total is missing for non umbrella or total is missing for umbrella and umbrella's value parent is children
+        if ((get(pathData, 'missing') && !isUmbrella) || (isUmbrella && umbrellaPaths[fullPath]['value_parent'] === "children")) {
             totalsData = childrenSum
             pathData['missing'] = allMissing // if we have any sub-path summary (even a bad one, it is no longer missing, though probably not legit)
-        } else if (umbrellaPaths.includes(nation + '/' + fullPath)) {
+        } else if (Object.keys(umbrellaPaths).includes(fullPath)) {
             // set its method
             totalsData['method'] = 'Umbrella Totals'
 
-            // if umbrella total is legit, and roll-up total is legit, and roll-up total theft greater than umbrella, use roll-up data
+            // if umbrella total is legit, and roll - up total is legit, and roll - up total theft greater than umbrella, use roll - up data
             if (totalsData['legit'] && childrenSum['legit'] && childrenSum['theft'] > totalsData['theft']) {
                 secondaryData = totalsData
                 totalsData = {
@@ -401,10 +378,11 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
                 secondaryData = childrenSum
             }
         }
+
         if (totalsData['theft'] > 0) {
-            // yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
-            // yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
-            if (umbrellaPaths.includes(`${nation}/${fullPath}`)) {
+            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+            if (Object.keys(umbrellaPaths).includes(fullPath)) {
                 yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
                 yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
             }
@@ -419,8 +397,10 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
     }
     yearData['_totals']['legit'] = allLegit
-    if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
-        yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+    // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+    //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+    if (yearData['_totals']['all_theft_amts']['_total'] > 0)
+        yearData['_totals']['theft'] = yearData['_totals']['all_theft_amts']['_total']
     return yearData
 }
 
@@ -430,7 +410,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
     for (let i = 0; i < nestedKeys.length; i++) {
         let key = nestedKeys[i]
         let nestedValues = paths[key]
-        if (['display_name', 'leaf', 'umbrella', 'parent'].includes(key)) {
+        if (['display_name', 'leaf', 'umbrella', 'parent', 'metadata'].includes(key)) {
             continue
         }
         let nextPath = `${currentPath}/${key}`
@@ -618,5 +598,4 @@ module.exports = {
     manipulatePaths,
     getHierarchyTotals,
     doPathRollUpsForYear,
-    checkAllYearDataSynced,
 }
