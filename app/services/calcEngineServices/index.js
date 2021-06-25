@@ -141,7 +141,7 @@ const getTexsSequence = async (year, path) => {
 
     // createLog(FULL_REPORT_PATH, `Fetching Umbrella Path`)
     let umbrellaPaths = await getUmbrellaPaths()
-    umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+    umbrellaPaths = Object.keys(umbrellaPaths).map(x => `${nation}/${x}`)
 
     let texsSequence = await texPathTraverse(get(nationPaths, path.replace(/\//g, '.')), path.replace(/\//g, '-'), [], year, umbrellaPaths)
 

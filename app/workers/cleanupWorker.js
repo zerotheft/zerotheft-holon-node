@@ -15,9 +15,13 @@ const cleanupWorker = new Worker('cleanupQuene', async job => {
     console.log('**Cleaner cleaning logs directory')
     await removeDir(LOG_PATH)
 
-    console.log('**Cleaner cleaning tmp directory')
     //remove everything from tmp directory
+    console.log('**Cleaner cleaning tmp directory')
     await removeDir(`${config.APP_PATH}/tmp`)
+
+    //clean the cached directory of path yamls
+    console.log('**Cleaner cleaning cached path yaml')
+    await removeDir(`${config.APP_PATH}/.zt/pathYamls`)
 
   } catch (e) {
     console.log("cleanupWorker ", e)

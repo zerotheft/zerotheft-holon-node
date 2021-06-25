@@ -30,7 +30,7 @@ const reportWorker = new Worker('ReportQueue', async job => {
                     let country = Object.keys(nation)
                     let lastYear = new Date().getFullYear() - 1
                     let umbrellaPaths = await getUmbrellaPaths()
-                    umbrellaPaths = umbrellaPaths.map(x => `${country[0]}/${x}`)
+                    umbrellaPaths = Object.keys(umbrellaPaths).map(x => `${country[0]}/${x}`)
                     // console.log('sss')
                     await runPathReport(nation[country[0]], country[0], umbrellaPaths)
                     for (let year = lastYear; year > lastYear - 20; year--) {

@@ -58,18 +58,18 @@ const scanDataWorker = new Worker('ScanData', async job => {
         const nationPaths = await pathsByNation(nation)
         const proposalContract = getProposalContract()
         const voterContract = getVoterContract()
-        let umbrellaPaths = await getUmbrellaPaths()// get all umbrella paths and return array of umbrella paths
+        const umbrellaInfo = await getUmbrellaPaths()// get all umbrella paths and return array of umbrella paths
         /*
         *umbrellaPaths=["macroeconomics","workers","industries/finance","economic_crisis/2008_mortgage","industries/healthcare/pharma"]
         */
-        umbrellaPaths = umbrellaPaths.map(x => `${nation}/${x}`)
+        let umbrellaPaths = Object.keys(umbrellaInfo).map(x => `${nation}/${x}`)
         const { proposals, votes } = await manipulatePaths(nationPaths.USA, proposalContract, voterContract, nation, {}, umbrellaPaths, [])
         console.log('GHT', proposals.length, votes.length)
 
         const hierarchyData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
         if (hierarchyData) {
             console.log('DPRFY')
-            doPathRollUpsForYear(hierarchyData, umbrellaPaths, nationPaths)
+            doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
 
             // check if its valid before caching
             // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
