@@ -215,7 +215,7 @@ const rollupPageCount = 3 // summary page, 2 breakdown table page (including bla
 
 const assignPageNumbers = (summaryTotalsPaths, paths, prefix = '', pageNo = 1) => {
     Object.keys(paths).forEach((p) => {
-        if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
+        if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
 
         const pp = prefix + p
         if (pp in summaryTotalsPaths) {
