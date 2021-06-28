@@ -166,7 +166,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // set up yearly totals
         // for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
         // if (parseInt(yr) === parseInt(year))
-        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'overall_year_thefts': {}, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
+        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'last_year_theft': 0, 'overall_year_thefts': {}, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         // }
 
     }
@@ -400,7 +400,6 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
             Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
                 let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
                 yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
-                console.log(yearData['_totals']['overall_year_thefts'])
             })
         }
 
@@ -410,8 +409,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
     //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
     if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
         yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-
-
+    yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear]
     return yearData
 }
 
