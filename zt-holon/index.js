@@ -2,7 +2,7 @@ const minimist = require('minimist')
 const error = require('./utils/error')
 
 module.exports = () => {
-  const args = minimist(process.argv.slice(2), { string: ['from', 'to', 'user', 'donation_address'] })
+  const args = minimist(process.argv.slice(2), { string: ['from', 'to', 'citizen', 'donation_address'] })
   let cmd = args._[0] || 'help'
 
   if (args.version || args.v) {

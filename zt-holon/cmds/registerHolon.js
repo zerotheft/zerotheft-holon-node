@@ -71,7 +71,7 @@ module.exports = async args => {
                 })
             }
 
-            //assign holon ownership to the user who executes command
+            //assign holon ownership to the citizen who executes command
             await grantRole(storage.address, "holonowner")
             //now add holon data in the blockchain
             const holonDetails = {
@@ -81,7 +81,7 @@ module.exports = async args => {
             await holonContract.createTransaction('registerHolon', [JSON.stringify(holonDetails).replace('"', '\"'), response.data.status, donationAddr], 900000)
 
             spinner.stop()
-            console.log(chalk.green(`Holon successfully registered and user has been assigned ownership of the holon.`))
+            console.log(chalk.green(`Holon successfully registered and citizen has been assigned ownership of the holon.`))
         }
     } catch (e) {
         console.log(e)

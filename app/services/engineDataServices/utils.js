@@ -6,10 +6,10 @@ const proposalIdFile = `${exportsDir}/.last_exported_pid`
 const failedProposalIDFile = `${exportsDir}/.export_failed_pids`
 const holonIdFile = `${exportsDir}/.last_exported_hid`
 const failedHolonIDFile = `${exportsDir}/.export_failed_hids`
-const userIdFile = `${exportsDir}/.last_exported_uid`
-const failedUserIDFile = `${exportsDir}/.export_failed_uids`
+const citizenIdFile = `${exportsDir}/.last_exported_uid`
+const failedCitizenIDFile = `${exportsDir}/.export_failed_uids`
 const exportsDirNation = `${exportsDir}/nation_data`
-const { userSpecificVotesFile, proposalVotesFile, proposalArchiveVotesFile, proposalVotersFile } = require('zerotheft-node-utils/utils/common')
+const { citizenSpecificVotesFile, proposalVotesFile, proposalArchiveVotesFile, proposalVotersFile } = require('zerotheft-node-utils/utils/common')
 const { cacheServer } = require('../redisService')
 
 
@@ -50,11 +50,11 @@ const lastExportedHid = async () => {
   return lastHid
 }
 
-//get the last exported user ID
+//get the last exported citizen ID
 const lastExportedUid = async () => {
   let lastUid = 0
   try {
-    lastUid = fs.readFileSync(userIdFile, 'utf-8')
+    lastUid = fs.readFileSync(citizenIdFile, 'utf-8')
   } catch (e) {
     console.log(e.message)
   }
@@ -73,8 +73,8 @@ const keepCacheRecord = async (key, count) => {
 
 //save the record in file
 const cacheToFileRecord = async (key, entity) => {
-  if (entity === "users")
-    file = userIdFile
+  if (entity === "citizens")
+    file = citizenIdFile
   else if (entity === "votes")
     file = voteIDFile
   else if (entity === "proposals")
@@ -97,8 +97,8 @@ module.exports = {
   holonIdFile,
   failedHolonIDFile,
   lastExportedHid,
-  userIdFile,
-  failedUserIDFile,
+  citizenIdFile,
+  failedCitizenIDFile,
   lastExportedUid,
   keepCacheRecord,
   cacheToFileRecord
