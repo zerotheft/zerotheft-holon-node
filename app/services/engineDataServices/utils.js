@@ -9,7 +9,6 @@ const failedHolonIDFile = `${exportsDir}/.export_failed_hids`
 const citizenIdFile = `${exportsDir}/.last_exported_uid`
 const failedCitizenIDFile = `${exportsDir}/.export_failed_uids`
 const exportsDirNation = `${exportsDir}/nation_data`
-const { citizenSpecificVotesFile, proposalVotesFile, proposalArchiveVotesFile, proposalVotersFile } = require('zerotheft-node-utils/utils/common')
 const { cacheServer } = require('../redisService')
 
 
