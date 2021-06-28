@@ -166,7 +166,7 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
         // set up yearly totals
         // for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
         // if (parseInt(yr) === parseInt(year))
-        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'last_year_theft': 0, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
+        vtby = { '_totals': { 'votes': 0, 'for': 0, 'against': 0, 'legit': false, 'proposals': 0, 'overall_year_thefts': {}, 'theft': 0, 'all_theft_amts': { '_total': 0, '_amts': [] }, 'umbrella_theft_amts': { '_total': 0, '_amts': [] } }, 'paths': {} }
         // }
 
     }
@@ -258,7 +258,6 @@ const getHierarchyTotals = async (umbrellaPaths, proposals, votes, pathHierarchy
             'props': pvt['props']
         }
         ytots['theft'] += theft
-        ytots['last_year_theft'] += propMax['voted_year_thefts'][defaultPropYear]
 
     }
 
@@ -395,12 +394,24 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         if (!yearData['paths'][fullPath]['_totals']['legit']) {
             allLegit = false
         }
+
+
+        if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
+            Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
+                let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
+                yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
+                console.log(yearData['_totals']['overall_year_thefts'])
+            })
+        }
+
     }
     yearData['_totals']['legit'] = allLegit
     // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
     //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    if (yearData['_totals']['all_theft_amts']['_total'] > 0)
-        yearData['_totals']['theft'] = yearData['_totals']['all_theft_amts']['_total']
+    if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+        yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+
+
     return yearData
 }
 
