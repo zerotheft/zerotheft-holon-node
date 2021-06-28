@@ -85,7 +85,7 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
         p = get(sumtotals, `paths.${path}`)
     }
 
-    const yearlyThefts = get(p, '_totals.voted_year_thefts')
+    const yearlyThefts = get(p, `_totals.${path === nation ? 'overall' : 'voted'}_year_thefts`)
     if (!get(p, 'missing') && !isEmpty(yearlyThefts)) {
         Object.keys(yearlyThefts).forEach((year) => {
             const theft = yearlyThefts[year]
