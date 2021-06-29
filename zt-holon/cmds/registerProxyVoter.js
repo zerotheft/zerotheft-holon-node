@@ -63,7 +63,7 @@ const initialQuestions = async () => {
           return true;
         }
       },
-      { name: 'linkedin', message: 'Do you want to verify by user\'s linked in profile? You need to give us cookie of the linkedin account.', type: 'confirm' }
+      { name: 'linkedin', message: 'Do you want to verify by citizen\'s linked in profile? You need to give us cookie of the linkedin account.', type: 'confirm' }
     ])
 }
 
