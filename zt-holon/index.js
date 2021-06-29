@@ -20,6 +20,9 @@ module.exports = () => {
     case 'create-account':
       require('./cmds/createAccount')(args)
       break;
+    case 'register-citizen':
+      require('./cmds/registerCitizen')(args)
+      break;
 
     case 'get-balance':
       require('./cmds/getBalance')(args)
