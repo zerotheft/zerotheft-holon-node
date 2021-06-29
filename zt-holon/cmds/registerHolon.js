@@ -15,18 +15,18 @@ const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
 
 module.exports = async args => {
     const url = args.url
-    let port = args.port
+    // let port = args.port
     const country = args.country
     const donationAddr = args.donation_address
     if (url === "" || url === undefined) {
-        error(chalk.red('Please provide appropriate holon path'), true)
+        error(chalk.red('Please provide appropriate holon url along with port(if any) eg:https://abc.com:8585'), true)
         return
     }
 
-    if (port === "" || port === undefined) {
-        error(chalk.red('Please provide appropriate holon port'), true)
-        return
-    }
+    // if (port === "" || port === undefined) {
+    //     error(chalk.red('Please provide appropriate holon port'), true)
+    //     return
+    // }
     if (country === "" || country === undefined) {
         error(chalk.red('Please provide country'), true)
         return
@@ -35,7 +35,7 @@ module.exports = async args => {
         error(chalk.red('Please provide donation address'), true)
         return
     }
-    const holonPath = `${url.replace(/\/$/, "")}:${port}`
+    const holonPath = `${url.replace(/\/$/, "")}`
 
     if (!isURL(holonPath)) {
         error(chalk.red('Invalid holon url'), true)
@@ -64,7 +64,7 @@ module.exports = async args => {
             error(chalk.red(userData.error), true)
         }
         //perform status check of holon
-        const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}:${port}/healthcheck`)
+        const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}/healthcheck`)
         if (response.data.success) {
             const holonContract = getHolonContract()
             //check if holon is already registered
