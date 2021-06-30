@@ -409,7 +409,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
     //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
     if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
         yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear]
+    yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
     return yearData
 }
 
