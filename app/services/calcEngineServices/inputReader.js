@@ -48,7 +48,7 @@ const getLeafPaths = (paths, prePath = '') => {
     let leafPaths = []
 
     Object.keys(paths).forEach((p) => {
-        if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
+        if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         if (!paths[p])
             leafPaths.push(prePath + p)
         else
@@ -62,7 +62,7 @@ const getFlatPaths = (paths, prePath = '') => {
     let flatPaths = []
 
     Object.keys(paths).forEach((p) => {
-        if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
+        if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         flatPaths.push(prePath + p)
         flatPaths = [...flatPaths, ...getFlatPaths(paths[p], prePath + p + '/')]
     })
