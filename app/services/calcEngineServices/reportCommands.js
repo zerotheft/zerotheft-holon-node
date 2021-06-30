@@ -587,17 +587,17 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, nation, su
     return disp
 }
 
-const rowDispNoVote = (prob, indent, nation, fullPath, availablePdfsPaths) => {
+const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths) => {
     const probPretty = startCase(prob)
     const pathMatch = fullPath.match(/^\/?([^*]+)/)
     if (pathMatch) {
         fullPath = pathMatch[1]
     }
-    const filePath = `${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
+    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
      &
-    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
+    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
      \\\\ \n`
 }
 
@@ -608,7 +608,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         const pp = prefix + p
-        disp += rowDispNoVote(p, indent, nation, pp, availablePdfsPaths)
+        disp += rowDispNoVote(p, indent, nation, !get(paths, `${p}.leaf`), pp, availablePdfsPaths)
         disp += walkSubPathNoVote(pp ? pp + '/' : '', paths[p], indent + 1, nation, availablePdfsPaths)
     })
 
@@ -617,7 +617,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
 
 const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDispNoVote(fullPath, 0, nation, fullPath, availablePdfsPaths)
+    disp = rowDispNoVote(fullPath, 0, nation, true, fullPath, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = fullPath == nation ? '' : fullPath + '/'

@@ -123,76 +123,76 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
     })
 
     // third pass - step-estimate any theft between two legit/incomplete years
-    let lastTh = null
-    let lastThIdx = -1
-    let preStep = null
-    let preIdx = null
-    let postStep = null
-    let postIdx = null
-    yearTh.forEach((yd, idx) => {
-        if (yd['Determined By'] === 'voting' || yd['Determined By'] == 'incomplete voting') {
-            // if we had a legit in the past, back-fill all estimation cases between
-            let step = null
-            if (lastTh && lastThIdx < (idx - 1)) {
-                const diff = yd['theft'] - lastTh
-                const gap = idx - lastThIdx
-                step = diff / gap
+    // let lastTh = null
+    // let lastThIdx = -1
+    // let preStep = null
+    // let preIdx = null
+    // let postStep = null
+    // let postIdx = null
+    // yearTh.forEach((yd, idx) => {
+    //     if (yd['Determined By'] === 'voting' || yd['Determined By'] == 'incomplete voting') {
+    //         // if we had a legit in the past, back-fill all estimation cases between
+    //         let step = null
+    //         if (lastTh && lastThIdx < (idx - 1)) {
+    //             const diff = yd['theft'] - lastTh
+    //             const gap = idx - lastThIdx
+    //             step = diff / gap
 
-                for (backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
-                    lastTh += step
-                    yearTh[backIdx]['theft'] = lastTh
-                    yearTh[backIdx]['Theft'] = theftAmountAbbr(lastTh)
-                }
+    //             for (backIdx = lastThIdx + 1; backIdx < idx; backIdx++) {
+    //                 lastTh += step
+    //                 yearTh[backIdx]['theft'] = lastTh
+    //                 yearTh[backIdx]['Theft'] = theftAmountAbbr(lastTh)
+    //             }
 
-            } else if (lastTh && lastThIdx == (idx - 1)) {
-                step = yd['theft'] - lastTh
-            }
+    //         } else if (lastTh && lastThIdx == (idx - 1)) {
+    //             step = yd['theft'] - lastTh
+    //         }
 
-            // prepare for fourth/fifth passes
-            if (step) {
-                if (preStep === null && idx > 0) {
-                    preStep = step
-                    preIdx = idx
-                }
-                postStep = step
-                postIdx = idx
-            }
+    //         // prepare for fourth/fifth passes
+    //         if (step) {
+    //             if (preStep === null && idx > 0) {
+    //                 preStep = step
+    //                 preIdx = idx
+    //             }
+    //             postStep = step
+    //             postIdx = idx
+    //         }
 
-            lastTh = yd['theft']
-            lastThIdx = idx
-        }
-    })
+    //         lastTh = yd['theft']
+    //         lastThIdx = idx
+    //     }
+    // })
 
-    // // fourth pass - apply preStep to years before first not missing
-    if (preIdx) {
-        let lastTh = get(yearTh, `${preIdx}.theft`)
-        for (pi = preIdx - 1; pi >= 0; pi--) {
-            lastTh -= preStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-                yearTh[pi]['Theft'] = theftAmountAbbr(0)
-            } else {
-                yearTh[pi]['theft'] = lastTh
+    // fourth pass - apply preStep to years before first not missing
+    // if (preIdx) {
+    //     let lastTh = get(yearTh, `${preIdx}.theft`)
+    //     for (pi = preIdx - 1; pi >= 0; pi--) {
+    //         lastTh -= preStep
+    //         if (lastTh <= 0) {
+    //             yearTh[pi]['theft'] = 0
+    //             yearTh[pi]['Theft'] = theftAmountAbbr(0)
+    //         } else {
+    //             yearTh[pi]['theft'] = lastTh
 
-                yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
-            }
-        }
-    }
+    //             yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
+    //         }
+    //     }
+    // }
     // # fifth pass - apply postStep to years after last not missing
-    if (postIdx && postIdx < yearTh.length - 1) {
-        let lastTh = get(yearTh, `${postIdx}.theft`)
-        for (pi = postIdx + 1; pi < yearTh.length; pi++) {
-            lastTh += postStep
-            if (lastTh <= 0) {
-                yearTh[pi]['theft'] = 0
-                yearTh[pi]['Theft'] = theftAmountAbbr(0)
-            } else {
-                yearTh[pi]['theft'] = lastTh
+    // if (postIdx && postIdx < yearTh.length - 1) {
+    //     let lastTh = get(yearTh, `${postIdx}.theft`)
+    //     for (pi = postIdx + 1; pi < yearTh.length; pi++) {
+    //         lastTh += postStep
+    //         if (lastTh <= 0) {
+    //             yearTh[pi]['theft'] = 0
+    //             yearTh[pi]['Theft'] = theftAmountAbbr(0)
+    //         } else {
+    //             yearTh[pi]['theft'] = lastTh
 
-                yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
-            }
-        }
-    }
+    //             yearTh[pi]['Theft'] = theftAmountAbbr(lastTh)
+    //         }
+    //     }
+    // }
 
     return yearTh
 }

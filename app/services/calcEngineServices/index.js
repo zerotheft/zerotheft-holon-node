@@ -90,7 +90,7 @@ const listAvailablePdfsPaths = (paths, path) => {
             if (matches) {
                 availablePaths.push(matches[1].replace(/-/g, '/'))
             }
-        } else if (get(childData, 'metadata.umbrella') && fs.existsSync(multiFile)) {
+        } else if ((get(childData, 'metadata.umbrella') || get(childData, 'parent')) && fs.existsSync(multiFile)) {
             availablePaths = [...availablePaths, ...listAvailablePdfsPaths(childData, childFullPath)]
         }
     })
@@ -164,7 +164,7 @@ const getTexsSequence = async (path) => {
         const multiFile = `${multiIssueReportPath}/${childFile}_full.tex`
         if (get(childData, 'leaf') && fs.existsSync(singleFile)) {
             texsSequence.push(singleFile)
-        } else if (get(childData, 'metadata.umbrella') && fs.existsSync(multiFile)) {
+        } else if ((get(childData, 'metadata.umbrella') || get(childData, 'parent')) && fs.existsSync(multiFile)) {
             texsSequence.push(multiFile)
         }
     })
@@ -178,7 +178,7 @@ const getTexsSequence = async (path) => {
     return texsSequence
 }
 
-const multiIssuesFullReport = async (path, fromWorker = false, year) => {
+const multiIssuesFullReport = async (path, fromWorker = false) => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
     try {
         const fullFileName = `${path.replace(/\//g, '-')}_full`
@@ -206,13 +206,12 @@ const multiIssuesFullReport = async (path, fromWorker = false, year) => {
 
 /**
  * @dev Method generates full report of the nation
- * @param {int} year 
  * @param {bool} fromWorker 
  * @param {string} nation 
  * @returns JSON will full report url
  */
-const nationReport = async (year, fromWorker = false, nation = 'USA') => {
-    // createLog(FULL_REPORT_PATH, `Full report generation initiation...... for the year ${year}`)
+const nationReport = async (fromWorker = false, nation = 'USA') => {
+    // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
     try {
         const fullFileName = `${nation}_full`
         const reportExists = fs.existsSync(`${multiIssueReportPath}/${fullFileName}.pdf`)
