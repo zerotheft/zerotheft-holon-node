@@ -468,6 +468,15 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     pdfData.holonUrl = holon
     pdfData.pageID = 'multiIssueReport/' + actualPath
 
+    let generatedFrom = ''
+    const valueParent = get(subPaths, 'metadata.value_parent')
+    if (valueParent === 'umbrella')
+        generatedFrom = 'Generated from Umbrella Proposals'
+    else if (valueParent === 'children')
+        generatedFrom = 'Generated from Child Proposals'
+
+    pdfData.generatedFrom = generatedFrom
+
     let hideBlocks = []
 
     if (subPaths['parent']) hideBlocks = [...hideBlocks, 'theftAmountBlock', 'chartBlock']
