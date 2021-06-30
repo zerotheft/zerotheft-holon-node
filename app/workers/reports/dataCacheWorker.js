@@ -72,7 +72,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
             doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
 
             console.log('PVYTR')
-            parentVotedYearTheftsRollups(hierarchyData, umbrellaInfo, nationPaths)
+            parentVotedYearTheftsRollups(hierarchyData, umbrellaInfo)
             // check if its valid before caching
             // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
             // only if there is no cached data and if total theft is not zero   

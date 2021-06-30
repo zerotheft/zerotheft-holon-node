@@ -397,24 +397,24 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
 
 
-        if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
-            Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
-                let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
-                yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
-            })
-        }
+        // if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
+        //     Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
+        //         let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
+        //         yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
+        //     })
+        // }
 
     }
     yearData['_totals']['legit'] = allLegit
     // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
     //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
-        yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
+    // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+    //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+    // yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
     return yearData
 }
 
-const parentVotedYearTheftsRollups = async (yearData, umbrellaPaths, pathHierarchy, pathH = null, pathPrefix = null, nation = 'USA') => {
+const parentVotedYearTheftsRollups = async (yearData, umbrellaPaths) => {
 
     const childrenSumUmbrellas = filter(Object.keys(umbrellaPaths), (uPath) => umbrellaPaths[uPath]['value_parent'] === "children")
     Object.keys(yearData['paths']).forEach((path) => {
@@ -423,20 +423,32 @@ const parentVotedYearTheftsRollups = async (yearData, umbrellaPaths, pathHierarc
         if (Object.keys(umbrellaPaths).includes(path) && path.indexOf("industries/") > -1 && !isEmpty(pathData['_totals']['voted_year_thefts'])) {
 
             Object.keys(pathData['_totals']['voted_year_thefts']).forEach((yr) => {
-                // let th = pathData['_totals']['voted_year_thefts'][yr]
-                let th = yearData['paths']['industries']['_totals']['voted_theft_years'][yr]
-                yearData['paths']['industries']['_totals']['voted_theft_years'][yr] = yearData['paths']['industries']['_totals']['voted_theft_years'][yr] ? yearData['paths']['industries']['_totals']['voted_theft_years'][yr] + th : th
+                let th = pathData['_totals']['voted_year_thefts'][yr]
+                yearData['paths']['industries']['_totals']['voted_year_thefts'][yr] = yearData['paths']['industries']['_totals']['voted_year_thefts'][yr] ? yearData['paths']['industries']['_totals']['voted_year_thefts'][yr] + th : th
             })
         } else if (!Object.keys(umbrellaPaths).includes(path) && !isEmpty(pathData['_totals']['voted_year_thefts'])) { //umbrellas other than industries
             if (childrenSumUmbrellas.some(umb => path.includes(umb)) && yearData['paths'][path.split('/')[0]]['_totals']['method'] === 'Sum of Path Proposals') {
                 Object.keys(pathData['_totals']['voted_year_thefts']).forEach((yr) => {
                     // let th = pathData['_totals']['voted_year_thefts'][yr]
-                    let th = yearData['paths'][path.split('/')[0]]['_totals']['voted_theft_years'][yr]
-                    yearData['paths'][path.split('/')[0]]['_totals']['voted_theft_years'][yr] = yearData['paths'][path.split('/')[0]]['_totals']['voted_theft_years'][yr] ? yearData['paths'][path.split('/')[0]]['_totals']['voted_theft_years'][yr] + th : th
+                    let th = pathData['_totals']['voted_year_thefts'][yr]
+                    yearData['paths'][path.split('/')[0]]['_totals']['voted_year_thefts'][yr] = yearData['paths'][path.split('/')[0]]['_totals']['voted_year_thefts'][yr] ? yearData['paths'][path.split('/')[0]]['_totals']['voted_year_thefts'][yr] + th : th
                 })
             }
         }
     })
+
+    // Now all umbrellas have got voted_year_thefts.
+    Object.keys(yearData['paths']).forEach((path) => {
+        if (Object.keys(umbrellaPaths).includes(path) && !isEmpty(yearData['paths'][path]['_totals']['voted_year_thefts'])) {
+            Object.keys(yearData['paths'][path]['_totals']['voted_year_thefts']).forEach((yr) => {
+                let th = yearData['paths'][path]['_totals']['voted_year_thefts'][yr]
+                yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
+            })
+        }
+    })
+    if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+        yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+    yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
 }
 const manipulatePaths = async (paths, proposalContract, voterContract, currentPath, theftVotesSum = {}, umbrellaPaths, parentPaths = [], proposals = [], votes = []) => {
     createLog(CALC_STATUS_PATH, `Manipulating Path for ${currentPath}`, currentPath)
