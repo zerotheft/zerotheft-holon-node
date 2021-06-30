@@ -557,7 +557,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
     const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) : ''}}\\% &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) + '\\%' : ''}} &
     ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
