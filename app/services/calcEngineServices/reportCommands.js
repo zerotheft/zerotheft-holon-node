@@ -53,7 +53,7 @@ const generateReportData = async (fileName) => {
     pdfData.year = year
     pdfData.country = 'USA'
     pdfData.holonUrl = holon
-    pdfData.pageID = path
+    pdfData.pageID = 'ztReport/' + leafPath
 
     const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
     const props = getPathYearProposals(summaryTotals, path)
@@ -330,7 +330,7 @@ const generateNoVoteReportData = async (fileName, path, holon) => {
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.country = nation
     pdfData.holonUrl = holon
-    pdfData.pageID = noNationPath
+    pdfData.pageID = 'ztReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
     pdfData.title = pathTitle
@@ -382,24 +382,22 @@ const generateNoVotePDFReport = async (noteBookName, fileName, path, holon) => {
     return await generateNoVoteLatexPDF(pdfData, fileName)
 }
 
-const generateNoVoteMultiReportData = async (fileName, year, path, holon, subPaths, availablePdfsPaths) => {
+const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, availablePdfsPaths) => {
     const pathData = path.split('/')
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
     let pdfData = {}
-    pdfData.pdfLink = `/pathReports/${fileName}.pdf`
-    pdfData.year = year
     pdfData.country = nation
     pdfData.holonUrl = holon
-    pdfData.pageID = noNationPath
+    pdfData.pageID = 'multiIssueReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
-    const sourcesOfTheft = prepareSourcesOfTheftNoVote(year, noNationPath, nation, subPaths, availablePdfsPaths)
+    const sourcesOfTheft = prepareSourcesOfTheftNoVote(noNationPath, nation, subPaths, availablePdfsPaths)
 
     pdfData.sourcesOfTheft = sourcesOfTheft
 
@@ -443,66 +441,55 @@ const generateNoVoteMultiLatexPDF = async (pdfData, fileName) => {
     })
 }
 
-const generateNoVoteMultiPDFReport = async (noteBookName, fileName, year, path, holon, subPaths, availablePdfsPaths) => {
-    createLog(MAIN_PATH, `Generating No Vote Report for the year ${year} with filename: ${fileName}`)
-    const pdfData = await generateNoVoteMultiReportData(fileName, year, path, holon, subPaths, availablePdfsPaths)
+const generateNoVoteMultiPDFReport = async (noteBookName, fileName, path, holon, subPaths, availablePdfsPaths) => {
+    createLog(MAIN_PATH, `Generating No Vote Report with filename: ${fileName}`)
+    const pdfData = await generateNoVoteMultiReportData(fileName, path, holon, subPaths, availablePdfsPaths)
     return await generateNoVoteMultiLatexPDF(pdfData, fileName)
 }
 
-const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
-    const { summaryTotals, singleYearData, actualPath, holon, allPaths, subPaths, pdflinks, umbrellaPaths } = loadAllIssues(fileName)
+const generateMultiReportData = (fileName, availablePdfsPaths) => {
+    const { summaryTotals, actualPath, holon, allPaths, subPaths } = loadAllIssues(fileName)
 
     const pathData = actualPath.split('/')
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
+    const year = (new Date()).getFullYear() - 1
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.year = year
     pdfData.country = nation
     pdfData.holonUrl = holon
-    pdfData.pageID = noNationPath
+    pdfData.pageID = 'multiIssueReport/' + actualPath
 
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
 
-    const population = usaPopulation(year)
-    const pdfReportPath = `${holon}/pathReports/${fileName}.pdf`
-
     const paths = allPaths[nation]
 
     const path = actualPath == nation ? nation : noNationPath
-    const leafPaths = getLeafPaths(paths)
     let sumTotals = {}
 
-    const yearPaths = singleYearData['paths']
+    const yearPaths = summaryTotals['paths']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
-    else if (path === nation) sumTotals = singleYearData['_totals']
+    else if (path === nation) sumTotals = summaryTotals['_totals']
 
     let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
-    let pageNo = 7
     if (path === nation) {
         subPathsFlat = flatPaths
-        pageNo = 7
-        sumTotals['pageno'] = 1
     } else {
         flatPaths.forEach((p) => {
             if (p.indexOf(path + '/') === 0) subPathsFlat.push(p)
         })
     }
 
-    const { pageNo: resultPageNo, summaryTotalsPaths } = assignPageNumbers(singleYearData['paths'], paths, '', pageNo)
-    singleYearData['paths'] = summaryTotalsPaths
-
     const subPathTotals = {}
     subPathsFlat.forEach((p) => {
-        if (p in singleYearData['paths']) subPathTotals[p] = singleYearData['paths'][p]['_totals']
+        if (p in summaryTotals['paths']) subPathTotals[p] = summaryTotals['paths'][p]['_totals']
     })
-
-    const pathSummary = analyticsPathSummary(sumTotals, true)
 
     const yearTh = getPastYearsTheftForMulti(summaryTotals, path, nation)
 
@@ -523,7 +510,7 @@ const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
     const perCit = theftAmountAbbr((totalTheft / cts['citizens']).toFixed(1))
     const manyYearsPerCit = theftAmountAbbr((totalTh / cts['citizens']).toFixed(1))
 
-    pdfData.theft = theftAmountAbbr(totalTheft)
+    pdfData.theft = theftAmountAbbr(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts.${year}`, 0))
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCit
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
@@ -539,14 +526,14 @@ const generateMultiReportData = (fileName, year, availablePdfsPaths) => {
 
     pdfData.theftValueChartData = theftValueChartData
 
-    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, year, nation, subPaths, subPathTotals, availablePdfsPaths)
+    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, nation, subPaths, subPathTotals, availablePdfsPaths)
 
     pdfData.sourcesOfTheft = sourcesOfTheft
 
     return pdfData
 }
 
-const rowDisp = (prob, tots, indent, totalTheft, fullPath, year, nation, availablePdfsPaths) => {
+const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availablePdfsPaths) => {
     const probPretty = startCase(prob)
     const legit = tots['legit'] ? 'legit' : ''
     let votepct = tots['votes'] > 0 ? tots['for'] / tots['votes'] : 0
@@ -557,7 +544,6 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, year, nation, availab
         votepct = tots['votes'] > 0 ? tots['against'] / tots['votes'] : 0
     }
 
-    const page = tots['pageno'] < 0 ? 'n/a' : tots['pageno']
     const theft = tots['theft']
     const theftAbbr = theftAmountAbbr(theft)
     const theftpct = totalTheft > 0 ? (tots['theft'] / totalTheft * 100).toFixed() : 0
@@ -568,80 +554,80 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, year, nation, availab
     if (pathMatch) {
         fullPath = pathMatch[1]
     }
-    const filePath = `${year}_${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
+    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) : ''}}\\%} &
-    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) : ''}}\\% &
+    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
 
-const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, year, nation, availablePdfsPaths) => {
+const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, nation, availablePdfsPaths) => {
     let disp = ''
     if (!paths) return disp
 
     Object.keys(paths).forEach((p) => {
-        if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
+        if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         const pp = prefix + p
-        disp += rowDisp(p, subPathTotals[pp], indent, sumTotals['theft'], pp, year, nation, availablePdfsPaths)
-        disp += walkSubPath(prefix + p + '/', paths[p], indent + 1, subPathTotals, sumTotals, year, nation, availablePdfsPaths)
+        disp += rowDisp(p, subPathTotals[pp], indent, sumTotals['theft'], pp, nation, !get(paths, `${p}.leaf`), availablePdfsPaths)
+        disp += walkSubPath(prefix + p + '/', paths[p], indent + 1, subPathTotals, sumTotals, nation, availablePdfsPaths)
     })
 
     return disp
 }
 
-const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, year, nation, subPaths, subPathTotals, availablePdfsPaths) => {
+const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, nation, subPaths, subPathTotals, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDisp(path, sumTotals, 0, totalTheft, fullPath, year, nation, availablePdfsPaths)
+    disp = rowDisp(path, sumTotals, 0, totalTheft, fullPath, nation, true, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = path == nation ? '' : path + '/'
-    disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, year, nation, availablePdfsPaths)
+    disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, nation, availablePdfsPaths)
 
     return disp
 }
 
-const rowDispNoVote = (prob, indent, year, nation, fullPath, availablePdfsPaths) => {
+const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths) => {
     const probPretty = startCase(prob)
     const pathMatch = fullPath.match(/^\/?([^*]+)/)
     if (pathMatch) {
         fullPath = pathMatch[1]
     }
-    const filePath = `${year}_${nation}${fullPath ? '-' + fullPath.replace('/', '-') : ''}.tex`
+    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
      &
-    ${availablePdfsPaths.includes(fullPath) && (indent === 0 || fs.existsSync(`${multiIssueReportPath}/${filePath}`) || fs.existsSync(`${singleIssueReportPath}/${filePath}`)) ? `\\hyperlink{${fullPath}}{View Report}` : 'View Report'} &
+    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
      \\\\ \n`
 }
 
-const walkSubPathNoVote = (prefix, paths, indent, year, nation, availablePdfsPaths) => {
+const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) => {
     let disp = ''
     if (!paths) return disp
 
     Object.keys(paths).forEach((p) => {
-        if (['parent', 'display_name', 'umbrella', 'leaf'].includes(p)) return
+        if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         const pp = prefix + p
-        disp += rowDispNoVote(p, indent, year, nation, pp, availablePdfsPaths)
-        disp += walkSubPathNoVote(pp ? pp + '/' : '', paths[p], indent + 1, year, nation, availablePdfsPaths)
+        disp += rowDispNoVote(p, indent, nation, !get(paths, `${p}.leaf`), pp, availablePdfsPaths)
+        disp += walkSubPathNoVote(pp ? pp + '/' : '', paths[p], indent + 1, nation, availablePdfsPaths)
     })
 
     return disp
 }
 
-const prepareSourcesOfTheftNoVote = (year, fullPath, nation, subPaths, availablePdfsPaths) => {
+const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDispNoVote(fullPath, 0, year, nation, fullPath, availablePdfsPaths)
+    disp = rowDispNoVote(fullPath, 0, nation, true, fullPath, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = fullPath == nation ? '' : fullPath + '/'
-    disp += walkSubPathNoVote(firstPath, subPaths, 1, year, nation, availablePdfsPaths)
+    disp += walkSubPathNoVote(firstPath, subPaths, 1, nation, availablePdfsPaths)
 
     return disp
 }
 
-const generatePDFMultiReport = async (noteBookName, fileName, year, availablePdfsPaths) => {
-    const pdfData = generateMultiReportData(fileName, year, availablePdfsPaths)
+const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths) => {
+    const pdfData = generateMultiReportData(fileName, availablePdfsPaths)
     return await generateLatexMultiPDF(pdfData, fileName)
 }
 
