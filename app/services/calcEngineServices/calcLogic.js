@@ -311,7 +311,7 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
         }
 
         // for interior nodes, total up everything below
-        let childrenSum = { 'method': 'Sum of Path Proposals', 'votes': 0, 'for': 0, 'against': 0, 'theft': 0, 'legit': true }
+        let childrenSum = { 'method': 'Sum of Path Proposals', 'votes': 0, 'for': 0, 'against': 0, 'theft': 0, 'legit': true, 'voted_year_thefts': {} }
         let allMissing = true
         for (tpath in yearData['paths']) {
             // we are only looking for children
