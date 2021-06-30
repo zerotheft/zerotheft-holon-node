@@ -6,7 +6,7 @@ const { lastExportedUid, failedUserIDFile, keepCacheRecord, cacheToFileRecord } 
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { createDir, exportsDir } = require('../../common')
-
+const csv = require('csvtojson');
 
 const exportAllVoters = async () => {
   try {
@@ -67,6 +67,18 @@ const exportAllVoters = async () => {
   }
 }
 
+/* get all citizens in json*/
+const getVoterData = async (req) => {
+  try {
+    const citizens = await csv().fromFile(`${exportsDir}/users.csv`)
+    return citizens
+  }
+  catch (e) {
+    console.log(`getting Votes Error::`, e)
+  }
+}
+
 module.exports = {
-  exportAllVoters
+  exportAllVoters,
+  getVoterData
 }

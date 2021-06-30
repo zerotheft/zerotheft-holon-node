@@ -108,9 +108,21 @@ const allProposalsJSON = async () => {
   return json
 }
 
+/* get all votes in json*/
+
+const getProposalData = async () => {
+  try {
+    const proposals = await csv().fromFile(`${exportsDir}/proposals.csv`)
+    return proposals
+  }
+  catch (e) {
+    console.log(`getting Votes Error::`, e)
+  }
+}
 
 module.exports = {
   exportAllProposals,
   exportFailedProposals,
-  allProposalsJSON
+  allProposalsJSON,
+  getProposalData
 }
