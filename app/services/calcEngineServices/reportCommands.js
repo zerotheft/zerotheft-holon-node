@@ -281,6 +281,12 @@ const generateLatexPDF = async (pdfData, fileName) => {
 const generateLatexMultiPDF = async (pdfData, fileName) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
+
+        pdfData.hideBlocks.forEach((block) => {
+            const regex = new RegExp(`% ${block}Start[^~]+% ${block}End`, 'g')
+            template = template.replace(regex, '')
+        })
+
         Object.keys(pdfData).forEach((key) => {
             const regex = new RegExp(`--${key}--`, 'g')
             template = template.replace(regex, pdfData[key])
@@ -462,6 +468,10 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     pdfData.holonUrl = holon
     pdfData.pageID = 'multiIssueReport/' + actualPath
 
+    let hideBlocks = []
+
+    if (subPaths['parent']) hideBlocks = [...hideBlocks, 'theftAmountBlock', 'chartBlock']
+
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
@@ -529,6 +539,8 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, nation, subPaths, subPathTotals, availablePdfsPaths)
 
     pdfData.sourcesOfTheft = sourcesOfTheft
+
+    pdfData.hideBlocks = hideBlocks
 
     return pdfData
 }
