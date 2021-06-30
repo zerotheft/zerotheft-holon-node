@@ -1,8 +1,8 @@
 const PromisePool = require('@supercharge/promise-pool')
 
-const { getUserContract } = require('zerotheft-node-utils').contracts
-const { getUser, listUserIds } = require('zerotheft-node-utils/contracts/users')
-const { lastExportedUid, failedUserIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
+const { getCitizenContract } = require('zerotheft-node-utils').contracts
+const { getCitizen, listCitizenIds } = require('zerotheft-node-utils/contracts/citizens')
+const { lastExportedUid, failedCitizenIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { createDir, exportsDir } = require('../../common')
@@ -12,11 +12,11 @@ const exportAllVoters = async () => {
   try {
     await createDir(exportsDir)
 
-    const userContract = await getUserContract()
+    const citizenContract = await getCitizenContract()
 
     //get all voter addresses
-    const userIds = await listUserIds(userContract)
-    console.log('Total Users::', userIds.length)
+    const citizenIds = await listCitizenIds(citizenContract)
+    console.log('Total Citizens::', citizenIds.length)
 
     let count = 1;
     let lastUid = await lastExportedUid()
@@ -25,21 +25,21 @@ const exportAllVoters = async () => {
 
     await PromisePool
       .withConcurrency(10)
-      .for(userIds)
+      .for(citizenIds)
       .process(async uid => {
-        let userData = {}
+        let citizenData = {}
         try {
           if (count > parseInt(lastUid)) {
             console.log('exporting UID::', count, '::', uid)
 
-            userData = await getUser(uid, userContract)
+            citizenData = await getCitizen(uid, citizenContract)
             const citizensDir = `${exportsDir}/citizens`
             await createDir(citizensDir)
 
-            //if user found then add in csv
-            if (userData.success)
+            //if citizen found then add in csv
+            if (citizenData.success)
               writeCsv([{
-                id: uid, name: userData.name, country: userData.country, linkedin_url: userData.linkedin
+                id: uid, name: citizenData.name, country: citizenData.country, linkedin_url: citizenData.linkedin
               }], `${citizensDir}/${fileDir}.csv`)
 
             await keepCacheRecord('LAST_EXPORTED_UID', count)
@@ -47,7 +47,7 @@ const exportAllVoters = async () => {
           }
         } catch (e) {
 
-          fs.appendFileSync(failedUserIDFile, `${count}\n`);
+          fs.appendFileSync(failedCitizenIDFile, `${count}\n`);
           console.log('exportVoter Error::', e)
           createLog(EXPORT_LOG_PATH, `'exportVoter Error:: ${count} => ${e}`)
 
@@ -56,8 +56,8 @@ const exportAllVoters = async () => {
 
       })
 
-    //write the last exported User ID
-    cacheToFileRecord('LAST_EXPORTED_UID', "users")
+    //write the last exported Citizen ID
+    cacheToFileRecord('LAST_EXPORTED_UID', "citizens")
 
     console.log('voters export is completed!!!!')
     lastUid = await lastExportedUid()

@@ -38,8 +38,8 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
     console.log(`4. Data in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}`)
     // console.log(`5. Past year thefts(PAST_THEFTS): ${!!pastThefts}`)
-    console.log(`6. Last User ID Exported: ${cachedUid}`)
-    console.log(`7. User Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
+    console.log(`6. Last Citizen ID Exported: ${cachedUid}`)
+    console.log(`7. Citizen Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
     console.log(`8. Last Proposal ID Exported: ${cachedPid}`)
     console.log(`9. Proposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}`)
     console.log(`10. Last Vote ID Exported: ${cachedVid}`)
@@ -104,7 +104,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log('*****HEARTBEAT Report*****')
 
     // Print heatbeat in log file
-    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}\nLast User ID Exported: ${cachedUid}\nUser Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}\nLast Proposal ID Exported: ${cachedPid}\nProposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}\nLast Vote ID Exported: ${cachedVid}\n Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}\nser ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
+    let logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}\nLast Citizen ID Exported: ${cachedUid}\nCitizen Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}\nLast Proposal ID Exported: ${cachedPid}\nProposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}\nLast Vote ID Exported: ${cachedVid}\n Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}\nser ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
     createLog(WATCHER_LOG_PATH, logContent)
 
   } catch (e) {
