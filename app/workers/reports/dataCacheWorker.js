@@ -5,7 +5,7 @@ const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').path
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
-const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
+const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear, parentVotedYearTheftsRollups } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
 // const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
@@ -71,6 +71,8 @@ const scanDataWorker = new Worker('ScanData', async job => {
             console.log('DPRFY')
             doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
 
+            console.log('PVYTR')
+            parentVotedYearTheftsRollups(hierarchyData, umbrellaInfo, nationPaths)
             // check if its valid before caching
             // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
             // only if there is no cached data and if total theft is not zero   
