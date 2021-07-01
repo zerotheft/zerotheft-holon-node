@@ -2,7 +2,7 @@ const minimist = require('minimist')
 const error = require('./utils/error')
 
 module.exports = () => {
-  const args = minimist(process.argv.slice(2), { string: ['from', 'to', 'user', 'donation_address'] })
+  const args = minimist(process.argv.slice(2), { string: ['from', 'to', 'citizen', 'donation_address'] })
   let cmd = args._[0] || 'help'
 
   if (args.version || args.v) {
@@ -19,6 +19,9 @@ module.exports = () => {
       break;
     case 'create-account':
       require('./cmds/createAccount')(args)
+      break;
+    case 'register-citizen':
+      require('./cmds/registerCitizen')(args)
       break;
 
     case 'get-balance':

@@ -5,14 +5,13 @@ const getHolonsService = async () => {
     const holons = await getHolons()
     return holons
   } catch (e) {
-      return { error: e }
+    return { error: e }
   }
 }
 
 const getHolonInfo = async () => {
   const address = getStorageValues() && getStorageValues().address
-  const canBeFunded = getProxyHolonValues().proxy 
-
+  const canBeFunded = getProxyHolonValues().proxy
   return {
     address,
     canBeFunded

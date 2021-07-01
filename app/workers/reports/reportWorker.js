@@ -1,7 +1,7 @@
 const { Queue, Worker, QueueScheduler } = require('bullmq')
 const PromisePool = require('@supercharge/promise-pool')
 const IORedis = require('ioredis')
-const { allNations, getUmbrellaPaths } = require('zerotheft-node-utils').paths
+const { allNations } = require('zerotheft-node-utils').paths
 const { cacheServer } = require('../../services/redisService')
 const { singleIssueReport, multiIssuesFullReport, nationReport } = require('../../services/calcEngineServices')
 const { createLog, FULL_REPORT_PATH } = require('../../services/LogInfoServices')
@@ -17,8 +17,8 @@ const reportWorker = new Worker('ReportQueue', async job => {
             cacheServer.set('REPORTS_INPROGRESS', true)
 
             // await theftInfo(true, null)
-            const pathSync = await cacheServer.getAsync('PATH_SYNCHRONIZED')
-            if (pathSync) {
+            const isDatainCache = await cacheServer.getAsync('CALC_SUMMARY_SYNCED')
+            if (isDatainCache) {
                 console.log('Report generation initiated')
                 createLog(FULL_REPORT_PATH, `All path reports generation worker initiated`)
                 let nationPaths = await allNations()
@@ -26,24 +26,17 @@ const reportWorker = new Worker('ReportQueue', async job => {
                     // })
                     // nationPaths.forEach(async (nationHierarchy) => {
                     let nation = nationHierarchy.hierarchy
+                    delete (nation['Version'])
                     delete (nation['Alias'])
                     let country = Object.keys(nation)
-                    let lastYear = new Date().getFullYear() - 1
-                    let umbrellaPaths = await getUmbrellaPaths()
-                    umbrellaPaths = umbrellaPaths.map(x => `${country[0]}/${x}`)
                     // console.log('sss')
-                    await runPathReport(nation[country[0]], country[0], umbrellaPaths)
-                    for (let year = lastYear; year > lastYear - 20; year--) {
-                        console.log(`Nation report for ${year} initiated`)
-                        await nationReport(year, true, country[0])
-                    }
+                    await runPathReport(nation[country[0]], country[0])
+                    await nationReport(true, country[0])
                 })
                 await Promise.all(promises)
             }
 
-
         } catch (e) {
-
             console.log("reportWorker", e)
             throw e
         }
@@ -71,39 +64,23 @@ reportWorker.on("failed", async (job, returnvalue) => {
  * Generates path wise report for all years
  * @param {object} path 
  * @param {string} currPath 
- * @param {array} umbrellaPaths 
- * @param {array} parentPaths 
  */
-const runPathReport = async (path, currPath, umbrellaPaths, parentPaths = []) => {
+const runPathReport = async (path, currPath) => {
     try {
         await PromisePool
             .withConcurrency(10)
             .for(Object.keys(path))
             .process(async key => {
-                if (['parent', 'leaf', 'display_name', 'umbrella'].includes(key))
+                if (['parent', 'leaf', 'display_name', 'umbrella', 'metadata'].includes(key))
                     return
-                console.log(`runPathReport for ${key}`)
+                const currentPath = path[key]
+                if (!currentPath) retun
                 let nextPath = `${currPath}/${key}`
-                let lastYear = new Date().getFullYear() - 1
-                if (path[key] && path[key]['leaf']) {
-                    for (let year = lastYear; year > lastYear - 20; year--) {
-                        // console.log(`singleIssueReport onging for ${nextPath}(year ${year})`)
-                        await singleIssueReport(nextPath, true, year)
-                    }
-                } else if (path[key] && (path[key]['umbrella'] || path[key]['parent'])) {
-                    // if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
-                    //     for (let year = lastYear; year > lastYear - 20; year--) {
-                    //         // console.log(`singleIssueReport onging for ${nextPath}(year ${year})`)
-                    //         await singleIssueReport(nextPath, true, year)
-                    //     }
-                    //     parentPaths.push(nextPath)
-                    // } else {
-                    await runPathReport(path[key], nextPath, umbrellaPaths, parentPaths)
-                    for (let year = lastYear; year > lastYear - 20; year--) {
-                        // console.log(`multiIssuesFullReport onging for ${nextPath}(year ${year})`)
-                        await multiIssuesFullReport(nextPath, true, year)
-                    }
-                    // }
+                if (currentPath['leaf']) {
+                    await singleIssueReport(nextPath, true)
+                } else if ((currentPath['metadata'] && currentPath['metadata']['umbrella']) || currentPath['parent']) {
+                    await runPathReport(currentPath, nextPath)
+                    await multiIssuesFullReport(nextPath, true)
                 }
             })
     } catch (e) {

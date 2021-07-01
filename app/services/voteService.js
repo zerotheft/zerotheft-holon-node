@@ -1,6 +1,6 @@
 const { voteByHolon: voteProposal } = require('zerotheft-node-utils/contracts/proposals')
-const { userPriorVote } = require('zerotheft-node-utils/contracts/votes')
-const { getUser } = require('zerotheft-node-utils/contracts/users')
+const { citizenPriorVote, voteDataRollups } = require('zerotheft-node-utils/contracts/votes')
+const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
 const scrapedin = require('scrapedin')
 const { get } = require('lodash')
 const { getProxyHolonValues, getVoteValues, updateVoteValues, getLinkedinCookieValues } = require('zerotheft-node-utils/utils/storage')
@@ -26,16 +26,23 @@ const vote = async (req) => {
 
 }
 const priorVote = async (req) => {
-  let res = await userPriorVote(req)
+  let res = await citizenPriorVote(req)
   return res
 }
 
+const voteRollups = async (req) => {
+  createLog(VOTES_PATH, `voteData rollups ${req}`)
+  let res = await voteDataRollups(req)
+  return res
+}
+
+
 const validate = async (req) => {
   try {
-    const user = await getUser(req.voter)
-    createLog(VOTES_PATH, `Checking if use is registered...`)
+    const citizen = await getCitizen(req.voter)
+    createLog(VOTES_PATH, `Checking if citizen is registered...`)
 
-    if (!user) throw new Error('User is not registered yet.')
+    if (!citizen) throw new Error('Citizen is not registered yet.')
 
     const holonValues = getProxyHolonValues()
     createLog(VOTES_PATH, `Checking if holon had se up pay it forward yet...`)
@@ -55,7 +62,7 @@ const validate = async (req) => {
     createLog(VOTES_PATH, `Scapping linked in profile...`)
 
     const profileScraper = await scrapedin(options)
-    const profile = await profileScraper(user.linkedin)
+    const profile = await profileScraper(citizen.linkedin)
     if (!profile) throw new Error('We can\'t proceed with your request at the moment.')
 
     const connections = parseInt(profile.profile.connections)
@@ -81,5 +88,6 @@ const validate = async (req) => {
 }
 module.exports = {
   vote,
-  priorVote
+  priorVote,
+  voteRollups
 }
