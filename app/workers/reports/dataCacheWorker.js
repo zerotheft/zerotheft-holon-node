@@ -30,6 +30,8 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
+        cacheServer.set('DATA_RESYNC', true)
+
         // cacheServer.del('CALC_SUMMARY_SYNCED')
     }
 
@@ -94,6 +96,8 @@ const scanDataWorker = new Worker('ScanData', async job => {
 scanDataWorker.on("completed", async () => {
     cacheServer.set('CALC_SUMMARY_SYNCED', true)
     cacheServer.del('SYNC_INPROGRESS')
+    cacheServer.del('DATA_RESYNC')
+
     console.log(`Caching completed.`)
     createLog(MAIN_PATH, `Caching completed.`)
 }, { connection });
