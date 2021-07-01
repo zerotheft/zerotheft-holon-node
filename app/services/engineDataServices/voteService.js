@@ -65,6 +65,8 @@ const exportAllVotes = async (req) => {
               "id": voteID,
               "vote_type": voteIsTheft ? 'yes' : 'no',
               "alt_theft_amt": customTheftAmount,
+              "yes_theft_proposal": yesTheftProposal,
+              "no_theft_proposal": noTheftProposal,
               comment,
               "is_archive": !voteReplacedBy.includes(convertToAscii(0)) ? "yes" : "no",
               "vote_replaces": voteReplaces,
