@@ -35,7 +35,7 @@ const exportAllVotes = async (req) => {
     let count = 1;
     let lastVid = await lastExportedVid()
     console.log('lastVid', lastVid);
-    const fileDir = `votes_${Date.now()}`
+    const fileDir = Date.now()
     await PromisePool
       .withConcurrency(10)
       .for(allVoteIds)
@@ -59,7 +59,7 @@ const exportAllVotes = async (req) => {
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
             const hierarchy = file.match(/hierarchy: ("|')?([^("|'|\n)]+)("|')?/i)[2]
             //Start writing it in the file
-            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/${fileDir}`
+            const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/votes`
             await createDir(voteDir)
             writeCsv([{
               "id": voteID,
@@ -81,7 +81,7 @@ const exportAllVotes = async (req) => {
               "proposal_id": proposalID,
               "proposal_timestamp": proposalInfo.date
 
-            }], `${voteDir}/votes.csv`)
+            }], `${voteDir}/${fileDir}.csv`)
 
             // keep the roll ups record in file
             updateVoteDataRollups({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID, proposalID, voteReplaces }, proposalInfo, voterContract)

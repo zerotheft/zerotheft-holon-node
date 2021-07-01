@@ -23,7 +23,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     const isSyncing = await cacheServer.getAsync(`SYNC_INPROGRESS`)
     const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
     const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
-    // const isDatainCache = await cacheServer.getAsync(`PATH_SYNCHRONIZED`)
+    const isResyncing = await cacheServer.getAsync(`DATA_RESYNC`)
     // const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
     const isDatainCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
     const cachedUid = await lastExportedUid()
@@ -37,13 +37,13 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     console.log(`2. Reports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}`)
     console.log(`3. Full report(FULL_REPORT): ${!!isFullReport}`)
     console.log(`4. Data in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}`)
-    // console.log(`5. Past year thefts(PAST_THEFTS): ${!!pastThefts}`)
-    console.log(`6. Last Citizen ID Exported: ${cachedUid}`)
-    console.log(`7. Citizen Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
-    console.log(`8. Last Proposal ID Exported: ${cachedPid}`)
-    console.log(`9. Proposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}`)
-    console.log(`10. Last Vote ID Exported: ${cachedVid}`)
-    console.log(`11. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
+    console.log(`5. Last Citizen ID Exported: ${cachedUid}`)
+    console.log(`6. Citizen Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}`)
+    console.log(`7. Last Proposal ID Exported: ${cachedPid}`)
+    console.log(`8. Proposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}`)
+    console.log(`9. Last Vote ID Exported: ${cachedVid}`)
+    console.log(`10. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
+    console.log(`11. Data Resyncing(DATA_RESYNC): ${!!isResyncing}`)
 
     const isNotExporting = (!isVotesExporting && !isVotersExporting && !isProposalExporting)
     /**
@@ -75,10 +75,10 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
       exportDataQueue.add('proposalsExport', {}, { removeOnComplete: true, removeOnFail: true })
     }
     /**
-     * If no data in cache and no sync in progress
+     * If no extra process is running and data is not in cache or its 4 hours cron job
      * Initiate data caching
      */
-    if (!isSyncing && cachedVid > 0 && !isVotesExporting && !isDatainCache) {
+    if ((!isSyncing && cachedVid > 0 && !isVotesExporting) && (!isDatainCache || isResyncing)) {
       await singleYearCaching(job.data.nation)
     }
     /**

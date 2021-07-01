@@ -5,7 +5,7 @@ const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').path
 
 const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
-const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear } = require('../../services/calcEngineServices/calcLogic')
+const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear, parentVotedYearTheftsRollups } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
 // const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
@@ -30,16 +30,9 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
-        // cacheServer.del('PAST_THEFTS')
+        cacheServer.set('DATA_RESYNC', true)
 
-        //Reset all year synced statuses
-        // for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        cacheServer.del('CALC_SUMMARY_SYNCED')
-
-        // const isYearSynced = await cacheServer.getAsync(CALC_SUMMARY_SYNCED)
-        // if (!isYearSynced || !!job.data.reSync)
-        //     await singleYearCaching(job.data.nation, year)
-        // }
+        // cacheServer.del('CALC_SUMMARY_SYNCED')
     }
 
 }, { connection })
@@ -71,6 +64,8 @@ const scanDataWorker = new Worker('ScanData', async job => {
             console.log('DPRFY')
             doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
 
+            console.log('PVYTR')
+            parentVotedYearTheftsRollups(hierarchyData, umbrellaInfo)
             // check if its valid before caching
             // let isCached = fs.existsSync(`${exportsDir}/calc_data/${nation}/${year}.json`)
             // only if there is no cached data and if total theft is not zero   
@@ -101,6 +96,8 @@ const scanDataWorker = new Worker('ScanData', async job => {
 scanDataWorker.on("completed", async () => {
     cacheServer.set('CALC_SUMMARY_SYNCED', true)
     cacheServer.del('SYNC_INPROGRESS')
+    cacheServer.del('DATA_RESYNC')
+
     console.log(`Caching completed.`)
     createLog(MAIN_PATH, `Caching completed.`)
 }, { connection });
