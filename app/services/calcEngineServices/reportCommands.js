@@ -479,7 +479,7 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     let hideBlocks = []
 
-    if (subPaths['parent']) hideBlocks = [...hideBlocks, 'theftAmountBlock', 'chartBlock']
+    if (subPaths['parent']) hideBlocks = [...hideBlocks, 'chartBlock']
 
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
@@ -491,6 +491,8 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     let sumTotals = {}
 
     const yearPaths = summaryTotals['paths']
+
+    if (!get(yearPaths, `${path}._totals.voted_year_thefts`)) hideBlocks = [...hideBlocks, 'theftAmountBlock']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals['_totals']
