@@ -1,5 +1,5 @@
 const { exec } = require('child_process')
-const { get, startCase } = require("lodash")
+const { get, startCase, isEmpty } = require("lodash")
 const latex = require('node-latex')
 const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
@@ -479,8 +479,6 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     let hideBlocks = []
 
-    if (subPaths['parent']) hideBlocks = [...hideBlocks, 'chartBlock']
-
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
@@ -492,7 +490,7 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     const yearPaths = summaryTotals['paths']
 
-    if (!get(yearPaths, `${path}._totals.voted_year_thefts`)) hideBlocks = [...hideBlocks, 'theftAmountBlock']
+    if (isEmpty(get(yearPaths, `${path}._totals.voted_year_thefts`))) hideBlocks = [...hideBlocks, 'chartBlock']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals['_totals']
@@ -532,6 +530,7 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     const manyYearsPerCit = theftAmountAbbr((totalTh / cts['citizens']).toFixed(1))
 
     pdfData.theft = theftAmountAbbr(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts.${year}`, 0))
+    if (pdfData.theft == 0 || get(sumTotals, 'theft', 0) == 0) hideBlocks = [...hideBlocks, 'theftAmountBlock']
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCit
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
