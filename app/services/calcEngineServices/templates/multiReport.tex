@@ -50,7 +50,7 @@ anchorcolor = blue]{hyperref}
       \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
       \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
 
-      \node[rightHeaderText, right=of subtitle] (year) {--year--};
+      \node[rightHeaderText, right=of subtitle] (year) {--generatedFrom--};
       \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
       \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
@@ -60,6 +60,8 @@ anchorcolor = blue]{hyperref}
   \end{tikzpicture}
 }
 
+% do not remove this comment
+% theftAmountBlockStart
 \trimbox{-120pt -15pt 0 0}{ 
   \begin{tikzpicture}
       \node[theftBlockContent] (amount1) {\huge \textbf{\$--theft--}};
@@ -77,7 +79,10 @@ anchorcolor = blue]{hyperref}
       \end{scope}
   \end{tikzpicture}
 }
+% theftAmountBlockEnd
 
+% do not remove this comment
+% chartBlockStart
 \trimbox{25pt -40pt 0 0}{
   \begin{tikzpicture}
     \begin{axis}[
@@ -134,6 +139,7 @@ anchorcolor = blue]{hyperref}
     \end{axis}
   \end{tikzpicture}
 }
+% chartBlockEnd
 
 \textcolor{primary}{\huge \textbf{Sources of theft}}
 \setlength{\tabcolsep}{10pt} % for the horizontal padding
