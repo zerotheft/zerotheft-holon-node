@@ -30,16 +30,7 @@ const allYearDataWorker = new Worker('AllYearDataQueue', async job => {
         cacheServer.del('SYNC_INPROGRESS')
         cacheServer.del('FULL_REPORT')
         cacheServer.del('REPORTS_INPROGRESS')
-        // cacheServer.del('PAST_THEFTS')
-
-        //Reset all year synced statuses
-        // for (let year = defaultPropYear; year >= firstPropYear; year--) {
-        cacheServer.del('CALC_SUMMARY_SYNCED')
-
-        // const isYearSynced = await cacheServer.getAsync(CALC_SUMMARY_SYNCED)
-        // if (!isYearSynced || !!job.data.reSync)
-        //     await singleYearCaching(job.data.nation, year)
-        // }
+        // cacheServer.del('CALC_SUMMARY_SYNCED')
     }
 
 }, { connection })
