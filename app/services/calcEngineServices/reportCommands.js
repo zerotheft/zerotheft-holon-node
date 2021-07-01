@@ -281,6 +281,12 @@ const generateLatexPDF = async (pdfData, fileName) => {
 const generateLatexMultiPDF = async (pdfData, fileName) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
+
+        pdfData.hideBlocks.forEach((block) => {
+            const regex = new RegExp(`% ${block}Start[^~]+% ${block}End`, 'g')
+            template = template.replace(regex, '')
+        })
+
         Object.keys(pdfData).forEach((key) => {
             const regex = new RegExp(`--${key}--`, 'g')
             template = template.replace(regex, pdfData[key])
@@ -462,6 +468,19 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     pdfData.holonUrl = holon
     pdfData.pageID = 'multiIssueReport/' + actualPath
 
+    let generatedFrom = ''
+    const valueParent = get(subPaths, 'metadata.value_parent')
+    if (valueParent === 'umbrella')
+        generatedFrom = 'Generated from Umbrella Proposals'
+    else if (valueParent === 'children')
+        generatedFrom = 'Generated from Child Proposals'
+
+    pdfData.generatedFrom = generatedFrom
+
+    let hideBlocks = []
+
+    if (subPaths['parent']) hideBlocks = [...hideBlocks, 'chartBlock']
+
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
@@ -472,6 +491,8 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     let sumTotals = {}
 
     const yearPaths = summaryTotals['paths']
+
+    if (!get(yearPaths, `${path}._totals.voted_year_thefts`)) hideBlocks = [...hideBlocks, 'theftAmountBlock']
 
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals['_totals']
@@ -530,6 +551,8 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     pdfData.sourcesOfTheft = sourcesOfTheft
 
+    pdfData.hideBlocks = hideBlocks
+
     return pdfData
 }
 
@@ -557,7 +580,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
     const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) : ''}}\\% &
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) + '\\%' : ''}} &
     ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
