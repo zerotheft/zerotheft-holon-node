@@ -8,7 +8,7 @@ const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
 const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
-const { createDir } = require('../../common')
+const { createDir, writeFile } = require('../../common')
 const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
 const { convertToAscii } = require('zerotheft-node-utils/utils/web3');
 
@@ -89,6 +89,9 @@ const exportAllVotes = async (req) => {
             updateVoteDataRollups({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID, proposalID, voteReplaces }, proposalInfo, voterContract)
 
             await keepCacheRecord('LAST_EXPORTED_VID', count)
+
+            // save the last created file name of csv
+            writeFile(`${voteDir}/.latest_csv_file`, fileDir)
           }
         } catch (e) {
 
@@ -108,6 +111,7 @@ const exportAllVotes = async (req) => {
 
     //save all the rollups
     await saveVoteRollupsData({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes })
+
 
     createLog(EXPORT_LOG_PATH, `All voters exported. The last voter exported is ${lastVid}`)
   }

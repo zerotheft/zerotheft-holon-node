@@ -5,7 +5,7 @@ const { getCitizen, listCitizenIds } = require('zerotheft-node-utils/contracts/c
 const { lastExportedUid, failedCitizenIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
-const { createDir, exportsDir } = require('../../common')
+const { createDir, exportsDir, writeFile } = require('../../common')
 
 
 const exportAllVoters = async () => {
@@ -21,7 +21,8 @@ const exportAllVoters = async () => {
     let count = 1;
     let lastUid = await lastExportedUid()
     console.log('lastUId', lastUid)
-    const fileDir = `${Date.now()}`
+    const citizensDir = `${exportsDir}/citizens`
+    const fileDir = Date.now()
 
     await PromisePool
       .withConcurrency(10)
@@ -33,7 +34,6 @@ const exportAllVoters = async () => {
             console.log('exporting UID::', count, '::', uid)
 
             citizenData = await getCitizen(uid, citizenContract)
-            const citizensDir = `${exportsDir}/citizens`
             await createDir(citizensDir)
 
             //if citizen found then add in csv
@@ -43,6 +43,7 @@ const exportAllVoters = async () => {
               }], `${citizensDir}/${fileDir}.csv`)
 
             await keepCacheRecord('LAST_EXPORTED_UID', count)
+
 
           }
         } catch (e) {
@@ -61,6 +62,8 @@ const exportAllVoters = async () => {
 
     console.log('voters export is completed!!!!')
     lastUid = await lastExportedUid()
+    // save the last created file name of csv
+    writeFile(`${citizensDir}/.latest_csv_file`, fileDir)
     createLog(EXPORT_LOG_PATH, `All voters exported. The last voter exported is ${lastUid}`)
 
   }
