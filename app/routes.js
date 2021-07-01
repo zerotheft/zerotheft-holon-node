@@ -5,7 +5,7 @@ const { getProposalWithDetail, getTemplateDetail, pathProposalsByPath } = requir
 const { vote, priorVote, voteRollups } = require('./controllers/voteController')
 const { citizenInfo } = require('./controllers/citizenController')
 const { getHolons, getHolonInfo } = require('./controllers/holonsController')
-const { exportVoteData, exportReportData, exportProposalData, exportFailedProposalData, exportHolonData, exportVoterData, exportedProposals } = require('./controllers/engineDataController')
+const { exportVoteData, exportReportData, exportProposalData, exportFailedProposalData, exportHolonData, exportVoterData, exportedProposals, getVoters, getVotes, getProposals } = require('./controllers/engineDataController')
 const { getCurrentVersion, getAutoUpdateStatus, updateHolon, disableAutoUpdate, enableAutoUpdate } = require('./controllers/utilityController')
 
 const router = express.Router()
@@ -59,5 +59,8 @@ router.get('/export-voters', exportVoterData)
 
 //  csv to json routes
 router.get('/exported-proposals', exportedProposals)
+router.get('/citizen-data', getVoters)
+router.get('/votes-data', getVotes)
+router.get('/proposals-data', getProposals)
 
 module.exports = router

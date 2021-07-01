@@ -122,7 +122,19 @@ const exportAllVotes = async (req) => {
   }
 }
 
+/* get all votes in json*/
+const getVoteData = async (req) => {
+  try {
+    const filePath =  fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
+    const votes = await csv().fromFile(`${exportsDir}/${filePath}`)
+    return votes
+  }
+  catch (e) {
+    console.log(`getting Votes Error::`, e)
+  }
+}
 
 module.exports = {
-  exportAllVotes
+  exportAllVotes,
+  getVoteData
 }

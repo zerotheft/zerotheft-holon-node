@@ -15,6 +15,16 @@ const exportVoteData = async (req, res, next) => {
   }
 }
 
+/* return votes from the stored exported data */
+const getVotes =  async (req, res, next) => {
+  try {
+    const response = await voteService.getVoteData()
+    res.send(response)
+  }
+  catch (e) {
+    res.status(400) && next(e.message)
+  }
+}
 
 const exportReportData = async (req, res, next) => {
   try {
@@ -25,53 +35,74 @@ const exportReportData = async (req, res, next) => {
   }
 }
 
-
-/* Downloads and  saves every proposals from the blockchain*/
+/* Downloads and saves every proposals from the blockchain */
 const exportProposalData = async (req, res, next) => {
   try {
     const response = proposalService.exportAllProposals()
-    res.send({ message: 'proposal export is in  progress' })
+    res.send({ message: 'proposal export is in progress' })
   } catch (e) {
     res.status(400) && next(e.message)
   }
 }
 
-/* Downloads and  saves every failed proposals from the blockchain*/
+/* Downloads and saves every failed proposals from the blockchain */
 const exportFailedProposalData = async (req, res, next) => {
   try {
     const response = proposalService.exportFailedProposals()
-    res.send({ message: 'failed proposal export is in  progress' })
+    res.send({ message: 'failed proposal export is in progress' })
   } catch (e) {
     res.status(400) && next(e.message)
   }
 }
 
-/* Downloads and  saves every holons from the blockchain*/
+/* Downloads and saves every holons from the blockchain */
 const exportHolonData = async (req, res, next) => {
   try {
     const response = await holonService.exportAllHolons()
-    res.send({ message: 'holon export is in  progress' })
+    res.send({ message: 'holon export is in progress' })
   } catch (e) {
     res.status(400) && next(e.message)
   }
 }
 
-/* Downloads and  saves every voters from the blockchain*/
+/* Downloads and saves every voters from the blockchain */
 const exportVoterData = async (req, res, next) => {
   try {
     const response = voterService.exportAllVoters()
-    res.send({ message: 'voter export is in  progress' })
+    res.send({ message: 'voter export is in progress' })
   } catch (e) {
     res.status(400) && next(e.message)
   }
 }
 
-/* Returns all exported proposals from csv*/
+/* return proposals from the stored exported data */
+const getVoters =  async (req, res, next) => {
+  try {
+    const response = await voterService.getVoterData()
+    res.send(response)
+  }
+  catch (e) {
+    res.status(400) && next(e.message)
+  }
+}
+
+/* Returns all exported proposals from csv */
 const exportedProposals = async (req, res, next) => {
   try {
     const content = await proposalService.allProposalsJSON()
-    res.send({ content, message: 'voter export is in  progress' })
+    res.send({ content, message: 'proposal export is in progress' })
   } catch (e) {
+    res.status(400) && next(e.message)
+  }
+}
+
+/* return proposals from the stored exported data */
+const getProposals =  async (req, res, next) => {
+  try {
+    const response = await proposalService.getProposalData()
+    res.send(response)
+  }
+  catch (e) {
     res.status(400) && next(e.message)
   }
 }
@@ -83,5 +114,8 @@ module.exports = {
   exportFailedProposalData,
   exportHolonData,
   exportVoterData,
-  exportedProposals
+  exportedProposals,
+  getVoters,
+  getVotes,
+  getProposals
 }

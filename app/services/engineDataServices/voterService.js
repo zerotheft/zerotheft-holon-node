@@ -1,4 +1,5 @@
 const PromisePool = require('@supercharge/promise-pool')
+const fs = require('fs')
 
 const { getCitizenContract } = require('zerotheft-node-utils').contracts
 const { getCitizen, listCitizenIds } = require('zerotheft-node-utils/contracts/citizens')
@@ -6,7 +7,7 @@ const { lastExportedUid, failedCitizenIDFile, keepCacheRecord, cacheToFileRecord
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { createDir, exportsDir, writeFile } = require('../../common')
-
+const csv = require('csvtojson');
 
 const exportAllVoters = async () => {
   try {
@@ -73,6 +74,19 @@ const exportAllVoters = async () => {
   }
 }
 
+/* get all citizens in json*/
+const getVoterData = async (req) => {
+  try {
+    const fileName =  fs.readFileSync(`${exportsDir}/citizens/.latest_csv_file`, 'utf8')
+    const citizens = await csv().fromFile(`${exportsDir}/citizens/${fileName}.csv`)
+    return citizens
+  }
+  catch (e) {
+    console.log(`getting Votes Error::`, e)
+  }
+}
+
 module.exports = {
-  exportAllVoters
+  exportAllVoters,
+  getVoterData
 }

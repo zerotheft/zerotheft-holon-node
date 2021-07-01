@@ -86,11 +86,13 @@ const generateReportData = async (fileName) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
+    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
+        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
 
     const votedYearThefts = get(vt, `_totals.voted_year_thefts`, {})
@@ -515,11 +517,13 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
+    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
+        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
 
     const totalTheft = sumTotals['theft'].toFixed(1)
