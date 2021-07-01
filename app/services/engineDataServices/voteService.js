@@ -108,7 +108,8 @@ const exportAllVotes = async (req) => {
 /* get all citizens in json*/
 const getVoteData = async (req) => {
   try {
-    const votes = await csv().fromFile(`${exportsDir}/votes.csv`)
+    const filePath =  fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
+    const votes = await csv().fromFile(`${exportsDir}/${filePath}`)
     return votes
   }
   catch (e) {

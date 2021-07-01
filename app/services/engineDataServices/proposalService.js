@@ -109,7 +109,6 @@ const allProposalsJSON = async () => {
 }
 
 /* get all votes in json*/
-
 const getProposalData = async () => {
   try {
     const proposals = await csv().fromFile(`${exportsDir}/proposals.csv`)

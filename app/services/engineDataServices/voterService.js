@@ -1,4 +1,5 @@
 const PromisePool = require('@supercharge/promise-pool')
+const fs = require('fs')
 
 const { getUserContract } = require('zerotheft-node-utils').contracts
 const { getUser, listUserIds } = require('zerotheft-node-utils/contracts/users')
@@ -70,7 +71,8 @@ const exportAllVoters = async () => {
 /* get all citizens in json*/
 const getVoterData = async (req) => {
   try {
-    const citizens = await csv().fromFile(`${exportsDir}/users.csv`)
+    const fileName =  fs.readFileSync(`${exportsDir}/citizens/.latest_csv_file`, 'utf8')
+    const citizens = await csv().fromFile(`${exportsDir}/citizens/${fileName}.csv`)
     return citizens
   }
   catch (e) {

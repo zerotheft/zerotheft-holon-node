@@ -77,7 +77,6 @@ const exportVoterData = async (req, res, next) => {
 
 /* return proposals from the stored exported data */
 const getVoters =  async (req, res, next) => {
-  console.log('asasasadf sdasad')
   try {
     const response = await voterService.getVoterData()
     res.send(response)
