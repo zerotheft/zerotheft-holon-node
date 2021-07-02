@@ -377,68 +377,73 @@ const doPathRollUpsForYear = (yearData, umbrellaPaths, pathHierarchy, pathH = nu
             } else { // otherwise, use the umbrella total, and store the children sum as secondary
                 secondaryData = childrenSum
             }
-        }
-        else {
-            // set its method
+        } else {
             totalsData['method'] = 'Umbrella Totals'
             secondaryData = childrenSum
             totalsData['value_parent'] = umbrellaPaths[fullPath]['value_parent']
-
-            // // if umbrella total is legit, and roll - up total is legit, and roll - up total theft greater than umbrella, use roll - up data
-            // if (totalsData['legit'] && childrenSum['legit'] && childrenSum['theft'] > totalsData['theft']) {
-            //     secondaryData = totalsData
-            //     totalsData = {
-            //         'method': 'Umbrella Totals',
-            //         'reason': `roll-up and umbrella thefts are legit and roll-up theft (${childrenSum['theft']}) is greater than umbrella theft (${totalsData['theft']})`,
-            //         'legit': true,
-            //         'votes': childrenSum['votes'],
-            //         'for': childrenSum['for'],
-            //         'against': childrenSum['against'],
-            //         'theft': childrenSum['theft'],
-            //         'need_votes': childrenSum['need_votes']
-            //     }
-            // } else if (!totalsData['legit'] && childrenSum['legit']) { // if umbrella is not legit and roll-up is legit, use roll-up data
-            //     secondaryData = totalsData
-            //     totalsData = childrenSum
-            //     totalsData['reason'] = `umbrella is not legit and roll-up is legit`
-            // } else { // otherwise, use the umbrella total, and store the children sum as secondary
-            //     secondaryData = childrenSum
-            // }
         }
-
-        if (totalsData['theft'] > 0 && fullPath !== "industries") {
-            yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
-            yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
-            if (Object.keys(umbrellaPaths).includes(fullPath)) {
-                yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
-                yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
-            }
-        }
-
-        yearData['paths'][fullPath]['_totals'] = totalsData
-        if (!!secondaryData) {
-            yearData['paths'][fullPath]['_secondary'] = secondaryData
-        }
-        if (!yearData['paths'][fullPath]['_totals']['legit']) {
-            allLegit = false
-        }
-
-
-        // if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
-        //     Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
-        //         let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
-        //         yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
-        //     })
-        // }
-
     }
-    yearData['_totals']['legit'] = allLegit
-    // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
-    //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    // if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
-    //     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
-    // yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
-    return yearData
+    //     else {
+    // // set its method
+    // totalsData['method'] = 'Umbrella Totals'
+    // secondaryData = childrenSum
+    // totalsData['value_parent'] = umbrellaPaths[fullPath]['value_parent']
+
+    // // if umbrella total is legit, and roll - up total is legit, and roll - up total theft greater than umbrella, use roll - up data
+    // if (totalsData['legit'] && childrenSum['legit'] && childrenSum['theft'] > totalsData['theft']) {
+    //     secondaryData = totalsData
+    //     totalsData = {
+    //         'method': 'Umbrella Totals',
+    //         'reason': `roll-up and umbrella thefts are legit and roll-up theft (${childrenSum['theft']}) is greater than umbrella theft (${totalsData['theft']})`,
+    //         'legit': true,
+    //         'votes': childrenSum['votes'],
+    //         'for': childrenSum['for'],
+    //         'against': childrenSum['against'],
+    //         'theft': childrenSum['theft'],
+    //         'need_votes': childrenSum['need_votes']
+    //     }
+    // } else if (!totalsData['legit'] && childrenSum['legit']) { // if umbrella is not legit and roll-up is legit, use roll-up data
+    //     secondaryData = totalsData
+    //     totalsData = childrenSum
+    //     totalsData['reason'] = `umbrella is not legit and roll-up is legit`
+    // } else { // otherwise, use the umbrella total, and store the children sum as secondary
+    //     secondaryData = childrenSum
+    // }
+    // }
+
+    if (totalsData['theft'] > 0 && fullPath !== "industries") {
+        yearData['_totals']['all_theft_amts']['_total'] += totalsData['theft']
+        yearData['_totals']['all_theft_amts']['_amts'].push(totalsData['theft'])
+        if (Object.keys(umbrellaPaths).includes(fullPath)) {
+            yearData['_totals']['umbrella_theft_amts']['_total'] += totalsData['theft']
+            yearData['_totals']['umbrella_theft_amts']['_amts'].push(totalsData['theft'])
+        }
+    }
+
+    yearData['paths'][fullPath]['_totals'] = totalsData
+    if (!!secondaryData) {
+        yearData['paths'][fullPath]['_secondary'] = secondaryData
+    }
+    if (!yearData['paths'][fullPath]['_totals']['legit']) {
+        allLegit = false
+    }
+
+
+    // if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
+    //     Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
+    //         let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
+    //         yearData['_totals']['overall_year_thefts'][yr] = yearData['_totals']['overall_year_thefts'][yr] ? yearData['_totals']['overall_year_thefts'][yr] + th : th
+    //     })
+    // }
+
+}
+yearData['_totals']['legit'] = allLegit
+// if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+//     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+// if (yearData['_totals']['umbrella_theft_amts']['_total'] > 0)
+//     yearData['_totals']['theft'] = yearData['_totals']['umbrella_theft_amts']['_total']
+// yearData['_totals']['last_year_theft'] = yearData['_totals']['overall_year_thefts'][defaultPropYear + 1] || yearData['_totals']['overall_year_thefts'][defaultPropYear]
+return yearData
 }
 
 const parentVotedYearTheftsRollups = async (yearData, umbrellaPaths) => {
