@@ -492,10 +492,10 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     const yearPaths = summaryTotals['paths']
 
-    if (isEmpty(get(yearPaths, `${path}._totals.voted_year_thefts`))) hideBlocks = [...hideBlocks, 'chartBlock']
-
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals['_totals']
+
+    if (isEmpty(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts`))) hideBlocks = [...hideBlocks, 'chartBlock']
 
     let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
@@ -534,7 +534,6 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     const manyYearsPerCit = theftAmountAbbr((totalTh / cts['citizens']).toFixed(1))
 
     pdfData.theft = theftAmountAbbr(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts.${year}`, 0))
-    if (pdfData.theft == 0 || get(sumTotals, 'theft', 0) == 0) hideBlocks = [...hideBlocks, 'theftAmountBlock']
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCit
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)

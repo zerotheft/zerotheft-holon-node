@@ -86,41 +86,42 @@ const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
     }
 
     const yearlyThefts = get(p, `_totals.${path === nation ? 'overall' : 'voted'}_year_thefts`)
-    if (!get(p, 'missing') && !isEmpty(yearlyThefts)) {
+    if (!(get(p, 'missing') && get(p, `_totals.value_parent`) === 'umbrella') && !isEmpty(yearlyThefts)) {
         Object.keys(yearlyThefts).forEach((year) => {
             const theft = yearlyThefts[year]
-            let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
+            let yd = { 'Year': year, 'theft': theft, 'Determined By': 'voting', 'Theft': theftAmountAbbr(theft) }
+            // let yd = { 'Year': year, 'theft': priorTheft, 'Determined By': 'estimation' }
 
-            if (get(p, '_totals.legit')) {
-                if (theft <= 0) {
-                    yd['Determined By'] = 'incomplete voting'
-                    yd['theft'] = 0
-                } else {
-                    yd['Determined By'] = 'voting'
-                    yd['theft'] = theft
-                }
-            } else { // not legit
-                if (theft <= 0) {
-                    yd['theft'] = 0
-                } else {
-                    yd['theft'] = theft
-                }
-                yd['Determined By'] = 'incomplete voting'
-            }
+            // if (get(p, '_totals.legit')) {
+            //     if (theft <= 0) {
+            //         yd['Determined By'] = 'incomplete voting'
+            //         yd['theft'] = 0
+            //     } else {
+            //         yd['Determined By'] = 'voting'
+            //         yd['theft'] = theft
+            //     }
+            // } else { // not legit
+            //     if (theft <= 0) {
+            //         yd['theft'] = 0
+            //     } else {
+            //         yd['theft'] = theft
+            //     }
+            //     yd['Determined By'] = 'incomplete voting'
+            // }
 
-            firstTheft = firstTheft ? firstTheft : yd['theft']
-            priorTheft = yd['theft']
+            // firstTheft = firstTheft ? firstTheft : yd['theft']
+            // priorTheft = yd['theft']
 
             yearTh.push(yd)
         })
     }
 
     // second pass - back-fill any early years with first_theft estimate
-    Object.keys(yearTh).forEach((key) => {
-        const yd = yearTh[key]
-        if (!yd.theft) yd.theft = firstTheft
-        yd['Theft'] = theftAmountAbbr(yd['theft'])
-    })
+    // Object.keys(yearTh).forEach((key) => {
+    //     const yd = yearTh[key]
+    //     if (!yd.theft) yd.theft = firstTheft
+    //     yd['Theft'] = theftAmountAbbr(yd['theft'])
+    // })
 
     // third pass - step-estimate any theft between two legit/incomplete years
     // let lastTh = null
