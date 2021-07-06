@@ -8,23 +8,25 @@ const axios = require('axios')
 
 const { getStorageValues } = require('zerotheft-node-utils/utils/storage.js')
 const { MODE, PORT } = require('zerotheft-node-utils/config.js')
-const { getHolonContract } = require('zerotheft-node-utils/utils/contract')
+const { getHolonContract, getCitizenContract } = require('zerotheft-node-utils/utils/contract')
 const { grantRole } = require('zerotheft-node-utils/utils/accessControl')
+const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
+
 
 module.exports = async args => {
     const url = args.url
-    let port = args.port
+    // let port = args.port
     const country = args.country
     const donationAddr = args.donation_address
     if (url === "" || url === undefined) {
-        error(chalk.red('Please provide appropriate holon path'), true)
+        error(chalk.red('Please provide appropriate holon url along with port(if any) eg:https://abc.com:8585'), true)
         return
     }
 
-    if (port === "" || port === undefined) {
-        error(chalk.red('Please provide appropriate holon port'), true)
-        return
-    }
+    // if (port === "" || port === undefined) {
+    //     error(chalk.red('Please provide appropriate holon port'), true)
+    //     return
+    // }
     if (country === "" || country === undefined) {
         error(chalk.red('Please provide country'), true)
         return
@@ -33,7 +35,7 @@ module.exports = async args => {
         error(chalk.red('Please provide donation address'), true)
         return
     }
-    const holonPath = `${url.replace(/\/$/, "")}:${port}`
+    const holonPath = `${url.replace(/\/$/, "")}`
 
     if (!isURL(holonPath)) {
         error(chalk.red('Invalid holon url'), true)
@@ -55,8 +57,14 @@ module.exports = async args => {
             error(chalk.red('Please use zt-holon create-account to create your etc account.'), true)
         }
         spinner.start()
+        //check if citizen address is in the blockchain
+        const userContract = getCitizenContract()
+        const userData = await getCitizen(storage.address, userContract)
+        if (!userData.success) {
+            error(chalk.red(userData.error), true)
+        }
         //perform status check of holon
-        const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}:${port}/healthcheck`)
+        const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}/healthcheck`)
         if (response.data.success) {
             const holonContract = getHolonContract()
             //check if holon is already registered
@@ -71,7 +79,7 @@ module.exports = async args => {
                 })
             }
 
-            //assign holon ownership to the user who executes command
+            //assign holon ownership to the citizen who executes command
             await grantRole(storage.address, "holonowner")
             //now add holon data in the blockchain
             const holonDetails = {
@@ -81,7 +89,7 @@ module.exports = async args => {
             await holonContract.createTransaction('registerHolon', [JSON.stringify(holonDetails).replace('"', '\"'), response.data.status, donationAddr], 900000)
 
             spinner.stop()
-            console.log(chalk.green(`Holon successfully registered and user has been assigned ownership of the holon.`))
+            console.log(chalk.green(`Holon successfully registered and citizen has been assigned ownership of the holon.`))
         }
     } catch (e) {
         console.log(e)
