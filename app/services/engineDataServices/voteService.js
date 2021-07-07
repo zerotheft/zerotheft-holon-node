@@ -53,7 +53,9 @@ const exportAllVotes = async (req) => {
             let proposalID = (voteIsTheft) ? yesTheftProposal : noTheftProposal
             //get the voted proposal information
             const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
-            outputFiles = await fetchProposalYaml(proposalContract, proposalInfo.yamlBlock, 1, [], undefined, 1)
+            const proposalYaml = await proposalContract.callSmartContractGetFunc('getProposalYaml', [proposalInfo.yamlBlock])
+
+            outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1, [], undefined, 1)
             const file = fs.readFileSync(outputFiles[0], 'utf-8')
             const countryReg = file.match(/summary_country: ("|')?([^("|'|\n)]+)("|')?/i)
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
@@ -125,7 +127,7 @@ const exportAllVotes = async (req) => {
 /* get all votes in json*/
 const getVoteData = async (req) => {
   try {
-    const filePath =  fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
+    const filePath = fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
     const votes = await csv().fromFile(`${exportsDir}/${filePath}`)
     return votes
   }
