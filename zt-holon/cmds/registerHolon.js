@@ -64,10 +64,6 @@ module.exports = async args => {
             //assign holon ownership to the citizen who executes command
             await grantRole(storage.address, "holonowner")
             //now add holon data in the blockchain
-            const holonDetails = {
-                url: holonPath,
-                country
-            }
             await holonContract.createTransaction('registerHolon', [name, url, donationAddr, response.data.status], 900000)
 
             spinner.stop()
