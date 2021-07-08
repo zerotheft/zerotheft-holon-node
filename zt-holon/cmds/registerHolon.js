@@ -14,21 +14,15 @@ const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
 
 
 module.exports = async args => {
+    const name = args.name
     const url = args.url
-    // let port = args.port
-    const country = args.country
     const donationAddr = args.donation_address
     if (url === "" || url === undefined) {
         error(chalk.red('Please provide appropriate holon url along with port(if any) eg:https://abc.com:8585'), true)
         return
     }
-
-    // if (port === "" || port === undefined) {
-    //     error(chalk.red('Please provide appropriate holon port'), true)
-    //     return
-    // }
-    if (country === "" || country === undefined) {
-        error(chalk.red('Please provide country'), true)
+    if (name === "" || name === undefined) {
+        error(chalk.red('Please provide holon name'), true)
         return
     }
     if (donationAddr === "" || donationAddr === undefined) {
@@ -67,18 +61,6 @@ module.exports = async args => {
         const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}/healthcheck`)
         if (response.data.success) {
             const holonContract = getHolonContract()
-            //check if holon is already registered
-            const holonIds = await holonContract.callSmartContractGetFunc('getHolonIds')
-            if (holonIds.length > 0) {
-                holonIds.forEach(async (holonID) => {
-                    const holonInfo = await holonContract.callSmartContractGetFunc('getHolon', [holonID])
-                    if (holonInfo.url === holonPath) {
-                        error(chalk.red(chalk`${holonPath} holon already registered.`), true)
-                    }
-
-                })
-            }
-
             //assign holon ownership to the citizen who executes command
             await grantRole(storage.address, "holonowner")
             //now add holon data in the blockchain
@@ -86,7 +68,7 @@ module.exports = async args => {
                 url: holonPath,
                 country
             }
-            await holonContract.createTransaction('registerHolon', [JSON.stringify(holonDetails).replace('"', '\"'), response.data.status, donationAddr], 900000)
+            await holonContract.createTransaction('registerHolon', [name, url, donationAddr, response.data.status], 900000)
 
             spinner.stop()
             console.log(chalk.green(`Holon successfully registered and citizen has been assigned ownership of the holon.`))
