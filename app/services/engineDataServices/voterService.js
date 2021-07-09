@@ -40,7 +40,18 @@ const exportAllVoters = async () => {
             //if citizen found then add in csv
             if (citizenData.success)
               writeCsv([{
-                id: uid, name: citizenData.name, country: citizenData.country, linkedin_url: citizenData.linkedin
+                id: uid,
+                firstName: citizenData.firstName,
+                middleName: citizenData.middleName,
+                lastName: citizenData.lastName,
+                country: citizenData.country,
+                citizenship: citizenData.citizenship,
+                currentState: citizenData.currentState,
+                currentCity: citizenData.currentCity,
+                currentZip: citizenData.currentZip,
+                version: citizenData.version,
+                linkedin: citizenData.linkedin,
+                createdAt: citizenData.createdAt,
               }], `${citizensDir}/${fileDir}.csv`)
 
             await keepCacheRecord('LAST_EXPORTED_UID', count)

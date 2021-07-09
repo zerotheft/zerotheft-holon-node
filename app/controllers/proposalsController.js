@@ -22,7 +22,7 @@ const pathProposalsByPath = async (req, res, next) => {
     var votes = [],
       theftAmt = []
     response.map((proposal) => {
-      if (proposal['votes']) {
+      if (proposal && proposal['votes']) {
         votes.push(proposal['votes']);
         theftAmt.push(proposal['theftAmt'])
       }

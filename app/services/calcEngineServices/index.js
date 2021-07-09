@@ -117,7 +117,7 @@ const multiIssuesReport = async (path, fromWorker = false) => {
             // TODO: uncomment this
             let allYearData = await allYearCachedData(nation)
 
-            if (!get(allYearData, `paths.${noNationPath}.missing`) || allPaths['parent']) {
+            if (!get(allYearData, `paths.${noNationPath}.missing`) || get(allYearData, `paths.${noNationPath}._totals.value_parent`) === 'children' || allPaths['parent']) {
                 const pathsJson = { yearData: allYearData, actualPath: path, holon: getAppRoute(false), allPaths: nationPaths, subPaths: allPaths }
                 // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
                 // TODO: uncomment this

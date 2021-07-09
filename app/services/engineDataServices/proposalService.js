@@ -21,22 +21,24 @@ const processProposalIds = async (proposalContract, proposalIds, count, lastPid,
         if (count > parseInt(lastPid) || isFailed) {
           // if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
           console.log('Exporting proposalId::', count, '::', pid)
-          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [pid])
+          const propKey = `ZTMProposal:${pid}`
+          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [propKey])
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 
           if (Object.keys(proposal).length > 0) {
-            outputFiles = await fetchProposalYaml(proposalContract, proposal.yamlBlock, 1)
+            const proposalYaml = await proposalContract.callSmartContractGetFunc('getProposalYaml', [proposal.yamlBlock])
+            outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
             file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
-            let { theftYears, theftAmt } = proposalYearTheftInfo(file)
+            let { theftAmt } = proposalYearTheftInfo(file)
 
             const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
             await createDir(proposalDir)
-            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
+            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${propKey}_proposal-${proposal.date}.yaml`));
 
             //save every proposal in csv
             writeCsv([{
-              "id": pid,
+              "id": propKey,
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
               "theft_amount": theftAmt,
