@@ -5,7 +5,9 @@ const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
 
 const fs = require('fs')
-const homedir = require('os').homedir()
+const os = require('os')
+const homedir = os.homedir()
+const platform = os.platform()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { APP_PATH } = require('zerotheft-node-utils/config')
@@ -159,7 +161,7 @@ const generateReportData = async (fileName) => {
 
 const svgToPdf = async (svgPath) => {
     return new Promise((resolve, reject) => {
-        exec(`/Applications/Inkscape.app/Contents/MacOS/inkscape -D ${svgPath}.svg  -o ${svgPath}.pdf`, (error, stdout, stderr) => {
+        exec(`${platform === 'darwin' ? '/Applications/Inkscape.app/Contents/MacOS/' : ''}inkscape ${svgPath}.svg --export-type="pdf" -o ${svgPath}.pdf`, (error, stdout, stderr) => {
             if (error) {
                 console.log('SVG pdf creation failed')
                 reject({ message: `SVG pdf creation failed: ${error}` })
