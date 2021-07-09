@@ -23,7 +23,6 @@ const processProposalIds = async (proposalContract, proposalIds, count, lastPid,
           console.log('Exporting proposalId::', count, '::', pid)
           const propKey = `ZTMProposal:${pid}`
           const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [propKey])
-          console.log(proposal)
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 
           if (Object.keys(proposal).length > 0) {
@@ -35,11 +34,11 @@ const processProposalIds = async (proposalContract, proposalIds, count, lastPid,
 
             const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
             await createDir(proposalDir)
-            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
+            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${propKey}_proposal-${proposal.date}.yaml`));
 
             //save every proposal in csv
             writeCsv([{
-              "id": pid,
+              "id": propKey,
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
               "theft_amount": theftAmt,
