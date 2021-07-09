@@ -8,12 +8,13 @@ const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
 const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
 const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
-const { createDir, writeFile } = require('../../common')
+const { createDir, exportsDir, writeFile } = require('../../common')
 const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
 const { convertToAscii } = require('zerotheft-node-utils/utils/web3');
 
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
+const csv = require('csvtojson');
 
 /* get all votes and export them individually in json*/
 const exportAllVotes = async (req) => {
@@ -123,10 +124,11 @@ const exportAllVotes = async (req) => {
 }
 
 /* get all votes in json*/
-const getVoteData = async (req) => {
+const getVoteData = async (referencePath) => {
   try {
-    const filePath =  fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
-    const votes = await csv().fromFile(`${exportsDir}/${filePath}`)
+    const path = `nation_data/USA/${referencePath}/votes`
+    const fileName =  fs.readFileSync(`${exportsDir}/${path}/.latest_csv_file`, 'utf8').toString()
+    const votes = await csv().fromFile(`${exportsDir}/${path}/${fileName.replace('\n','')}.csv`)
     return votes
   }
   catch (e) {
