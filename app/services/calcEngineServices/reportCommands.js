@@ -575,7 +575,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
     }
-    if (!maxYr || !minYear) hideBlocks.push('theftAmountBlock')
+    if (!maxYr || !minYr) hideBlocks.push('theftAmountBlock')
 
     const totalTheft = sumTotals['theft'].toFixed(1)
 
