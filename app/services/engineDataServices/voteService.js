@@ -2,7 +2,7 @@ const fs = require('fs')
 const { get } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 
-const { getCitizenContract, getProposalContract, getVoterContract, getHolonContract } = require('zerotheft-node-utils').contracts
+const { getCitizenContract, getProposalContract, getVoteContract, getHolonContract } = require('zerotheft-node-utils').contracts
 const { listVoteIds, updateVoteDataRollups, saveVoteRollupsData } = require('zerotheft-node-utils/contracts/votes')
 const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
 const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals')
@@ -20,14 +20,13 @@ const exportAllVotes = async (req) => {
   try {
     const citizenContract = await getCitizenContract()
     const proposalContract = await getProposalContract()
-    const voterContract = await getVoterContract()
+    const voterContract = await getVoteContract()
     const holonContract = await getHolonContract()
 
     let { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes } = await voteDataRollupsFile()
 
     //get all the holons
     const allHolons = await getHolons('object', holonContract)
-
     //get all the voteIds
     let allVoteIds = await listVoteIds(voterContract)
     console.log('Total votes::', allVoteIds.length)
@@ -45,15 +44,18 @@ const exportAllVotes = async (req) => {
           if (count > parseInt(lastVid)) {
             // if (1) {
             console.log('exporting voteID:: ', count, '::', voteID)
+            const voteKey = `ZTMVote:${voteID}`
             //First get the votes info
-            let { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteID])
-            const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteID])
+            let { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteKey])
+            const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteKey])
             //get the voter information
             const { name, linkedin, country } = await getCitizen(voter, citizenContract)
             let proposalID = (voteIsTheft) ? yesTheftProposal : noTheftProposal
             //get the voted proposal information
             const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
-            outputFiles = await fetchProposalYaml(proposalContract, proposalInfo.yamlBlock, 1, [], undefined, 1)
+            const proposalYaml = await proposalContract.callSmartContractGetFunc('getProposalYaml', [proposalInfo.yamlBlock])
+
+            outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1, [], undefined, 1)
             const file = fs.readFileSync(outputFiles[0], 'utf-8')
             const countryReg = file.match(/summary_country: ("|')?([^("|'|\n)]+)("|')?/i)
             let summaryCountry = countryReg ? countryReg[2] : 'USA'
@@ -62,13 +64,13 @@ const exportAllVotes = async (req) => {
             const voteDir = `${exportsDirNation}/${summaryCountry}/${hierarchy}/votes`
             await createDir(voteDir)
             writeCsv([{
-              "id": voteID,
+              "id": voteKey,
               "vote_type": voteIsTheft ? 'yes' : 'no',
               "alt_theft_amt": customTheftAmount,
               "yes_theft_proposal": yesTheftProposal,
               "no_theft_proposal": noTheftProposal,
               comment,
-              "is_archive": !voteReplacedBy.includes(convertToAscii(0)) ? "yes" : "no",
+              "is_archive": voteReplacedBy !== "" ? "yes" : "no",
               "vote_replaces": voteReplaces,
               "vote_replaced_by": voteReplacedBy,
               "timestamp": date,
@@ -86,7 +88,7 @@ const exportAllVotes = async (req) => {
             }], `${voteDir}/${fileDir}.csv`)
 
             // keep the roll ups record in file
-            updateVoteDataRollups({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID, proposalID, voteReplaces }, proposalInfo, voterContract)
+            updateVoteDataRollups({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes }, { voter, voteID: voteKey, proposalID, voteReplaces }, proposalInfo, voterContract)
 
             await keepCacheRecord('LAST_EXPORTED_VID', count)
 
@@ -125,7 +127,7 @@ const exportAllVotes = async (req) => {
 /* get all votes in json*/
 const getVoteData = async (req) => {
   try {
-    const filePath =  fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
+    const filePath = fs.readFileSync(`${exportsDir}/votefile.txt`, 'utf8')
     const votes = await csv().fromFile(`${exportsDir}/${filePath}`)
     return votes
   }

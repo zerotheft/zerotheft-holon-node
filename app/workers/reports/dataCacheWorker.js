@@ -3,7 +3,7 @@ const fs = require('fs')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
 
-const { getProposalContract, getVoterContract } = require('zerotheft-node-utils/utils/contract')
+const { getProposalContract, getVoteContract } = require('zerotheft-node-utils/utils/contract')
 const { exportsDir, createAndWrite, cacheDir } = require('../../common')
 const { manipulatePaths, getHierarchyTotals, doPathRollUpsForYear, parentVotedYearTheftsRollups } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
@@ -50,7 +50,7 @@ const scanDataWorker = new Worker('ScanData', async job => {
 
         const nationPaths = await pathsByNation(nation)
         const proposalContract = getProposalContract()
-        const voterContract = getVoterContract()
+        const voterContract = getVoteContract()
         const umbrellaInfo = await getUmbrellaPaths()// get all umbrella paths and return array of umbrella paths
         /*
         *umbrellaPaths=["macroeconomics","workers","industries/finance","economic_crisis/2008_mortgage","industries/healthcare/pharma"]

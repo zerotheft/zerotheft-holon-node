@@ -6,12 +6,18 @@ const { getCitizenContract } = require('zerotheft-node-utils/utils/contract')
 const { getStorageValues } = require('zerotheft-node-utils/utils/storage.js')
 
 module.exports = async (args) => {
-    const name = args.name
-    const country = args.country
-    const linkedin = args.linkedin
+    const firstname = args.firstname || ""
+    const middlename = args.middlename || ""
+    const lastname = args.lastname || ""
+    const country = args.country || ""
+    const citizenship = args.citizenship || ""
+    const currentState = args.state || ""
+    const currentCity = args.city || ""
+    const currentZip = args.zip || ""
+    const linkedin = args.linkedin || ""
 
-    if (name === "" || name === undefined) {
-        error(chalk.red('Please provide name'), true)
+    if (firstname === "" || firstname === undefined) {
+        error(chalk.red('Please provide firstname'), true)
         return
     }
     if (country === "" || country === undefined) {
@@ -27,7 +33,7 @@ module.exports = async (args) => {
         const contract = getCitizenContract()
         const storage = await getStorageValues()
 
-        await contract.createTransaction('createCitizen', [JSON.stringify({ country, fullName: name, linkedin }).replace('"', '\"'), storage.address], 900000)
+        await contract.createTransaction('createCitizen', [firstname, middlename, lastname, country, citizenship, currentState, currentCity, currentZip, linkedin, storage.address], 900000)
         spinner.stop()
         console.log(chalk.green(`Citizen registration completed`))
     } catch (e) {
