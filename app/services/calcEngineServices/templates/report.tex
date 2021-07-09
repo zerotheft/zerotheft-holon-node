@@ -4,6 +4,7 @@
 \usepackage[a4paper, margin={40pt, 40pt}]{geometry}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
+\usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
@@ -15,8 +16,6 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
-\usepackage{contour}
-\contourlength{1pt}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
@@ -59,7 +58,7 @@ anchorcolor = blue]{hyperref}
       \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
 
       \node[rightHeaderText, right=10pt of subtitle] (year) {};
-      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
+      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country-- on --generatedTime--};
       \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
       \begin{scope}[on background layer]
@@ -147,25 +146,10 @@ anchorcolor = blue]{hyperref}
   \begin{tikzpicture}[scale=1.5, transform shape]
     \node[isTheftBlock, primary] (isTheft) {\Large \textbf{IS THIS THEFT?}};
     \node[below=5pt of isTheft, isTheftBlock] (noOfVoters) {\scriptsize Total No of Voters: --totalVotes--};
-    \node[below=-4pt of noOfVoters, isTheftBlock] (votedYesNo) {\scriptsize Voted Yes: --yesVotes-- \quad Voted No: --noVotes--};
-
-    \node[yesNoBarBg, yshift=-30pt, left=-105pt of votedYesNo] (yesBg) {};
-    % \node[right=of yesBg, yesNoBarProgress, minimum width=75pt] (yesBar) {};
-    \node[right=of yesBg, yesNoBarProgress, minimum width= --yesVotePercent--pt] (yesBar) {};
-    \node[right=of yesBg, yesNoBarText] (yesPercent) {\contour{black}{\LARGE \textbf{Yes --yesVotePercent--\%}}};
- 
-    \begin{scope}[on background layer]
-      \node[fit=(yesBg)(yesBar)(yesPercent), inner sep=0] (yesGraph) {};
-    \end{scope}
-
-    \node[yesNoBarBg, below= 10pt of yesBg] (noBg) {};
-    % \node[right=of noBg, yesNoBarProgress, minimum width=0pt, noProgressBgColor] (noBar) {};
-    \node[right=of noBg, yesNoBarProgress, minimum width= --noVotePercent--pt, noProgressBgColor] (noBar) {};
-    \node[right=of noBg, yesNoBarText] (noPercent) {\contour{black}{\LARGE \textbf{No --noVotePercent--\%}}};
- 
-    \begin{scope}[on background layer]
-      \node[fit=(noBg)(noBar)(noPercent), inner sep=0] (noGraph) {};
-    \end{scope}
+    \node[below=-4pt of noOfVoters, isTheftBlock] (votedYes) {\scriptsize Voted Yes: --yesVotes--};
+    \node[below=-4pt of votedYes, isTheftBlock] (votedNo) {\scriptsize Voted No: --noVotes--};
+    
+    \node[yshift=-40pt, left=-120pt of votedNo] (noVoteImage) {\includegraphics[width=115pt]{--yesNoChart--}};
   \end{tikzpicture}
 }
 \trimbox{-10pt 20pt 0 0}{
