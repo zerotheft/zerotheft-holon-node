@@ -18,7 +18,8 @@ const exportVoteData = async (req, res, next) => {
 /* return votes from the stored exported data */
 const getVotes =  async (req, res, next) => {
   try {
-    const response = await voteService.getVoteData()
+    let path = req.query['0']
+    const response = await voteService.getVoteData(path)
     res.send(response)
   }
   catch (e) {

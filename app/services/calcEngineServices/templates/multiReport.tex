@@ -8,6 +8,8 @@
 \usepackage{pgfplots}
 \usepackage{pgf-pie}
 \usepackage{adjustbox}
+\usepackage[T1]{fontenc}
+\usepackage{minted}
 \usepackage[colorlinks = true,
 linkcolor = blue,
 urlcolor  = blue,
@@ -51,7 +53,7 @@ anchorcolor = blue]{hyperref}
       \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
 
       \node[rightHeaderText, right=of subtitle] (year) {--generatedFrom--};
-      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country--};
+      \node[rightHeaderText, below=of year, below=5pt] (country) {for --country-- on --generatedTime--};
       \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
       \begin{scope}[on background layer]
@@ -141,6 +143,21 @@ anchorcolor = blue]{hyperref}
 }
 % chartBlockEnd
 
+% inflationBlockStart
+\setlength\LTpost{30pt}
+\setlength{\tabcolsep}{10pt} % for the horizontal padding
+{\renewcommand{\arraystretch}{2}% for the vertical padding
+  \begin{longtable}{p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt} p{0pt} p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt}} 
+    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Not Translated into --inflationYear-- Dollar Values} & &
+    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Translated into --inflationYear-- Dollar Values} \\ 
+
+    --stolenByYearTableData--
+    % 2021 & \$800B & 2019 & \$650B & 2019 & \$650B & & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
+    % 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
+\end{longtable}
+}
+% inflationBlockEnd
+
 \textcolor{primary}{\huge \textbf{Sources of theft}}
 \setlength{\tabcolsep}{10pt} % for the horizontal padding
 {\renewcommand{\arraystretch}{2}% for the vertical padding
@@ -160,4 +177,32 @@ anchorcolor = blue]{hyperref}
     % \label{tab:myfirstlongtable}
 \end{longtable}
 }
+
+% proposalYamlBlockStart
+\newpage 
+\trimbox{0 -15pt 0 0}{ 
+  \begin{tikzpicture}
+    \node[fullWidth, text=primary] (leadingProposal) {\huge \textbf{Leading Proposals}};
+    \node[fullWidth, below =0ptof leadingProposal] (viewProposalTextLink) {\href{--holonUrl--/path/--pathSlug--/issue/--leafSlug--}{\color{blue}View Full Proposal Text}};
+    \node[fullWidth, below =0ptof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal by --leadingProposalAuthor-- on --leadingProposalDate--}};
+  \end{tikzpicture}
+}
+
+\noindent
+  \begin{minted}[%
+    breaklines,
+    mathescape,
+    numbersep=5pt,
+    numbersep=5pt,
+    xleftmargin=0pt,
+    xrightmargin=0pt,
+    breaksymbolleft=,
+    gobble=0,
+    linenos
+  ]{yaml}
+--leadingProposalDetail--
+  \end{minted}
+
+  --viewMore--
+% proposalYamlBlockEnd
 \end{document}

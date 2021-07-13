@@ -5,7 +5,9 @@ const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
 
 const fs = require('fs')
-const homedir = require('os').homedir()
+const os = require('os')
+const homedir = os.homedir()
+const platform = os.platform()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
 const { getReportPath } = require('../../../config');
 const { APP_PATH } = require('zerotheft-node-utils/config')
@@ -21,13 +23,17 @@ const { pathSummary: analyticsPathSummary,
     assignPageNumbers
 } = require('./reportAnalytics')
 
+const moment = require('moment-timezone')
+const reportTime = moment.tz(moment.now(), 'America/Los_Angeles').format('MMM DD, YYYY hh:mmA z')
+
 var currentDate = new Date();
-var currentYear = currentDate.getFullYear();
+var inflationDate = currentDate.getFullYear();
 
 const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
 const singleIssueReportPath = `${getReportPath()}reports/ztReport`
 const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
 const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
+const yesNoTemplate = `${apiPath}/app/assets/YesNo.svg`
 const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedValues.json`
 
 if (!fs.existsSync(inflatedValuesPath)) {
@@ -35,7 +41,7 @@ if (!fs.existsSync(inflatedValuesPath)) {
     const years = Object.keys(yearlyAverageUSInflationRate).sort().reverse()
 
     let inflatedValues = {}
-    inflatedValues[currentYear] = 1
+    inflatedValues[inflationDate] = 1
     years.forEach((year, index) => {
         inflatedValues[year] = inflatedValues[parseInt(year) + 1] * (1 + (yearlyAverageUSInflationRate[year] / 100))
     })
@@ -47,11 +53,10 @@ const inflatedValues = require(inflatedValuesPath)
 const generateReportData = async (fileName) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
-    const year = (new Date()).getFullYear() - 1
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
-    pdfData.year = year
     pdfData.country = 'USA'
+    pdfData.generatedTime = reportTime
     pdfData.holonUrl = holon
     pdfData.pageID = 'ztReport/' + leafPath
 
@@ -86,24 +91,23 @@ const generateReportData = async (fileName) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
-    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
-        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
 
     const votedYearThefts = get(vt, `_totals.voted_year_thefts`, {})
     const leadingTheft = get(pathSummary, 'leading_theft', '$0')
-    const cts = getCitizenAmounts(year)
+    const cts = getCitizenAmounts(maxYr)
     const perCitTheft = theftAmountAbbr((realTheftAmount(leadingTheft) / cts['citizens']).toFixed(2))
     const xYrs = (parseInt(maxYr) - parseInt(minYr)) + 1
 
     const manyYearsPerCit = theftAmountAbbr(totalTh / cts['citizens'])
 
-    pdfData.theft = theftAmountAbbr(get(votedYearThefts, year, 0))
+    pdfData.theft = theftAmountAbbr(get(votedYearThefts, maxYr, 0))
+    pdfData.year = maxYr
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCitTheft
 
@@ -121,12 +125,11 @@ const generateReportData = async (fileName) => {
     pdfData.theftValueChartData = theftValueChartData
 
     const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
-    const totalVotes = yesVotes + noVotes
+    await getYesNoChart(noVotes, yesVotes, fileName)
     pdfData.yesVotes = yesVotes
     pdfData.noVotes = noVotes
-    pdfData.totalVotes = totalVotes
-    pdfData.yesVotePercent = ((yesVotes / totalVotes) * 100).toFixed()
-    pdfData.noVotePercent = 100 - pdfData.yesVotePercent
+    pdfData.totalVotes = yesVotes + noVotes
+    pdfData.yesNoChart = `${singleIssueReportPath}/${fileName}-yesNo.pdf`
 
     const { bellCurveThefts, bellCurveVotes } = prepareBellCurveData(propThefts, propVotes)
 
@@ -137,7 +140,7 @@ const generateReportData = async (fileName) => {
     pdfData.votesForTheftAmountData = votesForTheftAmountData
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
-    pdfData.inflationYear = currentYear
+    pdfData.inflationYear = inflationDate
 
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
@@ -154,6 +157,45 @@ const generateReportData = async (fileName) => {
     // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
 
     return pdfData
+}
+
+const svgToPdf = async (svgPath) => {
+    return new Promise((resolve, reject) => {
+        exec(`${platform === 'darwin' ? '/Applications/Inkscape.app/Contents/MacOS/' : ''}inkscape ${svgPath}.svg --export-type="pdf" -o ${svgPath}.pdf`, (error, stdout, stderr) => {
+            if (error) {
+                console.log('SVG pdf creation failed')
+                reject({ message: `SVG pdf creation failed: ${error}` })
+            }
+            console.log('SVG pdf created')
+            resolve()
+        })
+    })
+}
+
+const getYesNoChart = async (noVotes, yesVotes, fileName) => {
+    return new Promise((resolve, reject) => {
+        const totalVotes = yesVotes + noVotes
+        const yesVotePercent = ((yesVotes / totalVotes) * 100).toFixed()
+        const noVotePercent = 100 - yesVotePercent
+        const svgPath = `${singleIssueReportPath}/${fileName}-yesNo`
+
+        let template = fs.readFileSync(yesNoTemplate, 'utf8')
+        template = template.replace(/--yesValue--/g, yesVotePercent)
+        template = template.replace(/--yesProgress--/g, yesVotePercent * 4)
+        template = template.replace(/--noValue--/g, noVotePercent)
+        template = template.replace(/--noProgress--/g, noVotePercent * 4)
+
+        fs.writeFile(svgPath + '.svg', template, async (err) => {
+            if (err) {
+                console.error('Yes no svg:', err)
+                reject({ message: `'Yes no svg: ${err}` })
+            }
+            console.log('Yes no svg Prepared')
+            await svgToPdf(svgPath)
+            resolve()
+            console.log('SVG pdf creation complete')
+        });
+    })
 }
 
 const prepareStolenByYearSingle = (year, stolenByYear, inflated = false) => {
@@ -294,6 +336,8 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
             template = template.replace(regex, pdfData[key])
         })
 
+        template = template.replace(/--viewMore--/g, `\\href{${pdfData['holonUrl']}/path/${pdfData['pathSlug']}/issue/${pdfData['leafSlug']}}{\\color{blue}View More}`)
+
         const reportPrepd = `${multiIssueReportPath}/${fileName}.tex`
         const reportPDF = `${multiIssueReportPath}/${fileName}.pdf`
 
@@ -337,6 +381,7 @@ const generateNoVoteReportData = async (fileName, path, holon) => {
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.country = nation
+    pdfData.generatedTime = reportTime
     pdfData.holonUrl = holon
     pdfData.pageID = 'ztReport/' + path
 
@@ -397,6 +442,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
 
     let pdfData = {}
     pdfData.country = nation
+    pdfData.generatedTime = reportTime
     pdfData.holonUrl = holon
     pdfData.pageID = 'multiIssueReport/' + path
 
@@ -455,18 +501,17 @@ const generateNoVoteMultiPDFReport = async (noteBookName, fileName, path, holon,
     return await generateNoVoteMultiLatexPDF(pdfData, fileName)
 }
 
-const generateMultiReportData = (fileName, availablePdfsPaths) => {
+const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     const { summaryTotals, actualPath, holon, allPaths, subPaths } = loadAllIssues(fileName)
 
     const pathData = actualPath.split('/')
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
-    const year = (new Date()).getFullYear() - 1
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
-    pdfData.year = year
     pdfData.country = nation
+    pdfData.generatedTime = reportTime
     pdfData.holonUrl = holon
     pdfData.pageID = 'multiIssueReport/' + actualPath
 
@@ -485,6 +530,12 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     pdfData.title = pathTitle
     pdfData.subtitle = pathPrefix
 
+    let slugData = actualPath.split('/')
+    const leafSlug = slugData.pop()
+    const pathSlug = slugData.join('%2F')
+    pdfData.leafSlug = leafSlug
+    pdfData.pathSlug = pathSlug
+
     const paths = allPaths[nation]
 
     const path = actualPath == nation ? nation : noNationPath
@@ -495,7 +546,8 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     if (path in yearPaths) sumTotals = yearPaths[path]['_totals']
     else if (path === nation) sumTotals = summaryTotals['_totals']
 
-    if (isEmpty(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts`))) hideBlocks = [...hideBlocks, 'chartBlock']
+    const votedYearThefts = get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts`, {})
+    if (isEmpty(votedYearThefts)) hideBlocks = [...hideBlocks, 'chartBlock', 'inflationBlock']
 
     let subPathsFlat = []
     const flatPaths = getFlatPaths(paths)
@@ -517,23 +569,23 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
     let minYr = null
     let maxYr = null
     let totalTh = 0
-    let yearTheft
     for (i = 0; i < yearTh.length; i++) {
         const yr = yearTh[i]
         minYr = minYr === null || yr['Year'] < minYr ? yr['Year'] : minYr
         maxYr = maxYr === null || yr['Year'] > maxYr ? yr['Year'] : maxYr
         totalTh += yr['theft']
-        if (yr['Year'] == year) yearTheft = yr['Theft']
     }
+    if (!maxYr || !minYr) hideBlocks.push('theftAmountBlock')
 
     const totalTheft = sumTotals['theft'].toFixed(1)
 
-    const cts = getCitizenAmounts(year)
+    const cts = getCitizenAmounts(maxYr)
     const xYrs = (parseInt(maxYr) - parseInt(minYr)) + 1
     const perCit = theftAmountAbbr((totalTheft / cts['citizens']).toFixed(1))
     const manyYearsPerCit = theftAmountAbbr((totalTh / cts['citizens']).toFixed(1))
 
-    pdfData.theft = theftAmountAbbr(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts.${year}`, 0))
+    pdfData.theft = theftAmountAbbr(get(sumTotals, `${path === nation ? 'overall' : 'voted'}_year_thefts.${maxYr}`, 0))
+    pdfData.year = maxYr
     pdfData.citizen = cts.citizens
     pdfData.perCitTheft = perCit
     pdfData.manyYearsTheft = theftAmountAbbr(totalTh)
@@ -549,12 +601,37 @@ const generateMultiReportData = (fileName, availablePdfsPaths) => {
 
     pdfData.theftValueChartData = theftValueChartData
 
-    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, nation, subPaths, subPathTotals, availablePdfsPaths)
+    pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
+    pdfData.inflationYear = inflationDate
 
+    const sourcesOfTheft = prepareSourcesOfTheft(path, sumTotals, totalTheft, path, nation, subPaths, subPathTotals, availablePdfsPaths)
     pdfData.sourcesOfTheft = sourcesOfTheft
 
-    pdfData.hideBlocks = hideBlocks
+    const vt = getPathVoteTotals(summaryTotals, path)
+    let limitedLinesArray = []
+    if (vt && !get(vt, 'missing')) {
+        const voteTotals = {
+            'for': get(vt, '_totals.for', 0),
+            'against': get(vt, '_totals.against', 0),
+            'props': get(vt, 'props', {})
+        }
+        const pathSummary = analyticsPathSummary(voteTotals)
 
+        const leadingProp = get(pathSummary, 'leading_proposal')
+        const proposalID = get(leadingProp, 'id')
+        const yamlJSON = await getProposalYaml(proposalID, path)
+        pdfData.leadingProposalID = proposalID
+        pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
+        pdfData.leadingProposalDate = leadingProp['date']
+
+        const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+        limitedLinesArray = limitTextLines(leadingProposalDetail)
+    }
+    pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
+
+    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
+
+    pdfData.hideBlocks = hideBlocks
     return pdfData
 }
 
@@ -652,7 +729,7 @@ const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPa
 }
 
 const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths) => {
-    const pdfData = generateMultiReportData(fileName, availablePdfsPaths)
+    const pdfData = await generateMultiReportData(fileName, availablePdfsPaths)
     return await generateLatexMultiPDF(pdfData, fileName)
 }
 
