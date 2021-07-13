@@ -10,7 +10,7 @@ const { getStorageValues } = require('zerotheft-node-utils/utils/storage.js')
 const { MODE, PORT } = require('zerotheft-node-utils/config.js')
 const { getHolonContract, getCitizenContract } = require('zerotheft-node-utils/utils/contract')
 const { grantRole } = require('zerotheft-node-utils/utils/accessControl')
-const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
+const { getCitizenIdByAddress } = require('zerotheft-node-utils/contracts/citizens')
 
 
 module.exports = async args => {
@@ -53,7 +53,8 @@ module.exports = async args => {
         spinner.start()
         //check if citizen address is in the blockchain
         const userContract = getCitizenContract()
-        const userData = await getCitizen(storage.address, userContract)
+        const userData = await getCitizenIdByAddress(storage.address, userContract)
+
         if (!userData.success) {
             error(chalk.red(userData.error), true)
         }
