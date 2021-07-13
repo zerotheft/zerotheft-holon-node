@@ -2,7 +2,7 @@ const PromisePool = require('@supercharge/promise-pool')
 const fs = require('fs')
 
 const { getCitizenContract } = require('zerotheft-node-utils').contracts
-const { getCitizen, listCitizenIds } = require('zerotheft-node-utils/contracts/citizens')
+const { contractIdentifier, getCitizen, listCitizenIds, getCitizenContractVersion } = require('zerotheft-node-utils/contracts/citizens')
 const { lastExportedUid, failedCitizenIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
@@ -14,7 +14,7 @@ const exportAllVoters = async () => {
     await createDir(exportsDir)
 
     const citizenContract = await getCitizenContract()
-
+    const verRes = await getCitizenContractVersion(citizenContract)
     //get all voter addresses
     const citizenIds = await listCitizenIds(citizenContract)
     console.log('Total Citizens::', citizenIds.length)
@@ -33,14 +33,16 @@ const exportAllVoters = async () => {
         try {
           if (count > parseInt(lastUid)) {
             console.log('exporting UID::', count, '::', uid)
-
+            uid = `${contractIdentifier}:${verRes.version}:${uid}`
             citizenData = await getCitizen(uid, citizenContract)
+
             await createDir(citizensDir)
 
             //if citizen found then add in csv
             if (citizenData.success)
               writeCsv([{
                 id: uid,
+                address: citizenData.address,
                 firstName: citizenData.firstName,
                 middleName: citizenData.middleName,
                 lastName: citizenData.lastName,
@@ -88,8 +90,8 @@ const exportAllVoters = async () => {
 /* get all citizens in json*/
 const getVoterData = async (req) => {
   try {
-    const fileName =  fs.readFileSync(`${exportsDir}/citizens/.latest_csv_file`, 'utf8').toString()
-    const citizens = await csv().fromFile(`${exportsDir}/citizens/${fileName.replace('\n','')}.csv`)
+    const fileName = fs.readFileSync(`${exportsDir}/citizens/.latest_csv_file`, 'utf8').toString()
+    const citizens = await csv().fromFile(`${exportsDir}/citizens/${fileName.replace('\n', '')}.csv`)
     return citizens
   }
   catch (e) {

@@ -3,14 +3,13 @@ const { get } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
 
 const { getCitizenContract, getProposalContract, getVoteContract, getHolonContract } = require('zerotheft-node-utils').contracts
-const { listVoteIds, updateVoteDataRollups, saveVoteRollupsData } = require('zerotheft-node-utils/contracts/votes')
+const { contractIdentifier, getVoteContractVersion, listVoteIds, updateVoteDataRollups, saveVoteRollupsData } = require('zerotheft-node-utils/contracts/votes')
 const { voteDataRollupsFile } = require('zerotheft-node-utils/utils/common')
 const { fetchProposalYaml } = require('zerotheft-node-utils/contracts/proposals')
 const { getHolons } = require('zerotheft-node-utils/contracts/holons')
-const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
+const { getCitizen, getCitizenIdByAddress } = require('zerotheft-node-utils/contracts/citizens')
 const { createDir, exportsDir, writeFile } = require('../../common')
 const { lastExportedVid, failedVoteIDFile, keepCacheRecord, cacheToFileRecord, exportsDirNation } = require('./utils')
-const { convertToAscii } = require('zerotheft-node-utils/utils/web3');
 
 const { writeCsv } = require('./readWriteCsv')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
@@ -24,6 +23,7 @@ const exportAllVotes = async (req) => {
     const voterContract = await getVoteContract()
     const holonContract = await getHolonContract()
 
+    const verRes = await getVoteContractVersion()
     let { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes } = await voteDataRollupsFile()
 
     //get all the holons
@@ -42,15 +42,16 @@ const exportAllVotes = async (req) => {
       .process(async voteID => {
 
         try {
-          if (count > parseInt(lastVid)) {
-            // if (1) {
+          // if (count > parseInt(lastVid)) {
+          if (1) {
             console.log('exporting voteID:: ', count, '::', voteID)
-            const voteKey = `ZTMVote:${voteID}`
+            const voteKey = `${contractIdentifier}:${verRes.version}:${voteID}`
             //First get the votes info
             let { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } = await voterContract.callSmartContractGetFunc('getVote', [voteKey])
             const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteKey])
             //get the voter information
-            const { name, linkedin, country } = await getCitizen(voter, citizenContract)
+            const cres = await getCitizenIdByAddress(voter, citizenContract)
+            const { name, linkedin, country } = await getCitizen(cres.citizenID, citizenContract)
             let proposalID = (voteIsTheft) ? yesTheftProposal : noTheftProposal
             //get the voted proposal information
             const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
@@ -75,11 +76,13 @@ const exportAllVotes = async (req) => {
               "vote_replaces": voteReplaces,
               "vote_replaced_by": voteReplacedBy,
               "timestamp": date,
+              "holon_id": holon,
               "holon_name": get(allHolons[holon], 'name', ''),
               "holon_url": get(allHolons[holon], 'url', ''),
-              "holon_address": get(allHolons[holon], 'address', ''),
-              "holon_country": get(allHolons[holon], 'country', ''),
-              "voter_id": voter,
+              "holon_address": get(allHolons[holon], 'owner', ''),
+              "holon_donation_address": get(allHolons[holon], 'donationAddress', ''),
+              "voter_id": cres.citizenID,
+              "voter_address": voter,
               "voter_name": name,
               "voter_country": country,
               "voter_linkedin": linkedin,
@@ -129,8 +132,8 @@ const exportAllVotes = async (req) => {
 const getVoteData = async (referencePath) => {
   try {
     const path = `nation_data/USA/${referencePath}/votes`
-    const fileName =  fs.readFileSync(`${exportsDir}/${path}/.latest_csv_file`, 'utf8').toString()
-    const votes = await csv().fromFile(`${exportsDir}/${path}/${fileName.replace('\n','')}.csv`)
+    const fileName = fs.readFileSync(`${exportsDir}/${path}/.latest_csv_file`, 'utf8').toString()
+    const votes = await csv().fromFile(`${exportsDir}/${path}/${fileName.replace('\n', '')}.csv`)
     return votes
   }
   catch (e) {
