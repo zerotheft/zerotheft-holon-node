@@ -70,7 +70,9 @@
     "redis": "^3.0.2",
     "scrapedin": "^1.0.21",
     "serve-index": "^1.9.1",
+    "sharp": "^0.28.3",
     "split-file": "^2.2.1",
+    "svg-chartist": "^1.0.1",
     "yaml": "^1.10.0"
   }
 }

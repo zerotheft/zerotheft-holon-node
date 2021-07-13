@@ -35,6 +35,7 @@ const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
 const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
 const yesNoTemplate = `${apiPath}/app/assets/YesNo.svg`
 const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedValues.json`
+const sharp = require('sharp');
 
 if (!fs.existsSync(inflatedValuesPath)) {
     const yearlyAverageUSInflationRate = require('./yearlyAverageUSInflationRate.json')
@@ -129,7 +130,7 @@ const generateReportData = async (fileName) => {
     pdfData.yesVotes = yesVotes
     pdfData.noVotes = noVotes
     pdfData.totalVotes = yesVotes + noVotes
-    pdfData.yesNoChart = `${singleIssueReportPath}/${fileName}-yesNo.pdf`
+    pdfData.yesNoChart = `${singleIssueReportPath}/${fileName}-yesNo.png`
 
     const { bellCurveThefts, bellCurveVotes } = prepareBellCurveData(propThefts, propVotes)
 
@@ -159,19 +160,6 @@ const generateReportData = async (fileName) => {
     return pdfData
 }
 
-const svgToPdf = async (svgPath) => {
-    return new Promise((resolve, reject) => {
-        exec(`${platform === 'darwin' ? '/Applications/Inkscape.app/Contents/MacOS/' : ''}inkscape ${svgPath}.svg --export-type="pdf" -o ${svgPath}.pdf`, (error, stdout, stderr) => {
-            if (error) {
-                console.log('SVG pdf creation failed')
-                reject({ message: `SVG pdf creation failed: ${error}` })
-            }
-            console.log('SVG pdf created')
-            resolve()
-        })
-    })
-}
-
 const getYesNoChart = async (noVotes, yesVotes, fileName) => {
     return new Promise((resolve, reject) => {
         const totalVotes = yesVotes + noVotes
@@ -190,10 +178,10 @@ const getYesNoChart = async (noVotes, yesVotes, fileName) => {
                 console.error('Yes no svg:', err)
                 reject({ message: `'Yes no svg: ${err}` })
             }
-            console.log('Yes no svg Prepared')
-            await svgToPdf(svgPath)
+            console.log('Yes no svg prepared')
+            await sharp(svgPath + '.svg').resize({ width: 400 }).png().toFile(svgPath + '.png')
+            console.log('Yes no png created')
             resolve()
-            console.log('SVG pdf creation complete')
         });
     })
 }
