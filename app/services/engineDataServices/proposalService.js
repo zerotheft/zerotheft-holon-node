@@ -5,7 +5,7 @@ const yaml = require('js-yaml')
 const splitFile = require('split-file');
 const PromisePool = require('@supercharge/promise-pool')
 const { getProposalContract } = require('zerotheft-node-utils').contracts
-const { fetchProposalYaml, listProposalIds, proposalYearTheftInfo } = require('zerotheft-node-utils/contracts/proposals')
+const { contractIdentifier, fetchProposalYaml, listProposalIds, proposalYearTheftInfo, getProposalContractVersion } = require('zerotheft-node-utils/contracts/proposals')
 const { createDir, exportsDir } = require('../../common')
 const { exportsDirNation, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
@@ -13,6 +13,8 @@ const { writeCsv } = require('./readWriteCsv')
 const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, count, lastPid, isFailed = false) => {
+  const verRes = await getProposalContractVersion(proposalContract)
+
   await PromisePool
     .withConcurrency(10)
     .for(proposalIds)
@@ -21,7 +23,7 @@ const processProposalIds = async (proposalContract, proposalIds, count, lastPid,
         if (count > parseInt(lastPid) || isFailed) {
           // if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
           console.log('Exporting proposalId::', count, '::', pid)
-          const propKey = `ZTMProposal:${pid}`
+          const propKey = `${contractIdentifier}:${verRes.version}:${pid}`
           const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [propKey])
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
 

@@ -1,4 +1,4 @@
-const { getHolons } = require('zerotheft-node-utils').holons
+const { getHolons, getHolonIdByAddress } = require('zerotheft-node-utils').holons
 const { getStorageValues, getProxyHolonValues } = require('zerotheft-node-utils/utils/storage')
 const getHolonsService = async () => {
   try {
@@ -11,9 +11,11 @@ const getHolonsService = async () => {
 
 const getHolonInfo = async () => {
   const address = getStorageValues() && getStorageValues().address
+  const holonres = await getHolonIdByAddress(address)
   const canBeFunded = getProxyHolonValues().proxy
   return {
     address,
+    holonID: holonres.holonID,
     canBeFunded
   }
 }
