@@ -33,7 +33,7 @@ module.exports = async (args) => {
         const contract = getCitizenContract()
         const storage = await getStorageValues()
 
-        await contract.createTransaction('createCitizen', [firstname, middlename, lastname, country, citizenship, currentState, currentCity, currentZip, linkedin, storage.address], 900000)
+        await contract.createTransaction('registerUnverifiedCitizen', [firstname, middlename, lastname, country, citizenship, currentState, currentCity, currentZip, linkedin, storage.address], 900000)
         spinner.stop()
         console.log(chalk.green(`Citizen registration completed`))
     } catch (e) {
