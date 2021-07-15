@@ -42,7 +42,7 @@ anchorcolor = blue]{hyperref}
 	rightHeaderText/.style={headerText, align=right,text width=180pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
-	isTheftBlock/.style={align=left, text width=120pt}
+	isTheftBlock/.style={align=left, text width=180pt}
 }
 
 \begin{document}
@@ -87,98 +87,24 @@ anchorcolor = blue]{hyperref}
 
 \trimbox{25pt -40pt 0 0}{
   \begin{tikzpicture}
-    \begin{axis}[
-      title style={at={(0.5,1)},anchor=south,text=primary},
-      title = \large \textbf{Theft from --minYear-- to --maxYear--},
-      xlabel={Year},
-      ylabel={Theft Amount},
-      % xmin = 0, xmax = 10,
-      % ymin = 0, ymax = 1,
-      grid = both,
-      % xtick distance = 1,
-      x tick label style={/pgf/number format/.cd,%
-        scaled y ticks = true,
-        set thousands separator={},
-        fixed},
-      width = \textwidth,
-      height = 0.4\textwidth,
-      legend cell align = {left},
-      % legend pos = north west,
-      legend style={at={(0.5,-35pt)},anchor=north},
-      scatter/classes={
-      voting={theftValueType1Color, /tikz/mark size=3pt},%
-      incompletevoting={theftValueType2Color, /tikz/mark size=3pt},%
-      estimation={theftValueType3Color, /tikz/mark size=3pt}}
-    ]
-    
-    \addplot[
-      scatter,mark=*,primary,
-      text=primary,
-      scatter src=explicit symbolic,
-      nodes near coords*=\scriptsize \textbf{\Theft},
-      every node near coord/.append style={below right, rotate=90, shift={(0, 6pt)}},
-      visualization depends on={value \thisrow{Theft} \as \Theft},
-    ] 
-    table [meta=DeterminedBy] {
-      --theftValueChartData--
-      % Year theft DeterminedBy Theft
-      % 1    0.3  voting       0.25T   
-      % 2    0.1  estimation       1.5    
-      % 3    0.6  voting      0.70   
-      % 4   0.4  incompletevoting      0.125  
-      % 8   0.1  estimation       2      
-    };
-    
-    \legend{
-      % voting
-      Voted Theft, 
-      % incompletevoting
-      Interim Theft (needs more vote),
-      % estimation
-      Estimated Theft
-    }
-    
-    \end{axis}
+    \node[] (theftValueChart) {\includegraphics[width=520pt]{--theftValueChart--}};
   \end{tikzpicture}
 }
 
 \trimbox{0 -40pt 0 0}{
-  \begin{tikzpicture}[scale=1.5, transform shape]
-    \node[isTheftBlock, primary] (isTheft) {\Large \textbf{IS THIS THEFT?}};
-    \node[below=5pt of isTheft, isTheftBlock] (noOfVoters) {\scriptsize Total No of Voters: --totalVotes--};
-    \node[below=-4pt of noOfVoters, isTheftBlock] (votedYes) {\scriptsize Voted Yes: --yesVotes--};
-    \node[below=-4pt of votedYes, isTheftBlock] (votedNo) {\scriptsize Voted No: --noVotes--};
+  \begin{tikzpicture}
+    \node[isTheftBlock, primary] (isTheft) {\huge \textbf{IS THIS THEFT?}};
+    \node[below=10pt of isTheft, isTheftBlock] (noOfVoters) {\large Total No of Voters: --totalVotes--};
+    \node[below=0pt of noOfVoters, isTheftBlock] (votedYes) {\large Voted Yes: --yesVotes--};
+    \node[below=0pt of votedYes, isTheftBlock] (votedNo) {\large Voted No: --noVotes--};
     
-    \node[yshift=-40pt, left=-120pt of votedNo] (noVoteImage) {\includegraphics[width=115pt]{--yesNoChart--}};
+    \node[yshift=-70pt, left=-185pt of votedNo] (noVoteImage) {\includegraphics[width=180pt]{--yesNoChart--}};
   \end{tikzpicture}
 }
-\trimbox{-10pt 20pt 0 0}{
+\trimbox{0 5pt 0 0}{
   \begin{tikzpicture}
-    \begin{axis}[
-      ybar interval,
-      title style={at={(0.5,1)},anchor=south,text=primary},
-      title = \large \textbf{Votes For Theft Amount},
-      xlabel={Theft Amount},
-      ylabel={Votes},
-      ymajorgrids = true,
-      xmajorgrids = false,
-      width = 0.545\textwidth,
-      height = 0.4\textwidth,
-      xtick = {}
-    ]
-      \addplot[draw=none,fill=primary] table
-        {
-          --votesForTheftAmountData--
-          % Theft Votes
-          % 1000    10
-          % 1200    20
-          % 1300    5
-          % 1500   15
-          % 2000   20
-          % 2100   30
-        };
-    \end{axis}
-    \end{tikzpicture}
+    \node[] (theftValueChart) {\includegraphics[width=300pt]{--votesForTheftAmountChart--}};
+  \end{tikzpicture}
 }
 
 \pagebreak
