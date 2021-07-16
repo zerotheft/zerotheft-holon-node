@@ -4,7 +4,9 @@ const menus = {
 
     my-account                                                                                        ... view your account details
     create-account                                                                                    ... creates your new account
-    register-citizen                                                                                  ... register citizen
+    register-citizen  --firstname "<firstname>" --middlename "<middlename>" --lastname "<lastname>"  
+    --country "<country>" --citizenship "<citizenship>" --state "<state>" 
+    --city "<city>" --zip "<zip>" --linkedin "<linkedin>"                                             ... register citizen
     get-balance                                                                                       ... get the ETC balance in your account
     greeting                                                                                          ... greets
     import-account --private-key <privateKey>                                                         ... imports the account using private key

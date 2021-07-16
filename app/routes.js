@@ -34,7 +34,7 @@ router.get('/proposals-by-path', pathProposalsByPath)
 router.post('/vote', vote)
 router.post('/vote-rollups', voteRollups)
 router.post('/prior-vote', priorVote)
-router.get('/citizen-info/:address', citizenInfo)
+router.get('/citizen-info/:citizenID', citizenInfo)
 //Holons
 router.get('/holons', getHolons)
 router.get('/holon-info', getHolonInfo)
