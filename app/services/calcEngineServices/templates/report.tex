@@ -6,8 +6,6 @@
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usepackage{pgfplots}
-\usepackage{pgf-pie}
 \usepackage{adjustbox}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
@@ -91,6 +89,7 @@ anchorcolor = blue]{hyperref}
   \end{tikzpicture}
 }
 
+% yesNoBlockStart
 \trimbox{0 -40pt 0 0}{
   \begin{tikzpicture}
     \node[isTheftBlock, primary] (isTheft) {\huge \textbf{IS THIS THEFT?}};
@@ -101,11 +100,14 @@ anchorcolor = blue]{hyperref}
     \node[yshift=-70pt, left=-185pt of votedNo] (noVoteImage) {\includegraphics[width=180pt]{--yesNoChart--}};
   \end{tikzpicture}
 }
+% yesNoBlockEnd
+% votesForTheftBlockStart
 \trimbox{0 5pt 0 0}{
   \begin{tikzpicture}
     \node[] (theftValueChart) {\includegraphics[width=300pt]{--votesForTheftAmountChart--}};
   \end{tikzpicture}
 }
+% votesForTheftBlockEnd
 
 \pagebreak
 \setlength{\tabcolsep}{10pt} % for the horizontal padding

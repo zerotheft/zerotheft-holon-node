@@ -120,20 +120,20 @@ const generateReportData = async (fileName) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-
-    await getTheftValueChart(yearTh, fileName)
-    pdfData.theftValueChart = `${singleIssueReportPath}/${fileName}-theftValue.png`
+    const filePath = `${singleIssueReportPath}/${fileName}`
+    await getTheftValueChart(yearTh, filePath)
+    pdfData.theftValueChart = `${filePath}-theftValue.png`
 
     const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
-    await getYesNoChart(noVotes, yesVotes, fileName)
+    await getYesNoChart(noVotes, yesVotes, filePath)
     pdfData.yesVotes = yesVotes
     pdfData.noVotes = noVotes
     pdfData.totalVotes = yesVotes + noVotes
-    pdfData.yesNoChart = `${singleIssueReportPath}/${fileName}-yesNo.png`
+    pdfData.yesNoChart = `${filePath}-yesNo.png`
 
     const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-    await getVotesForTheftAmountChart(bellCurveData, fileName)
-    pdfData.votesForTheftAmountChart = `${singleIssueReportPath}/${fileName}-votesForTheftAmount.png`
+    await getVotesForTheftAmountChart(bellCurveData, filePath)
+    pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -155,12 +155,12 @@ const generateReportData = async (fileName) => {
     return pdfData
 }
 
-const getYesNoChart = async (noVotes, yesVotes, fileName) => {
+const getYesNoChart = async (noVotes, yesVotes, filePath) => {
     return new Promise((resolve, reject) => {
         const totalVotes = yesVotes + noVotes
         const yesVotePercent = ((yesVotes / totalVotes) * 100).toFixed()
         const noVotePercent = 100 - yesVotePercent
-        const svgPath = `${singleIssueReportPath}/${fileName}-yesNo`
+        const svgPath = `${filePath}-yesNo`
 
         let template = fs.readFileSync(yesNoTemplate, 'utf8')
         template = template.replace(/--yesValue--/g, yesVotePercent)
@@ -181,7 +181,7 @@ const getYesNoChart = async (noVotes, yesVotes, fileName) => {
     })
 }
 
-const getVotesForTheftAmountChart = async (bellCurveData, fileName) => {
+const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
     return new Promise((resolve, reject) => {
         const { bellCurveThefts, bellCurveVotes } = bellCurveData
         const xLow = min(bellCurveThefts)
@@ -270,7 +270,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, fileName) => {
         </style>
         `
 
-        const svgPath = `${singleIssueReportPath}/${fileName}-votesForTheftAmount`
+        const svgPath = `${filePath}-votesForTheftAmount`
 
         chartistSvg('line', data, opts).then((svg) => {
             svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
@@ -330,7 +330,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, fileName) => {
     })
 }
 
-const getTheftValueChart = async (yearTh, fileName) => {
+const getTheftValueChart = async (yearTh, filePath) => {
     return new Promise((resolve, reject) => {
         let series = []
         yearTh.forEach((theft) => {
@@ -402,7 +402,7 @@ const getTheftValueChart = async (yearTh, fileName) => {
         </style>
         `
 
-        const svgPath = `${singleIssueReportPath}/${fileName}-theftValue`
+        const svgPath = `${filePath}-theftValue`
 
         chartistSvg('line', data, opts).then((svg) => {
             svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
@@ -816,12 +816,9 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    let theftValueChartData = 'Year theft DeterminedBy Theft\n'
-    yearTh.forEach((theft) => {
-        theftValueChartData += `${theft['Year']} ${theft['theft']} ${theft['Determined By'].replace(/\s/g, '')} ${theft['Theft'].replace(/\s/g, '')}\n`
-    })
-
-    pdfData.theftValueChartData = theftValueChartData
+    const filePath = `${multiIssueReportPath}/${fileName}`
+    await getTheftValueChart(yearTh, filePath)
+    pdfData.theftValueChart = `${filePath}-theftValue.png`
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -837,6 +834,19 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
             'against': get(vt, '_totals.against', 0),
             'props': get(vt, 'props', {})
         }
+
+        const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
+        await getYesNoChart(noVotes, yesVotes, filePath)
+        pdfData.yesVotes = yesVotes
+        pdfData.noVotes = noVotes
+        pdfData.totalVotes = yesVotes + noVotes
+        pdfData.yesNoChart = `${filePath}-yesNo.png`
+
+        const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
+        const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+        await getVotesForTheftAmountChart(bellCurveData, filePath)
+        pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+
         const pathSummary = analyticsPathSummary(voteTotals)
 
         const leadingProp = get(pathSummary, 'leading_proposal')
@@ -848,10 +858,10 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
         limitedLinesArray = limitTextLines(leadingProposalDetail)
+    } else {
+        hideBlocks = [...hideBlocks, 'proposalYamlBlock', 'yesNoBlock', 'votesForTheftBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
-
-    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
     pdfData.hideBlocks = hideBlocks
     return pdfData
