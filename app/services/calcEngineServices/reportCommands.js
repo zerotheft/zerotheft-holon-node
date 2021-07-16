@@ -1,5 +1,5 @@
 const { exec } = require('child_process')
-const { get, startCase, isEmpty } = require("lodash")
+const { get, startCase, isEmpty, min, max } = require("lodash")
 const latex = require('node-latex')
 const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
@@ -35,6 +35,9 @@ const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
 const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
 const yesNoTemplate = `${apiPath}/app/assets/YesNo.svg`
 const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedValues.json`
+const chartistSvg = require('./svg-chartist');
+const Chartist = require('chartist');
+const sharp = require('sharp');
 
 if (!fs.existsSync(inflatedValuesPath)) {
     const yearlyAverageUSInflationRate = require('./yearlyAverageUSInflationRate.json')
@@ -117,27 +120,20 @@ const generateReportData = async (fileName) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    let theftValueChartData = 'Year theft DeterminedBy Theft\n'
-    yearTh.forEach((theft) => {
-        theftValueChartData += `${theft['Year']} ${theft['theft']} ${theft['Determined By'].replace(/\s/g, '')} ${theft['Theft'].replace(/\s/g, '')}\n`
-    })
-
-    pdfData.theftValueChartData = theftValueChartData
+    const filePath = `${singleIssueReportPath}/${fileName}`
+    await getTheftValueChart(yearTh, filePath)
+    pdfData.theftValueChart = `${filePath}-theftValue.png`
 
     const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
-    await getYesNoChart(noVotes, yesVotes, fileName)
+    await getYesNoChart(noVotes, yesVotes, filePath)
     pdfData.yesVotes = yesVotes
     pdfData.noVotes = noVotes
     pdfData.totalVotes = yesVotes + noVotes
-    pdfData.yesNoChart = `${singleIssueReportPath}/${fileName}-yesNo.pdf`
+    pdfData.yesNoChart = `${filePath}-yesNo.png`
 
-    const { bellCurveThefts, bellCurveVotes } = prepareBellCurveData(propThefts, propVotes)
-
-    let votesForTheftAmountData = 'Theft Votes\n';
-    bellCurveThefts.forEach((theft, index) => {
-        votesForTheftAmountData += `${theft} ${bellCurveVotes[index]}\n`
-    })
-    pdfData.votesForTheftAmountData = votesForTheftAmountData
+    const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+    await getVotesForTheftAmountChart(bellCurveData, filePath)
+    pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -159,25 +155,12 @@ const generateReportData = async (fileName) => {
     return pdfData
 }
 
-const svgToPdf = async (svgPath) => {
-    return new Promise((resolve, reject) => {
-        exec(`${platform === 'darwin' ? '/Applications/Inkscape.app/Contents/MacOS/' : ''}inkscape ${svgPath}.svg --export-type="pdf" -o ${svgPath}.pdf`, (error, stdout, stderr) => {
-            if (error) {
-                console.log('SVG pdf creation failed')
-                reject({ message: `SVG pdf creation failed: ${error}` })
-            }
-            console.log('SVG pdf created')
-            resolve()
-        })
-    })
-}
-
-const getYesNoChart = async (noVotes, yesVotes, fileName) => {
+const getYesNoChart = async (noVotes, yesVotes, filePath) => {
     return new Promise((resolve, reject) => {
         const totalVotes = yesVotes + noVotes
         const yesVotePercent = ((yesVotes / totalVotes) * 100).toFixed()
         const noVotePercent = 100 - yesVotePercent
-        const svgPath = `${singleIssueReportPath}/${fileName}-yesNo`
+        const svgPath = `${filePath}-yesNo`
 
         let template = fs.readFileSync(yesNoTemplate, 'utf8')
         template = template.replace(/--yesValue--/g, yesVotePercent)
@@ -190,11 +173,250 @@ const getYesNoChart = async (noVotes, yesVotes, fileName) => {
                 console.error('Yes no svg:', err)
                 reject({ message: `'Yes no svg: ${err}` })
             }
-            console.log('Yes no svg Prepared')
-            await svgToPdf(svgPath)
+            console.log('Yes no svg prepared')
+            await sharp(svgPath + '.svg').resize({ width: 400 }).png().toFile(svgPath + '.png')
+            console.log('Yes no png created')
             resolve()
-            console.log('SVG pdf creation complete')
         });
+    })
+}
+
+const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
+    return new Promise((resolve, reject) => {
+        const { bellCurveThefts, bellCurveVotes } = bellCurveData
+        const xLow = min(bellCurveThefts)
+        const xHigh = max(bellCurveThefts)
+        const yLow = 0
+        const yHigh = max(bellCurveVotes)
+        let series = []
+        const normalHighVote = yHigh
+        let normalHighVoteTheft = 0
+        bellCurveThefts.forEach((theft, index) => {
+            series.push({ x: theft, y: bellCurveVotes[index] })
+            if (bellCurveVotes[index] === normalHighVote) {
+                normalHighVoteTheft = theft
+            }
+        })
+
+        let data = {
+            series: [series]
+        };
+
+        const options = {
+            chartPadding: {
+                right: 30,
+                left: 30
+            },
+            width: 600,
+            height: 350,
+            axisX: {
+                type: Chartist.AutoScaleAxis,
+                scaleMinSpace: 40,
+                onlyInteger: true,
+                labelOffset: { y: 10 },
+                offset: 0,
+                high: xHigh,
+                low: xLow,
+                labelInterpolationFnc: function (value) {
+                    return theftAmountAbbr(value)
+                }
+            },
+            axisY: {
+                scaleMinSpace: 40,
+                onlyInteger: true,
+                labelOffset: { y: 6 },
+                high: yHigh,
+                low: yLow,
+                labelInterpolationFnc: function (value) {
+                    return theftAmountAbbr(value)
+                }
+            }
+        }
+
+        let opts = {
+            options: {
+                ...options,
+                showArea: true,
+                showPoint: false,
+            },
+            onDraw: function (data) {
+                let style = ''
+                if (data.type === 'line') {
+                    style += 'stroke: #521582;stroke-width: 1px;'
+                }
+                if (data.type === 'area') {
+                    style += 'fill: #F3F2F2;fill-opacity: 1;'
+                }
+
+                data.element.attr({
+                    style: style
+                });
+            }
+        }
+
+        const styles = `
+        <style>
+            .ct-label {
+                font-size: 20px !important;
+                fill: #000000 !important;
+                color: #000000 !important;
+            }
+            .ct-label.ct-horizontal {
+                text-anchor: middle !important;
+            }
+            .showChartOnly g.ct-grids, .showChartOnly g.ct-labels {
+                display: none;
+            }
+        </style>
+        `
+
+        const svgPath = `${filePath}-votesForTheftAmount`
+
+        chartistSvg('line', data, opts).then((svg) => {
+            svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
+            data = {
+                series: [
+                    // {
+                    //     name: 'inflated',
+                    //     data: [
+                    //         { x: 72431127829605, y: 200 }
+                    //     ]
+                    // },
+                    {
+                        name: 'normal',
+                        data: [
+                            { x: normalHighVoteTheft, y: normalHighVote }
+                        ]
+                    }
+                ]
+            }
+
+            opts = {
+                options: options,
+                onDraw: function (data) {
+                    if (data.type === 'bar') {
+                        let style = 'stroke-width: 30px;'
+
+                        if (data.series && data.series.name === 'inflated') {
+                            style += 'stroke: #007813;'
+                        } else {
+                            style += 'stroke: #7F51C1;'
+                        }
+
+                        data.element.attr({
+                            style: style
+                        });
+                    }
+                }
+            }
+
+
+            const lineChart = svg.replace(/(<svg[^>]+>)([^*]+)(<\/svg>)/, '$2')
+
+            chartistSvg('bar', data, opts).then((svg) => {
+                svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}<g class="showChartOnly">${lineChart}</g>`)
+                fs.writeFile(svgPath + '.svg', svg, async (err) => {
+                    if (err) {
+                        console.error('theft amount vote chart svg:', err)
+                        reject({ message: `'theft amount vote chart svg: ${err}` })
+                    }
+                    console.log('theft amount vote chart svg prepared')
+                    await sharp(svgPath + '.svg').resize({ width: 1000 }).png().toFile(svgPath + '.png')
+                    console.log('theft amount vote chart png created')
+                    resolve()
+                });
+            })
+        })
+    })
+}
+
+const getTheftValueChart = async (yearTh, filePath) => {
+    return new Promise((resolve, reject) => {
+        let series = []
+        yearTh.forEach((theft) => {
+            series.push({ x: theft['Year'], y: theft['theft'] })
+        })
+
+        const data = {
+            series: [series]
+        };
+
+        const options = {
+            chartPadding: {
+                right: 30,
+                left: 30
+            },
+            width: 1000,
+            height: 500,
+            axisX: {
+                type: Chartist.AutoScaleAxis,
+                scaleMinSpace: 40,
+                onlyInteger: true,
+                labelOffset: { y: 10 },
+                offset: 0,
+                showGrid: false
+            },
+            axisY: {
+                scaleMinSpace: 40,
+                onlyInteger: true,
+                labelOffset: { y: 6 },
+                labelInterpolationFnc: function (value) {
+                    return theftAmountAbbr(value)
+                }
+            }
+        }
+
+        const opts = {
+            options: options,
+            onDraw: function (data) {
+                let style = ''
+                if (data.type === 'point' || data.type === 'line') {
+                    style += 'stroke: #7F51C1;'
+                }
+                if (data.type === 'point') {
+                    style += 'stroke-width: 10px;'
+                }
+                if (data.type === 'line') {
+                    style += 'stroke-width: 2px;'
+                }
+
+                data.element.attr({
+                    style: style
+                });
+            }
+        }
+
+        const styles = `
+        <style>
+            .ct-grids line {
+                stroke-dasharray: none !important;
+            }
+            .ct-label {
+                font-size: 20px !important;
+                fill: #000000 !important;
+                color: #000000 !important;
+            }
+            .ct-label.ct-horizontal {
+                text-anchor: middle !important;
+            }
+        </style>
+        `
+
+        const svgPath = `${filePath}-theftValue`
+
+        chartistSvg('line', data, opts).then((svg) => {
+            svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
+            fs.writeFile(svgPath + '.svg', svg, async (err) => {
+                if (err) {
+                    console.error('theft value chart svg:', err)
+                    reject({ message: `'theft value chart svg: ${err}` })
+                }
+                console.log('theft value chart svg prepared')
+                await sharp(svgPath + '.svg').resize({ width: 1000 }).png().toFile(svgPath + '.png')
+                console.log('theft value chart png created')
+                resolve()
+            });
+        })
     })
 }
 
@@ -594,12 +816,9 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    let theftValueChartData = 'Year theft DeterminedBy Theft\n'
-    yearTh.forEach((theft) => {
-        theftValueChartData += `${theft['Year']} ${theft['theft']} ${theft['Determined By'].replace(/\s/g, '')} ${theft['Theft'].replace(/\s/g, '')}\n`
-    })
-
-    pdfData.theftValueChartData = theftValueChartData
+    const filePath = `${multiIssueReportPath}/${fileName}`
+    await getTheftValueChart(yearTh, filePath)
+    pdfData.theftValueChart = `${filePath}-theftValue.png`
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -615,6 +834,19 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
             'against': get(vt, '_totals.against', 0),
             'props': get(vt, 'props', {})
         }
+
+        const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
+        await getYesNoChart(noVotes, yesVotes, filePath)
+        pdfData.yesVotes = yesVotes
+        pdfData.noVotes = noVotes
+        pdfData.totalVotes = yesVotes + noVotes
+        pdfData.yesNoChart = `${filePath}-yesNo.png`
+
+        const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
+        const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+        await getVotesForTheftAmountChart(bellCurveData, filePath)
+        pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+
         const pathSummary = analyticsPathSummary(voteTotals)
 
         const leadingProp = get(pathSummary, 'leading_proposal')
@@ -626,10 +858,10 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
         limitedLinesArray = limitTextLines(leadingProposalDetail)
+    } else {
+        hideBlocks = [...hideBlocks, 'proposalYamlBlock', 'yesNoBlock', 'votesForTheftBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
-
-    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
     pdfData.hideBlocks = hideBlocks
     return pdfData
