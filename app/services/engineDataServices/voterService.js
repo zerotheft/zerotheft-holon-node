@@ -24,7 +24,6 @@ const exportAllVoters = async () => {
     console.log('lastUId', lastUid)
     const citizensDir = `${exportsDir}/citizens`
     const fileDir = Date.now()
-    // Object.keys(allVoters).map(async (version) => {
     await PromisePool
       .withConcurrency(1)
       .for(Object.keys(allVoters))
