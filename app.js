@@ -47,7 +47,7 @@ app.use('/public', serveIndex(path.join(APP_PATH, 'public')));
 //health check route
 app.get('/healthcheck', (req, res, next) => {
   return res.send({
-    "status": "GOOD",
+    "status": "Running",
     "success": true,
     "message": "holon is running fine"
   })
