@@ -14,7 +14,6 @@ const exportAllVoters = async () => {
     await createDir(exportsDir)
 
     const citizenContract = await getCitizenContract()
-    const verRes = await getCitizenContractVersion(citizenContract)
     //get all voter addresses
     const { allVoters, allVotersCount } = await listCitizenIds(citizenContract)
     console.log('Total Citizens::', allVotersCount)
