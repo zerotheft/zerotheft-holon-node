@@ -265,6 +265,9 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
 
         const styles = `
         <style>
+            text {
+                font-family:sans-serif;
+            }
             .ct-grids line {
                 stroke-dasharray: none !important;
                 stroke: rgba(0,0,0,0.1) !important;
@@ -398,11 +401,14 @@ const getTheftValueChart = async (yearTh, filePath) => {
 
         const styles = `
         <style>
+            text {
+                font-family:sans-serif;
+            }
             .ct-grids line {
                 stroke-dasharray: none !important;
             }
             .ct-label {
-                font-size: 20px !important;
+                font-size: 18px !important;
                 fill: #000000 !important;
                 color: #000000 !important;
             }
