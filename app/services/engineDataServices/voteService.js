@@ -42,8 +42,8 @@ const exportAllVotes = async (req) => {
       .process(async voteID => {
 
         try {
-          // if (count > parseInt(lastVid)) {
-          if (1) {
+          if (count > parseInt(lastVid)) {
+            // if (1) {
             console.log('exporting voteID:: ', count, '::', voteID)
             const voteKey = `${contractIdentifier}:${verRes.version}:${voteID}`
             //First get the votes info

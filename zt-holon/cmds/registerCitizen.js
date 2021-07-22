@@ -4,6 +4,7 @@ const chalk = require('chalk')
 const error = require('../utils/error')
 const { getCitizenContract } = require('zerotheft-node-utils/utils/contract')
 const { getStorageValues } = require('zerotheft-node-utils/utils/storage.js')
+const { signMessage } = require('zerotheft-node-utils/utils/web3')
 
 module.exports = async (args) => {
     const firstname = args.firstname || ""
@@ -33,7 +34,10 @@ module.exports = async (args) => {
         const contract = getCitizenContract()
         const storage = await getStorageValues()
 
-        await contract.createTransaction('registerUnverifiedCitizen', [firstname, middlename, lastname, country, citizenship, currentState, currentCity, currentZip, linkedin, storage.address], 900000)
+        const params = [{ t: 'string', v: firstname }, { t: 'string', v: lastname }, { t: 'string', v: country }, { t: 'string', v: citizenship }, { t: 'string', v: currentState }, { t: 'string', v: currentCity }, { t: 'string', v: currentZip }, { t: 'string', v: linkedin }, { t: 'address', v: storage.address }]
+        const signedMessage = await signMessage(params)
+
+        await contract.createTransaction('registerUnverifiedCitizen', [firstname, middlename, lastname, country, citizenship, currentState, currentCity, currentZip, linkedin, signedMessage.signature], 900000)
         spinner.stop()
         console.log(chalk.green(`Citizen registration completed`))
     } catch (e) {
