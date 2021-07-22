@@ -56,6 +56,7 @@ const inflatedValues = require(inflatedValuesPath)
 const generateReportData = async (fileName) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
+    let hideBlocks = []
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
     pdfData.country = 'USA'
@@ -140,18 +141,23 @@ const generateReportData = async (fileName) => {
 
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
-    const yamlJSON = await getProposalYaml(proposalID, path)
-    pdfData.leadingProposalID = proposalID
-    pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-    pdfData.leadingProposalDate = leadingProp['date']
+    let limitedLinesArray = []
+    if (proposalID) {
+        const yamlJSON = await getProposalYaml(proposalID, path)
+        pdfData.leadingProposalID = proposalID
+        pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
+        pdfData.leadingProposalDate = leadingProp['date']
 
-    const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
-    const limitedLinesArray = limitTextLines(leadingProposalDetail)
+        const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+        limitedLinesArray = limitTextLines(leadingProposalDetail)
 
-    pdfData.leadingProposalDetail = leadingProposalDetail.replace(/\\n/g, '\n')
-    pdfData.leadingProposalDetailPart = limitedLinesArray.join('\n')
-    // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+        pdfData.leadingProposalDetail = leadingProposalDetail.replace(/\\n/g, '\n')
+        pdfData.leadingProposalDetailPart = limitedLinesArray.join('\n')
+        // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+    }
+    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
+    pdfData.hideBlocks = hideBlocks
     return pdfData
 }
 
@@ -208,7 +214,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
                 left: 30
             },
             width: 600,
-            height: 350,
+            height: 280,
             axisX: {
                 type: Chartist.AutoScaleAxis,
                 scaleMinSpace: 40,
@@ -217,16 +223,18 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
                 offset: 0,
                 high: xHigh,
                 low: xLow,
+                showGrid: false,
                 labelInterpolationFnc: function (value) {
                     return theftAmountAbbr(value)
                 }
             },
             axisY: {
-                scaleMinSpace: 40,
+                scaleMinSpace: 20,
                 onlyInteger: true,
                 labelOffset: { y: 6 },
                 high: yHigh,
                 low: yLow,
+                showGrid: false,
                 labelInterpolationFnc: function (value) {
                     return theftAmountAbbr(value)
                 }
@@ -236,6 +244,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
         let opts = {
             options: {
                 ...options,
+                axisY: { ...options.axisY, showGrid: true },
                 showArea: true,
                 showPoint: false,
             },
@@ -256,6 +265,10 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
 
         const styles = `
         <style>
+            .ct-grids line {
+                stroke-dasharray: none !important;
+                stroke: rgba(0,0,0,0.1) !important;
+            }
             .ct-label {
                 font-size: 20px !important;
                 fill: #000000 !important;
@@ -263,9 +276,6 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
             }
             .ct-label.ct-horizontal {
                 text-anchor: middle !important;
-            }
-            .showChartOnly g.ct-grids, .showChartOnly g.ct-labels {
-                display: none;
             }
         </style>
         `
@@ -347,7 +357,7 @@ const getTheftValueChart = async (yearTh, filePath) => {
                 left: 30
             },
             width: 1000,
-            height: 500,
+            height: 300,
             axisX: {
                 type: Chartist.AutoScaleAxis,
                 scaleMinSpace: 40,
@@ -435,10 +445,11 @@ const prepareStolenByYear = (stolenByYear) => {
         const year1 = stolenByYearYears[i]
         const year2 = stolenByYearYears[i + numberOfRows]
         const year3 = stolenByYearYears[i + (numberOfRows * 2)]
-        stolenByYearTableData += `
+        stolenByYearTableData += `\\rowcolor{${i % 2 ? 'even' : 'odd'}RowColor} 
             ${prepareStolenByYearSingle(year1, stolenByYear)} &
             ${prepareStolenByYearSingle(year2, stolenByYear)} &
-            ${prepareStolenByYearSingle(year3, stolenByYear)} & &
+            ${prepareStolenByYearSingle(year3, stolenByYear)} &
+            \\cellcolor{white} &
             ${prepareStolenByYearSingle(year1, stolenByYear, true)} &
             ${prepareStolenByYearSingle(year2, stolenByYear, true)} &
             ${prepareStolenByYearSingle(year3, stolenByYear, true)} \\\\ \n`
@@ -465,7 +476,7 @@ const breakLines = (line, lineChars, indent, start) => {
     return brokenLines
 }
 
-const limitTextLines = (content, lineLimit = 119, lineChars = 90) => {
+const limitTextLines = (content, lineLimit = 124, lineChars = 95) => {
     content = content.replace(/\\n/g, '\n')
     const lineArray = content.split(/\n/g)
 
@@ -730,6 +741,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
+    let hideBlocks = []
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.country = nation
@@ -745,8 +757,6 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
         generatedFrom = 'Generated from Child Proposals'
 
     pdfData.generatedFrom = generatedFrom
-
-    let hideBlocks = []
 
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle
@@ -851,17 +861,21 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const leadingProp = get(pathSummary, 'leading_proposal')
         const proposalID = get(leadingProp, 'id')
-        const yamlJSON = await getProposalYaml(proposalID, path)
-        pdfData.leadingProposalID = proposalID
-        pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-        pdfData.leadingProposalDate = leadingProp['date']
+        if (proposalID) {
+            const yamlJSON = await getProposalYaml(proposalID, path)
+            pdfData.leadingProposalID = proposalID
+            pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
+            pdfData.leadingProposalDate = leadingProp['date']
 
-        const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
-        limitedLinesArray = limitTextLines(leadingProposalDetail)
+            const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+            limitedLinesArray = limitTextLines(leadingProposalDetail)
+        }
     } else {
-        hideBlocks = [...hideBlocks, 'proposalYamlBlock', 'yesNoBlock', 'votesForTheftBlock']
+        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
+
+    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
     pdfData.hideBlocks = hideBlocks
     return pdfData
@@ -892,7 +906,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) + '\\%' : ''}} &
-    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
+    \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
 
@@ -930,8 +944,8 @@ const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths
     const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-     &
-    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
+    &
+    \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
      \\\\ \n`
 }
 
