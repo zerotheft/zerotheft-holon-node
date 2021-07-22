@@ -208,7 +208,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
                 left: 30
             },
             width: 600,
-            height: 350,
+            height: 280,
             axisX: {
                 type: Chartist.AutoScaleAxis,
                 scaleMinSpace: 40,
@@ -217,16 +217,18 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
                 offset: 0,
                 high: xHigh,
                 low: xLow,
+                showGrid: false,
                 labelInterpolationFnc: function (value) {
                     return theftAmountAbbr(value)
                 }
             },
             axisY: {
-                scaleMinSpace: 40,
+                scaleMinSpace: 20,
                 onlyInteger: true,
                 labelOffset: { y: 6 },
                 high: yHigh,
                 low: yLow,
+                showGrid: false,
                 labelInterpolationFnc: function (value) {
                     return theftAmountAbbr(value)
                 }
@@ -347,7 +349,7 @@ const getTheftValueChart = async (yearTh, filePath) => {
                 left: 30
             },
             width: 1000,
-            height: 500,
+            height: 300,
             axisX: {
                 type: Chartist.AutoScaleAxis,
                 scaleMinSpace: 40,
@@ -465,7 +467,7 @@ const breakLines = (line, lineChars, indent, start) => {
     return brokenLines
 }
 
-const limitTextLines = (content, lineLimit = 119, lineChars = 90) => {
+const limitTextLines = (content, lineLimit = 124, lineChars = 95) => {
     content = content.replace(/\\n/g, '\n')
     const lineArray = content.split(/\n/g)
 
@@ -851,17 +853,21 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const leadingProp = get(pathSummary, 'leading_proposal')
         const proposalID = get(leadingProp, 'id')
-        const yamlJSON = await getProposalYaml(proposalID, path)
-        pdfData.leadingProposalID = proposalID
-        pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-        pdfData.leadingProposalDate = leadingProp['date']
+        if (proposalID) {
+            const yamlJSON = await getProposalYaml(proposalID, path)
+            pdfData.leadingProposalID = proposalID
+            pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
+            pdfData.leadingProposalDate = leadingProp['date']
 
-        const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
-        limitedLinesArray = limitTextLines(leadingProposalDetail)
+            const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+            limitedLinesArray = limitTextLines(leadingProposalDetail)
+        }
     } else {
-        hideBlocks = [...hideBlocks, 'proposalYamlBlock', 'yesNoBlock', 'votesForTheftBlock']
+        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
+
+    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
     pdfData.hideBlocks = hideBlocks
     return pdfData
