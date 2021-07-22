@@ -29,10 +29,12 @@ anchorcolor = blue]{hyperref}
 \definecolor{yesNoBarBorderColor}{HTML}{B2AEAE}
 \definecolor{noProgressBgColor}{HTML}{E26C6C}
 \definecolor{tableHeaderBg}{HTML}{F0EAFA}
+\definecolor{oddRowColor}{HTML}{F1F4F6}
+\definecolor{evenRowColor}{HTML}{FAFCFD}
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=480pt},
+	fullWidth/.style={text width=535pt},
   yesNoBar/.style={minimum width=101pt, minimum height=30pt},
 	yesNoBarBg/.style={yesNoBar, draw=yesNoBarBorderColor, fill=yesNoBarBgColor, rounded corners=3pt, line width=1pt, right},
 	yesNoBarProgress/.style={yesNoBar, fill=primary, minimum height=29pt, rounded corners=2.5pt, right= -101.25pt, inner sep=0},
@@ -54,7 +56,7 @@ anchorcolor = blue]{hyperref}
   \begin{tikzpicture}
       \node[leftHeaderText] (subtitle) {ZeroTheft Movement: --subtitle--};
       \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
-      \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
+      \node[leftHeaderText, below=of title, below=0pt] (belowtitle) {voted theft Ethically, not legally};
 
       \node[rightHeaderText, right=10pt of subtitle] (year) {};
       \node[rightHeaderText, below=of year, below=5pt] (country) {for --country-- on --generatedTime--};
@@ -101,7 +103,7 @@ anchorcolor = blue]{hyperref}
     \node[below=0pt of votedYes, isTheftBlock] (votedNo) {\large Voted No: --noVotes--};
     
     % \node[yshift=-40pt, right=0pt of isTheft] (noVoteImage) {\includegraphics[width=130pt]{/Volumes/WorkSpace/WhiteHat/zerotheft/zerotheft-holon-node/zt_report/reports/ztReport/USA-tax-corp_tax_evasion-yesNo.png}};
-    \node[yshift=-70pt, left=-185pt of votedNo] (noVoteImage) {\includegraphics[width=130pt]{--yesNoChart--}};
+    \node[yshift=-40pt, right=0pt of isTheft] (noVoteImage) {\includegraphics[width=130pt]{--yesNoChart--}};
   \end{tikzpicture}
 }
 % yesNoBlockEnd
@@ -114,18 +116,20 @@ anchorcolor = blue]{hyperref}
 }
 % votesForTheftBlockEnd
 
-\setlength{\tabcolsep}{10pt} % for the horizontal padding
+\setlength{\tabcolsep}{8pt} % for the horizontal padding
 {\renewcommand{\arraystretch}{2}% for the vertical padding
-  \begin{longtable}{p{15pt} p{30pt} p{15pt} p{30pt} p{15pt} p{30pt} p{0pt} p{15pt} p{30pt} p{15pt} p{30pt} p{15pt} p{30pt}} 
-    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Not Translated into --inflationYear-- Dollar Values} & &
-    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Translated into --inflationYear-- Dollar Values} \\ 
+  \begin{longtable}{p{16pt} p{38pt} p{16pt} p{38pt} p{16pt} p{38pt} p{0pt} p{16pt} p{38pt} p{16pt} p{38pt} p{16pt} p{38pt}} 
+    \rowcolor{primary}
+    \multicolumn{6}{l}{\color{white} Not Translated into --inflationYear-- Dollar Values} & \cellcolor{white} &
+    \multicolumn{6}{l}{\color{white} Translated into --inflationYear-- Dollar Values} \\ 
 
     --stolenByYearTableData--
-    % 2021 & \$800B & 2019 & \$650B & 2019 & \$650B & & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
-    % 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
+    % \rowcolor{oddRowColor} 8888 & \$888.88B & 2019 & \$650B & 2019 & \$888.88B & \cellcolor{white} & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
+    % \rowcolor{evenRowColor} 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & \cellcolor{white} & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
 \end{longtable}
 }
 
+% proposalYamlBlockStart
 \newpage 
 \trimbox{0 10pt 0 0}{ 
   \begin{tikzpicture}
@@ -151,4 +155,5 @@ anchorcolor = blue]{hyperref}
   \end{minted}
 
   --viewMore--
+  % proposalYamlBlockEnd
 \end{document}

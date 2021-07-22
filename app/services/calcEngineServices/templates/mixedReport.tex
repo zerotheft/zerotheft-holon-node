@@ -1,12 +1,13 @@
 % headsectionstart
 % any changes on headsection of multiReport and report headsection should be added here
 \documentclass{article}
-\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage[a4paper, margin={15pt, 30pt}, footskip=0pt]{geometry}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{adjustbox}
+\usepackage[sfdefault]{roboto}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
 \usepackage[colorlinks = true,
@@ -25,6 +26,8 @@ anchorcolor = blue]{hyperref}
 \definecolor{yesVoteColor}{RGB}{115,54,163}
 \definecolor{noVoteColor}{RGB}{61,38,80}
 \definecolor{tableHeaderBg}{HTML}{F0EAFA}
+\definecolor{oddRowColor}{HTML}{F1F4F6}
+\definecolor{evenRowColor}{HTML}{FAFCFD}
 \definecolor{tableTheftBg}{HTML}{EF6868}
 \definecolor{tableNoTheftBg}{HTML}{71AE70}
 \definecolor{noVoteMessageBg}{HTML}{F9EADD}
@@ -35,17 +38,17 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=480pt},
+	fullWidth/.style={text width=535pt},
 	yesNoBar/.style={minimum width=101pt, minimum height=30pt},
 	yesNoBarBg/.style={yesNoBar, draw=yesNoBarBorderColor, fill=yesNoBarBgColor, rounded corners=3pt, line width=1pt, right},
 	yesNoBarProgress/.style={yesNoBar, fill=primary, minimum height=29pt, rounded corners=2.5pt, right= -101.25pt, inner sep=0},
 	yesNoBarText/.style={yesNoBar, right, white, right= -101.25pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
-	rightHeaderText/.style={headerText, align=right,text width=180pt},
+	rightHeaderText/.style={headerText, align=right,text width=225pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
-	noVotesMessageWidth/.style={text width=404pt},
-	isTheftBlock/.style={align=left, text width=180pt}
+	noVotesMessageWidth/.style={text width=449pt},
+	isTheftBlock/.style={align=left, text width=140pt}
 }
 
 \begin{document}

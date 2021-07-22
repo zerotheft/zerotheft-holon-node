@@ -1,12 +1,13 @@
 % headsectionstart
 % update mixedReport hedsection if any changes done in this headsection
 \documentclass{article}
-\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage[a4paper, margin={15pt, 30pt}, footskip=0pt]{geometry}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{adjustbox}
+\usepackage[sfdefault]{roboto}
 \usepackage[colorlinks = true,
 linkcolor = blue,
 urlcolor  = blue,
@@ -22,9 +23,9 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
-	noVotesMessageWidth/.style={text width=404pt},
+	noVotesMessageWidth/.style={text width=449pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
-	rightHeaderText/.style={headerText, align=right,text width=180pt},
+	rightHeaderText/.style={headerText, align=right,text width=225pt}
 }
 
 \begin{document}
@@ -37,7 +38,7 @@ anchorcolor = blue]{hyperref}
   \begin{tikzpicture}
       \node[leftHeaderText] (subtitle) {ZeroTheft Movement: --subtitle--};
       \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
-      \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
+      \node[leftHeaderText, below=of title, below=0pt] (belowtitle) {voted theft Ethically, not legally};
 
       \node[rightHeaderText, right=10pt of subtitle] (year) {};
       \node[rightHeaderText, below=of year, below=5pt] (country) {for --country-- on --generatedTime--};
@@ -67,18 +68,18 @@ anchorcolor = blue]{hyperref}
 \setlength{\tabcolsep}{10pt} % for the horizontal padding
 {\renewcommand{\arraystretch}{2}% for the vertical padding
     % \begin{longtable}{| p{150pt} | p{100pt} | p{100pt} | p{100pt} |} 
-\begin{longtable}{p{150pt} p{100pt} p{100pt} p{100pt}} 
+\begin{longtable}{p{215pt} p{80pt} p{60pt} p{100pt}} 
     % \hline
     \cellcolor{tableHeaderBg} \textbf{Problem Area} &
-    \cellcolor{tableHeaderBg} \textbf{Vote} &
-    \cellcolor{tableHeaderBg} \textbf{View More} &
+    \cellcolor{tableHeaderBg}  \centering \textbf{Vote} &
+    \cellcolor{tableHeaderBg} \centering \textbf{View More} &
     \cellcolor{tableHeaderBg} \textbf{Theft} \\ 
 
     --sourcesOfTheft--
-    % \textbf{USA} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \href{http://google.com}{Page 1} & needs 300 more votes \\
-    % \quad \textbf{Economic Crisis} & \cellcolor{tableNoTheftBg} \color{white} \centering \textbf{Not Theft 45\%} & Page 10 & \$34B \\
-    % \textbf{Bailouts} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & Page 1 & needs 300 more votes \\
-    % \caption{Your caption here} % needs to go inside longtable environment
+    % \textbf{USA} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \centering \href{http://google.com}{View Report} & needs 300 more votes \\
+    % \quad \textbf{Economic Crisis} & \cellcolor{tableNoTheftBg} \color{white} \centering \textbf{Not Theft 45\%} & \centering View Report & \$34B \\
+    % \textbf{Bailouts} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \centering View Report & needs 300 more votes \\
+    %\caption{Your caption here} % needs to go inside longtable environment
     % \label{tab:myfirstlongtable}
 \end{longtable}
 }

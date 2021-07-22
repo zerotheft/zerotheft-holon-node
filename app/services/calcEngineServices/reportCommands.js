@@ -56,6 +56,7 @@ const inflatedValues = require(inflatedValuesPath)
 const generateReportData = async (fileName) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
+    let hideBlocks = []
     let pdfData = {}
     pdfData.pdfLink = `/issueReports/${fileName}.pdf`
     pdfData.country = 'USA'
@@ -140,18 +141,23 @@ const generateReportData = async (fileName) => {
 
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
-    const yamlJSON = await getProposalYaml(proposalID, path)
-    pdfData.leadingProposalID = proposalID
-    pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-    pdfData.leadingProposalDate = leadingProp['date']
+    let limitedLinesArray = []
+    if (proposalID) {
+        const yamlJSON = await getProposalYaml(proposalID, path)
+        pdfData.leadingProposalID = proposalID
+        pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
+        pdfData.leadingProposalDate = leadingProp['date']
 
-    const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
-    const limitedLinesArray = limitTextLines(leadingProposalDetail)
+        const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
+        limitedLinesArray = limitTextLines(leadingProposalDetail)
 
-    pdfData.leadingProposalDetail = leadingProposalDetail.replace(/\\n/g, '\n')
-    pdfData.leadingProposalDetailPart = limitedLinesArray.join('\n')
-    // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+        pdfData.leadingProposalDetail = leadingProposalDetail.replace(/\\n/g, '\n')
+        pdfData.leadingProposalDetailPart = limitedLinesArray.join('\n')
+        // pdfData.leadingProposalDetail = yamlConverter.stringify(yamlJSON).replace(/: ?>/g, ': |')
+    }
+    if (isEmpty(limitedLinesArray)) hideBlocks.push('proposalYamlBlock')
 
+    pdfData.hideBlocks = hideBlocks
     return pdfData
 }
 
@@ -238,6 +244,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
         let opts = {
             options: {
                 ...options,
+                axisY: { ...options.axisY, showGrid: true },
                 showArea: true,
                 showPoint: false,
             },
@@ -258,6 +265,10 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
 
         const styles = `
         <style>
+            .ct-grids line {
+                stroke-dasharray: none !important;
+                stroke: rgba(0,0,0,0.1) !important;
+            }
             .ct-label {
                 font-size: 20px !important;
                 fill: #000000 !important;
@@ -265,9 +276,6 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
             }
             .ct-label.ct-horizontal {
                 text-anchor: middle !important;
-            }
-            .showChartOnly g.ct-grids, .showChartOnly g.ct-labels {
-                display: none;
             }
         </style>
         `
@@ -437,10 +445,11 @@ const prepareStolenByYear = (stolenByYear) => {
         const year1 = stolenByYearYears[i]
         const year2 = stolenByYearYears[i + numberOfRows]
         const year3 = stolenByYearYears[i + (numberOfRows * 2)]
-        stolenByYearTableData += `
+        stolenByYearTableData += `\\rowcolor{${i % 2 ? 'even' : 'odd'}RowColor} 
             ${prepareStolenByYearSingle(year1, stolenByYear)} &
             ${prepareStolenByYearSingle(year2, stolenByYear)} &
-            ${prepareStolenByYearSingle(year3, stolenByYear)} & &
+            ${prepareStolenByYearSingle(year3, stolenByYear)} &
+            \\cellcolor{white} &
             ${prepareStolenByYearSingle(year1, stolenByYear, true)} &
             ${prepareStolenByYearSingle(year2, stolenByYear, true)} &
             ${prepareStolenByYearSingle(year3, stolenByYear, true)} \\\\ \n`
@@ -732,6 +741,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
 
+    let hideBlocks = []
     let pdfData = {}
     pdfData.pdfLink = `/pathReports/${fileName}.pdf`
     pdfData.country = nation
@@ -747,8 +757,6 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
         generatedFrom = 'Generated from Child Proposals'
 
     pdfData.generatedFrom = generatedFrom
-
-    let hideBlocks = []
 
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = pathTitle

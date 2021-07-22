@@ -1,12 +1,13 @@
 % headsectionstart
 % update mixedReport hedsection if any changes done in this headsection
 \documentclass{article}
-\usepackage[a4paper, margin={40pt, 40pt}]{geometry}
+\usepackage[a4paper, margin={15pt, 30pt}, footskip=0pt]{geometry}
 \usepackage{longtable}
 \usepackage[table]{xcolor}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{adjustbox}
+\usepackage[sfdefault]{roboto}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
 \usepackage[colorlinks = true,
@@ -25,18 +26,20 @@ anchorcolor = blue]{hyperref}
 \definecolor{yesVoteColor}{RGB}{115,54,163}
 \definecolor{noVoteColor}{RGB}{61,38,80}
 \definecolor{tableHeaderBg}{HTML}{F0EAFA}
+\definecolor{oddRowColor}{HTML}{F1F4F6}
+\definecolor{evenRowColor}{HTML}{FAFCFD}
 \definecolor{tableTheftBg}{HTML}{EF6868}
 \definecolor{tableNoTheftBg}{HTML}{71AE70}
 
 
 \tikzset{
 	headerText/.style={text=white},
-	fullWidth/.style={text width=480pt},
+	fullWidth/.style={text width=535pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
-	rightHeaderText/.style={headerText, align=right,text width=180pt},
+	rightHeaderText/.style={headerText, align=right,text width=225pt},
 	theftBlock/.style={rounded corners=5pt, inner sep=10pt},
 	theftBlockContent/.style={text=black, text width=100pt},
-	isTheftBlock/.style={align=left, text width=180pt}
+	isTheftBlock/.style={align=left, text width=140pt}
 }
 
 \begin{document}
@@ -49,9 +52,9 @@ anchorcolor = blue]{hyperref}
   \begin{tikzpicture}
       \node[leftHeaderText] (subtitle) {ZeroTheft Movement: --subtitle--};
       \node[leftHeaderText, below=of subtitle, below=5pt] (title) {\huge \textbf{--title--}};
-      \node[leftHeaderText, below=of title, below=-5pt] (belowtitle) {voted theft Ethically, not legally};
+      \node[leftHeaderText, below=of title, below=0pt] (belowtitle) {voted theft Ethically, not legally};
 
-      \node[rightHeaderText, right=of subtitle] (year) {--generatedFrom--};
+      \node[rightHeaderText, right=10pt of subtitle] (year) {--generatedFrom--};
       \node[rightHeaderText, below=of year, below=5pt] (country) {for --country-- on --generatedTime--};
       \node[rightHeaderText, below=of country, below=5pt] (holon) {\href{--holonUrl--}{\color{white}--holonUrl--}};
     
@@ -63,7 +66,7 @@ anchorcolor = blue]{hyperref}
 
 % do not remove this comment
 % theftAmountBlockStart
-\trimbox{-120pt -15pt 0 0}{ 
+\trimbox{-136pt -15pt 0 0}{ 
   \begin{tikzpicture}
       \node[theftBlockContent] (amount1) {\huge \textbf{\$--theft--}};
       \node[theftBlockContent, below=0ptof amount1] (year1) {Stolen in --year--\newline};
@@ -84,44 +87,46 @@ anchorcolor = blue]{hyperref}
 
 % do not remove this comment
 % chartBlockStart
-\trimbox{25pt -40pt 0 0}{
+\trimbox{25pt -20pt 0 0}{
   \begin{tikzpicture}
-    \node[] (theftValueChart) {\includegraphics[width=520pt]{--theftValueChart--}};
+    \node[] (theftValueChart) {\includegraphics[width=565pt]{--theftValueChart--}};
   \end{tikzpicture}
 }
 % chartBlockEnd
 
 % yesNoBlockStart
-\trimbox{0 -40pt 0 0}{
+\trimbox{0 -20pt 0 0}{
   \begin{tikzpicture}
-    \node[isTheftBlock, primary] (isTheft) {\huge \textbf{IS THIS THEFT?}};
-    \node[below=10pt of isTheft, isTheftBlock] (noOfVoters) {\large Total No of Voters: --totalVotes--};
-    \node[below=0pt of noOfVoters, isTheftBlock] (votedYes) {\large Voted Yes: --yesVotes--};
+    \node[isTheftBlock, primary] (isTheft) {\LARGE \textbf{IS THIS THEFT?}};
+    \node[below=1pt of isTheft, isTheftBlock] (noOfVoters) {\large Total No of Voters:};
+    \node[below=0pt of noOfVoters, isTheftBlock] (noOfVotersNum) {\LARGE \textbf{--totalVotes--}};
+    \node[below=10pt of noOfVotersNum, isTheftBlock] (votedYes) {\large Voted Yes: --yesVotes--};
     \node[below=0pt of votedYes, isTheftBlock] (votedNo) {\large Voted No: --noVotes--};
     
-    \node[yshift=-70pt, left=-185pt of votedNo] (noVoteImage) {\includegraphics[width=180pt]{--yesNoChart--}};
+    \node[yshift=-40pt, right=0pt of isTheft] (noVoteImage) {\includegraphics[width=130pt]{--yesNoChart--}};
   \end{tikzpicture}
 }
 % yesNoBlockEnd
 % votesForTheftBlockStart
-\trimbox{0 5pt 0 0}{
+\trimbox{0 15pt 0 0}{
   \begin{tikzpicture}
-    \node[] (theftValueChart) {\includegraphics[width=300pt]{--votesForTheftAmountChart--}};
+    \node[] (theftValueChart) {\includegraphics[width=245pt]{--votesForTheftAmountChart--}};
   \end{tikzpicture}
 }
 % votesForTheftBlockEnd
 
 % inflationBlockStart
-\setlength\LTpost{30pt}
-\setlength{\tabcolsep}{10pt} % for the horizontal padding
+\setlength\LTpost{30pt} % long table margin bottom
+\setlength{\tabcolsep}{8pt} % for the horizontal padding
 {\renewcommand{\arraystretch}{2}% for the vertical padding
-  \begin{longtable}{p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt} p{0pt} p{10pt} p{30pt} p{10pt} p{30pt} p{10pt} p{30pt}} 
-    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Not Translated into --inflationYear-- Dollar Values} & &
-    \multicolumn{6}{l}{\cellcolor{primary} \color{white} Translated into --inflationYear-- Dollar Values} \\ 
+  \begin{longtable}{p{16pt} p{38pt} p{16pt} p{38pt} p{16pt} p{38pt} p{0pt} p{16pt} p{38pt} p{16pt} p{38pt} p{16pt} p{38pt}} 
+    \rowcolor{primary}
+    \multicolumn{6}{l}{\color{white} Not Translated into --inflationYear-- Dollar Values} & \cellcolor{white} &
+    \multicolumn{6}{l}{\color{white} Translated into --inflationYear-- Dollar Values} \\ 
 
     --stolenByYearTableData--
-    % 2021 & \$800B & 2019 & \$650B & 2019 & \$650B & & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
-    % 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
+    % \rowcolor{oddRowColor} 8888 & \$888.88B & 2019 & \$650B & 2019 & \$888.88B & \cellcolor{white} & 2021 & \$800B & 2019 & \$701B & 2019 & \$650B \\
+    % \rowcolor{evenRowColor} 2020 & \$700B & 2018 & \$600B & 2019 & \$650B & \cellcolor{white} & 2020 & \$725B & 2018 & \$656B & 2019 & \$650B \\
 \end{longtable}
 }
 % inflationBlockEnd
@@ -130,17 +135,17 @@ anchorcolor = blue]{hyperref}
 \setlength{\tabcolsep}{10pt} % for the horizontal padding
 {\renewcommand{\arraystretch}{2}% for the vertical padding
     % \begin{longtable}{| p{150pt} | p{100pt} | p{100pt} | p{100pt} |} 
-\begin{longtable}{p{150pt} p{100pt} p{100pt} p{100pt}} 
+\begin{longtable}{p{215pt} p{80pt} p{60pt} p{100pt}} 
     % \hline
     \cellcolor{tableHeaderBg} \textbf{Problem Area} &
-    \cellcolor{tableHeaderBg} \textbf{Vote} &
-    \cellcolor{tableHeaderBg} \textbf{View More} &
+    \cellcolor{tableHeaderBg}  \centering \textbf{Vote} &
+    \cellcolor{tableHeaderBg} \centering \textbf{View More} &
     \cellcolor{tableHeaderBg} \textbf{Theft} \\ 
 
     --sourcesOfTheft--
-    % \textbf{USA} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \href{http://google.com}{Page 1} & needs 300 more votes \\
-    % \quad \textbf{Economic Crisis} & \cellcolor{tableNoTheftBg} \color{white} \centering \textbf{Not Theft 45\%} & Page 10 & \$34B \\
-    % \textbf{Bailouts} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & Page 1 & needs 300 more votes \\
+    % \textbf{USA} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \centering \href{http://google.com}{View Report} & needs 300 more votes \\
+    % \quad \textbf{Economic Crisis} & \cellcolor{tableNoTheftBg} \color{white} \centering \textbf{Not Theft 45\%} & \centering View Report & \$34B \\
+    % \textbf{Bailouts} & \cellcolor{tableTheftBg} \color{white} \centering \textbf{Theft 45\%} & \centering View Report & needs 300 more votes \\
     %\caption{Your caption here} % needs to go inside longtable environment
     % \label{tab:myfirstlongtable}
 \end{longtable}
@@ -148,11 +153,11 @@ anchorcolor = blue]{hyperref}
 
 % proposalYamlBlockStart
 \newpage 
-\trimbox{0 -15pt 0 0}{ 
+\trimbox{0 10pt 0 0}{ 
   \begin{tikzpicture}
     \node[fullWidth, text=primary] (leadingProposal) {\huge \textbf{Leading Proposals}};
     \node[fullWidth, below =0ptof leadingProposal] (viewProposalTextLink) {\href{--holonUrl--/path/--pathSlug--/issue/--leafSlug--}{\color{blue}View Full Proposal Text}};
-    \node[fullWidth, below =0ptof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal by --leadingProposalAuthor-- on --leadingProposalDate--}};
+    \node[fullWidth, below =0ptof viewProposalTextLink] (leadingProposalTitle) {\large \textbf{Proposal by --leadingProposalAuthor-- on --leadingProposalDate-- asfsaf saf asf afsdf asd fasdf as asdf asd fasdf asdf as f asfasdf adf asdf asf}};
   \end{tikzpicture}
 }
 
@@ -162,8 +167,8 @@ anchorcolor = blue]{hyperref}
     mathescape,
     numbersep=5pt,
     numbersep=5pt,
-    xleftmargin=0pt,
-    xrightmargin=0pt,
+    xleftmargin=30pt,
+    xrightmargin=30pt,
     breaksymbolleft=,
     gobble=0,
     linenos
