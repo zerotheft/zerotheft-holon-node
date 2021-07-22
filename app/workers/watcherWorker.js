@@ -57,18 +57,18 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     }
 
     /**
-   * If no voters data exported
-   * Initiate voters data exports
-   */
+     * If no voters data exported
+     * Initiate voters data exports
+     */
     if (cachedUid === 0 && !isVotersExporting) {
       console.log('Voters Export data missing. Inititated....')
       createLog(WATCHER_LOG_PATH, 'Voters Export data missing. Inititated....')
       exportDataQueue.add('votersExport', {}, { removeOnComplete: true, removeOnFail: true })
     }
     /**
- * If no proposal data exported
- * Initiate proposal data exports
- */
+     * If no proposal data exported
+     * Initiate proposal data exports
+     */
     if (cachedPid === 0 && !isProposalExporting) {
       console.log('Proposal Export data missing. Inititated....')
       createLog(WATCHER_LOG_PATH, 'Proposal Export data missing. Inititated....')
@@ -81,15 +81,7 @@ const watcherWorker = new Worker('WatcherQueue', async job => {
     if ((!isSyncing && cachedVid > 0 && !isVotesExporting) && (!isDatainCache || isResyncing)) {
       await singleYearCaching(job.data.nation)
     }
-    /**
-    * If sync is complete and no past year thefts collected
-    * calculate past year thefts
-    */
-    // if (isDatainCache && !isSyncing && !pastThefts) {
-    //   console.log('Past year thefts missing. Initiated...')
-    //   // when all year data got sycned get past year thefts
-    //   // await calculatePastYearThefts()
-    // }
+
     /**
      * If sync is complete and full report is not present.
      * Initiate full report

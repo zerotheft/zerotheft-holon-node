@@ -498,7 +498,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
             try {
                 let details = await getPathDetail(nextPath, proposalContract, voterContract, true)
                 if (details.success) {
-                    proposals = proposals.concat(details.pathDetails)
+                    proposals = proposals.concat(details.allDetails)
                     votes = votes.concat(details.allVotesInfo)
 
                 }
@@ -514,7 +514,7 @@ const manipulatePaths = async (paths, proposalContract, voterContract, currentPa
                 try {
                     let details = await getPathDetail(nextPath, proposalContract, voterContract, true)
                     if (details.success) {
-                        proposals = proposals.concat(details.pathDetails)
+                        proposals = proposals.concat(details.allDetails)
                         votes = votes.concat(details.allVotesInfo)
 
                     }

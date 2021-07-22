@@ -14,63 +14,65 @@ const exportAllVoters = async () => {
     await createDir(exportsDir)
 
     const citizenContract = await getCitizenContract()
-    const verRes = await getCitizenContractVersion(citizenContract)
     //get all voter addresses
-    const citizenIds = await listCitizenIds(citizenContract)
-    console.log('Total Citizens::', citizenIds.length)
+    const { allVoters, allVotersCount } = await listCitizenIds(citizenContract)
+    console.log('Total Citizens::', allVotersCount)
 
     let count = 1;
     let lastUid = await lastExportedUid()
     console.log('lastUId', lastUid)
     const citizensDir = `${exportsDir}/citizens`
     const fileDir = Date.now()
-
     await PromisePool
-      .withConcurrency(10)
-      .for(citizenIds)
-      .process(async uid => {
-        let citizenData = {}
-        try {
-          if (count > parseInt(lastUid)) {
-            console.log('exporting UID::', count, '::', uid)
-            uid = `${contractIdentifier}:${verRes.version}:${uid}`
-            citizenData = await getCitizen(uid, citizenContract)
+      .withConcurrency(1)
+      .for(Object.keys(allVoters))
+      .process(async version => {
+        await PromisePool
+          .withConcurrency(10)
+          .for(allVoters[version])
+          .process(async uid => {
+            let citizenData = {}
+            try {
+              if (count > parseInt(lastUid)) {
+                console.log('exporting UID::', count, '::', uid)
+                uid = `${contractIdentifier}:${version}:${uid}`
+                citizenData = await getCitizen(uid, citizenContract)
 
-            await createDir(citizensDir)
+                await createDir(citizensDir)
 
-            //if citizen found then add in csv
-            if (citizenData.success)
-              writeCsv([{
-                id: uid,
-                address: citizenData.address,
-                firstName: citizenData.firstName,
-                middleName: citizenData.middleName,
-                lastName: citizenData.lastName,
-                country: citizenData.country,
-                citizenship: citizenData.citizenship,
-                currentState: citizenData.currentState,
-                currentCity: citizenData.currentCity,
-                currentZip: citizenData.currentZip,
-                version: citizenData.version,
-                linkedin: citizenData.linkedin,
-                createdAt: citizenData.createdAt,
-              }], `${citizensDir}/${fileDir}.csv`)
+                //if citizen found then add in csv
+                if (citizenData.success)
+                  writeCsv([{
+                    id: uid,
+                    address: citizenData.address,
+                    firstName: citizenData.firstName,
+                    middleName: citizenData.middleName,
+                    lastName: citizenData.lastName,
+                    country: citizenData.country,
+                    citizenship: citizenData.citizenship,
+                    currentState: citizenData.currentState,
+                    currentCity: citizenData.currentCity,
+                    currentZip: citizenData.currentZip,
+                    version: citizenData.version,
+                    linkedin: citizenData.linkedin,
+                    createdAt: citizenData.createdAt,
+                  }], `${citizensDir}/${fileDir}.csv`)
 
-            await keepCacheRecord('LAST_EXPORTED_UID', count)
+                await keepCacheRecord('LAST_EXPORTED_UID', count)
 
 
-          }
-        } catch (e) {
+              }
+            } catch (e) {
 
-          fs.appendFileSync(failedCitizenIDFile, `${count}\n`);
-          console.log('exportVoter Error::', e)
-          createLog(EXPORT_LOG_PATH, `'exportVoter Error:: ${count} => ${e}`)
+              fs.appendFileSync(failedCitizenIDFile, `${count}\n`);
+              console.log('exportVoter Error::', e)
+              createLog(EXPORT_LOG_PATH, `'exportVoter Error:: ${count} => ${e}`)
 
-        }
-        count++
+            }
+            count++
 
+          })
       })
-
     //write the last exported Citizen ID
     cacheToFileRecord('LAST_EXPORTED_UID', "citizens")
 
