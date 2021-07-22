@@ -906,7 +906,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) + '\\%' : ''}} &
-    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
+    \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
 }
 
@@ -944,8 +944,8 @@ const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths
     const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
 
     return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
-     &
-    ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
+    &
+    \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
      \\\\ \n`
 }
 
