@@ -9,6 +9,7 @@ const axios = require('axios')
 const { getStorageValues } = require('zerotheft-node-utils/utils/storage.js')
 const { MODE, PORT } = require('zerotheft-node-utils/config.js')
 const { getHolonContract, getCitizenContract } = require('zerotheft-node-utils/utils/contract')
+const { signMessage } = require('zerotheft-node-utils/utils/web3')
 const { grantRole } = require('zerotheft-node-utils/utils/accessControl')
 const { getCitizenIdByAddress } = require('zerotheft-node-utils/contracts/citizens')
 
@@ -62,10 +63,12 @@ module.exports = async args => {
         const response = await axios.get(`${holonURL.protocol}//${holonURL.hostname}/healthcheck`)
         if (response.data.success) {
             const holonContract = getHolonContract()
+            const params = [{ t: 'string', v: name }, { t: 'string', v: url }, { t: 'address', v: donationAddr }, { t: 'string', v: response.data.status }, { t: 'address', v: storage.address }]
+            const signedMessage = await signMessage(params)
             //assign holon ownership to the citizen who executes command
             await grantRole(storage.address, "holonowner")
             //now add holon data in the blockchain
-            await holonContract.createTransaction('registerHolon', [name, url, donationAddr, response.data.status], 900000)
+            await holonContract.createTransaction('registerHolon', [name, url, donationAddr, response.data.status, signedMessage.signature], 900000)
 
             spinner.stop()
             console.log(chalk.green(`Holon successfully registered and citizen has been assigned ownership of the holon.`))
