@@ -885,8 +885,20 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
         const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-        await getVotesForTheftAmountChart(bellCurveData, filePath)
+        await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
         pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+
+        const lastYear = (new Date()).getFullYear() - 1
+        const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+        const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+        await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
+        pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+
+        const fiveYearsAgo = lastYear - 5
+        const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+        const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+        await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
+        pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
 
         const pathSummary = analyticsPathSummary(voteTotals)
 
