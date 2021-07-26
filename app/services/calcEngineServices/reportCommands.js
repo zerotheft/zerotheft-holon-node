@@ -208,12 +208,24 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) => {
         let series = []
         const normalHighVote = yHigh
         let normalHighVoteTheft = 0
+        let totalVotes = 0
+        let totalVotedAmount = 0
+        let validProposalsCount = 0
         bellCurveThefts.forEach((theft, index) => {
-            series.push({ x: theft, y: bellCurveVotes[index] })
+            const theftVotes = bellCurveVotes[index]
+            series.push({ x: theft, y: theftVotes })
+            totalVotes += theftVotes
+            if (theftVotes) {
+                validProposalsCount += 1
+            }
+            totalVotedAmount += theft * theftVotes
             if (bellCurveVotes[index] === normalHighVote) {
                 normalHighVoteTheft = theft
             }
         })
+
+        const averageYesVotedTheft = totalVotedAmount / totalVotes
+        const averageYesVotes = totalVotes / validProposalsCount
 
         let data = {
             series: [series]
@@ -300,16 +312,16 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) => {
             svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
             data = {
                 series: [
-                    // {
-                    //     name: 'inflated',
-                    //     data: [
-                    //         { x: 72431127829605, y: 200 }
-                    //     ]
-                    // },
                     {
                         name: 'normal',
                         data: [
                             { x: normalHighVoteTheft, y: normalHighVote }
+                        ]
+                    },
+                    {
+                        name: 'inflated',
+                        data: [
+                            { x: averageYesVotedTheft, y: averageYesVotes }
                         ]
                     }
                 ],
