@@ -88,8 +88,6 @@ const generateReportData = async (fileName) => {
     pdfData.leafSlug = leafSlug
     pdfData.pathSlug = pathSlug
 
-    const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
-
     const yearTh = getPastYearsTheftForMulti(summaryTotals, path)
 
     let minYr = null
@@ -132,9 +130,22 @@ const generateReportData = async (fileName) => {
     pdfData.totalVotes = yesVotes + noVotes
     pdfData.yesNoChart = `${filePath}-yesNo.png`
 
+    const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
     const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-    await getVotesForTheftAmountChart(bellCurveData, filePath)
+    await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
     pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+
+    const lastYear = (new Date()).getFullYear() - 1
+    const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+    const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+    await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
+    pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+
+    const fiveYearsAgo = lastYear - 5
+    const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+    const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+    await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
+    pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -187,7 +198,7 @@ const getYesNoChart = async (noVotes, yesVotes, filePath) => {
     })
 }
 
-const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
+const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) => {
     return new Promise((resolve, reject) => {
         const { bellCurveThefts, bellCurveVotes } = bellCurveData
         const xLow = min(bellCurveThefts)
@@ -197,12 +208,24 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
         let series = []
         const normalHighVote = yHigh
         let normalHighVoteTheft = 0
+        let totalVotes = 0
+        let totalVotedAmount = 0
+        let validProposalsCount = 0
         bellCurveThefts.forEach((theft, index) => {
-            series.push({ x: theft, y: bellCurveVotes[index] })
+            const theftVotes = bellCurveVotes[index]
+            series.push({ x: theft, y: theftVotes })
+            totalVotes += theftVotes
+            if (theftVotes) {
+                validProposalsCount += 1
+            }
+            totalVotedAmount += theft * theftVotes
             if (bellCurveVotes[index] === normalHighVote) {
                 normalHighVoteTheft = theft
             }
         })
+
+        const averageYesVotedTheft = totalVotedAmount / totalVotes
+        const averageYesVotes = totalVotes / validProposalsCount
 
         let data = {
             series: [series]
@@ -283,29 +306,31 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
         </style>
         `
 
-        const svgPath = `${filePath}-votesForTheftAmount`
+        const svgPath = `${filePath}`
 
         chartistSvg('line', data, opts).then((svg) => {
             svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
             data = {
                 series: [
-                    // {
-                    //     name: 'inflated',
-                    //     data: [
-                    //         { x: 72431127829605, y: 200 }
-                    //     ]
-                    // },
                     {
                         name: 'normal',
                         data: [
                             { x: normalHighVoteTheft, y: normalHighVote }
                         ]
+                    },
+                    {
+                        name: 'inflated',
+                        data: [
+                            { x: averageYesVotedTheft, y: averageYesVotes }
+                        ]
                     }
-                ]
+                ],
+                title: title
             }
 
             opts = {
                 options: options,
+                title: { x: 0, y: 40, 'font-size': `50px`, 'font-family': 'sans-serif', 'font-weight': 'normal', fill: 'black', opacity: '0.6' },
                 onDraw: function (data) {
                     if (data.type === 'bar') {
                         let style = 'stroke-width: 30px;'
@@ -330,12 +355,12 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath) => {
                 svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}<g class="showChartOnly">${lineChart}</g>`)
                 fs.writeFile(svgPath + '.svg', svg, async (err) => {
                     if (err) {
-                        console.error('theft amount vote chart svg:', err)
-                        reject({ message: `'theft amount vote chart svg: ${err}` })
+                        console.error(`theft amount vote chart svg for ${filePath}:`, err)
+                        reject({ message: `'theft amount vote chart svg for ${filePath}: ${err}` })
                     }
-                    console.log('theft amount vote chart svg prepared')
+                    console.log(`theft amount vote chart svg prepared for ${filePath}`)
                     await sharp(svgPath + '.svg').resize({ width: 1000 }).png().toFile(svgPath + '.png')
-                    console.log('theft amount vote chart png created')
+                    console.log(`theft amount vote chart png created for ${filePath}`)
                     resolve()
                 });
             })
@@ -860,8 +885,20 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
         const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
         const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-        await getVotesForTheftAmountChart(bellCurveData, filePath)
+        await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
         pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+
+        const lastYear = (new Date()).getFullYear() - 1
+        const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+        const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+        await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
+        pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+
+        const fiveYearsAgo = lastYear - 5
+        const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+        const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+        await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
+        pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
 
         const pathSummary = analyticsPathSummary(voteTotals)
 
