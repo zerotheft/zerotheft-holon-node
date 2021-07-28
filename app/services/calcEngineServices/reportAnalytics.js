@@ -1,11 +1,11 @@
 const { get, max, startCase, isEmpty } = require("lodash")
 const { paths } = require("zerotheft-node-utils")
 const { theftAmountAbbr, realTheftAmount } = require("./helper")
-const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true) => {
+const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true, year) => {
     let sums = {}
     Object.keys(voteTotals.props).forEach((key) => {
         const prop = voteTotals.props[key]
-        const theft = prop.theftAmt
+        const theft = year ? get(prop, `voted_year_thefts.${year}`) : prop.theftAmt
         if (theft <= 0) {
             return
         }

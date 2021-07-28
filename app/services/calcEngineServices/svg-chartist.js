@@ -52,10 +52,10 @@ module.exports = function chart(type, chartData, opts = {}) {
                 var svg = div.querySelector('svg');
                 var ttl = title(chartData.title, 0.5 * w, 0.6 * th, opts.title);
                 var stl = title(chartData.subtitle, 0.5 * w, th + 0.6 * sth, opts.subtitle);
-                if (chartData.title || chartData.subtitle) {
-                    for (var e of div.querySelectorAll('svg > g'))
-                        e.setAttribute('transform', `translate(0, ${th + sth})`);
-                }
+                // if (chartData.title || chartData.subtitle) {
+                //     for (var e of div.querySelectorAll('svg > g'))
+                //         e.setAttribute('transform', `translate(0, ${th + sth})`);
+                // }
 
                 // svg.setAttribute('height', h + th + sth + 0.2 * h);
                 svg.setAttribute('height', h + 40);
