@@ -14,15 +14,15 @@ const { generatePDFReport, generateNoVotePDFReport, generatePDFMultiReport, gene
 const { defaultPropYear, firstPropYear, usaPopulation } = require('./helper')
 const { createLog, SINGLE_REPORT_PATH, MULTI_REPORT_PATH, FULL_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
-const reportsPath = `${getReportPath()}reports`
-const multiIssueReportPath = `${reportsPath}/multiIssueReport`
-const singleIssueReportPath = `${reportsPath}/ztReport`
+const reportsPath = (fromWorker) => `${getReportPath()}reports${fromWorker ? '_in_progress' : ''}`
+const multiIssueReportPath = (fromWorker) => `${reportsPath(fromWorker)}/multiIssueReport`
+const singleIssueReportPath = (fromWorker) => `${reportsPath(fromWorker)}/ztReport`
 
 const singleIssueReport = async (leafPath, fromWorker = false) => {
     createLog(SINGLE_REPORT_PATH, 'Single report generation initiation......', leafPath)
     const fileName = `${leafPath.replace(/\//g, '-')}`
     try {
-        const filePath = singleIssueReportPath
+        const filePath = singleIssueReportPath(fromWorker)
         if (fromWorker || !fs.existsSync(`${filePath}/${fileName}.pdf`)) {
             const nation = leafPath.split('/')[0]
             const nationPaths = await pathsByNation(nation)
@@ -39,10 +39,10 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
                 createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName}`, leafPath)
-                await generatePDFReport('ztReport', fileName)
+                await generatePDFReport('ztReport', fileName, fromWorker)
                 return { report: `${fileName}.pdf` }
             } else {
-                await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false))
+                await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false), fromWorker)
                 return { report: `${fileName}.pdf` }
                 // return { message: 'Issue not present' }
             }
@@ -74,24 +74,24 @@ const allYearCachedData = async (nation) => {
     } catch { }
 }
 
-const listAvailablePdfsPaths = (paths, path) => {
+const listAvailablePdfsPaths = (paths, path, fromWorker) => {
     let availablePaths = []
     const childrenKeys = difference(Object.keys(paths), ['metadata', 'parent'])
-    const regex = new RegExp(`^${reportsPath}/([^\.]+).tex$`)
+    const regex = new RegExp(`^${reportsPath(fromWorker)}/([^\.]+).tex$`)
 
     childrenKeys.forEach((childPath) => {
         const childData = paths[childPath]
         const childFullPath = `${path}/${childPath}`
         const childFile = childFullPath.replace(/\//g, '-')
-        const singleFile = `${singleIssueReportPath}/${childFile}.tex`
-        const multiFile = `${multiIssueReportPath}/${childFile}_full.tex`
+        const singleFile = `${singleIssueReportPath(fromWorker)}/${childFile}.tex`
+        const multiFile = `${multiIssueReportPath(fromWorker)}/${childFile}_full.tex`
         if (get(childData, 'leaf') && fs.existsSync(singleFile)) {
             const matches = singleFile.match(regex)
             if (matches) {
                 availablePaths.push(matches[1].replace(/-/g, '/'))
             }
         } else if ((get(childData, 'metadata.umbrella') || get(childData, 'parent')) && fs.existsSync(multiFile)) {
-            availablePaths = [...availablePaths, ...listAvailablePdfsPaths(childData, childFullPath)]
+            availablePaths = [...availablePaths, ...listAvailablePdfsPaths(childData, childFullPath, fromWorker)]
         }
     })
 
@@ -104,14 +104,14 @@ const multiIssuesReport = async (path, fromWorker = false) => {
     const fileName = `${path.replace(/\//g, '-')}`
 
     try {
-        if (fromWorker || !fs.existsSync(`${multiIssueReportPath}/${fileName}.pdf`)) {
+        if (fromWorker || !fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fileName}.pdf`)) {
             const pathData = path.split('/')
             const nation = pathData[0]
             const noNationPath = pathData.slice(1).join('/')
             const nationPaths = await pathsByNation(nation)
             const allPaths = get(nationPaths, path.split('/').join('.'))
 
-            const availablePdfsPaths = listAvailablePdfsPaths(allPaths, path)
+            const availablePdfsPaths = listAvailablePdfsPaths(allPaths, path, fromWorker)
 
             // let allYearData = { '2001': '' }
             // TODO: uncomment this
@@ -123,14 +123,14 @@ const multiIssuesReport = async (path, fromWorker = false) => {
                 // TODO: uncomment this
                 await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
 
-                await generatePDFMultiReport('multiIssueReport', fileName, availablePdfsPaths)
+                await generatePDFMultiReport('multiIssueReport', fileName, availablePdfsPaths, fromWorker)
                 return { report: `${fileName}.pdf` }
             } else {
-                await generateNoVoteMultiPDFReport('multiIssueReport', fileName, path, getAppRoute(false), allPaths, availablePdfsPaths)
+                await generateNoVoteMultiPDFReport('multiIssueReport', fileName, path, getAppRoute(false), allPaths, availablePdfsPaths, fromWorker)
                 return { report: `${fileName}.pdf` }
                 // return { message: 'No Issues for the path' }
             }
-        } else if (fs.existsSync(`${multiIssueReportPath}/${fileName}.pdf`)) {
+        } else if (fs.existsSync(`${(multiIssueReportPath(fromWorker))}/${fileName}.pdf`)) {
             return { report: `${fileName}.pdf` }
         } else {
             return { message: 'No Issues for the path' }
@@ -147,7 +147,7 @@ const multiIssuesReport = async (path, fromWorker = false) => {
     }
 }
 
-const getTexsSequence = async (path) => {
+const getTexsSequence = async (path, fromWorker) => {
     const nation = path.split('/')[0]
     const nationPaths = await pathsByNation(nation)
     delete (nationPaths['Alias'])
@@ -160,8 +160,8 @@ const getTexsSequence = async (path) => {
     childrenKeys.forEach((childPath) => {
         const childData = childrens[childPath]
         const childFile = `${path}/${childPath}`.replace(/\//g, '-')
-        const singleFile = `${singleIssueReportPath}/${childFile}.tex`
-        const multiFile = `${multiIssueReportPath}/${childFile}_full.tex`
+        const singleFile = `${singleIssueReportPath(fromWorker)}/${childFile}.tex`
+        const multiFile = `${multiIssueReportPath(fromWorker)}/${childFile}_full.tex`
         if (get(childData, 'leaf') && fs.existsSync(singleFile)) {
             texsSequence.push(singleFile)
         } else if ((get(childData, 'metadata.umbrella') || get(childData, 'parent')) && fs.existsSync(multiFile)) {
@@ -170,7 +170,7 @@ const getTexsSequence = async (path) => {
     })
 
     const fileName = `${path.replace(/\//g, '-')}.tex`
-    const reportPathTex = `${multiIssueReportPath}/${fileName}`
+    const reportPathTex = `${(multiIssueReportPath(fromWorker))}/${fileName}`
     if (texsSequence.length > 0 || fs.existsSync(reportPathTex)) {
         texsSequence.unshift(reportPathTex)
     }
@@ -182,10 +182,10 @@ const multiIssuesFullReport = async (path, fromWorker = false) => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
     try {
         const fullFileName = `${path.replace(/\//g, '-')}_full`
-        const filePath = multiIssueReportPath
+        const filePath = multiIssueReportPath(fromWorker)
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(path)
+            const texsSequence = await getTexsSequence(path, fromWorker)
 
             await multiIssuesReport(path, fromWorker)
 
@@ -214,14 +214,14 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
     // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
     try {
         const fullFileName = `${nation}_full`
-        const reportExists = fs.existsSync(`${multiIssueReportPath}/${fullFileName}.pdf`)
+        const reportExists = fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(nation)
+            const texsSequence = await getTexsSequence(nation, fromWorker)
 
             await multiIssuesReport(nation, fromWorker)
 
             // create full nation report
-            await mergePdfLatex(fullFileName, texsSequence)
+            await mergePdfLatex(fullFileName, texsSequence, fromWorker)
             return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
             return { report: `${fullFileName}.pdf` }
@@ -235,56 +235,6 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
         return { error: e.message }
     }
 }
-
-const texPathTraverse = async (path, currPath, texsSequence, umbrellaPaths, parentPaths = []) => {
-    let pathClone = Object.assign({}, path)
-    if (path && path.leaf)
-        delete path.leaf
-    if (path && path.umbrella)
-        delete path.umbrella
-    if (path && path.display_name)
-        delete path.display_name
-    if (path && path.parent)
-        delete path.parent
-    createLog(FULL_REPORT_PATH, `Traversing the path`)
-    try {
-        let nestedKeys = Object.keys(path)
-        for (let i = 0; i < nestedKeys.length; i++) {
-            let key = nestedKeys[i]
-            let nestedValues = path[key]
-            let nextPath = `${currPath}/${key}`.replace(/\//g, '-')
-            let fileName = `${nextPath}`
-            if (pathClone[key]['leaf']) {
-                let filePath = singleIssueReportPath
-                // if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
-                texsSequence.push(`${filePath}/${fileName}.tex`)
-                // }
-            } else {
-                if (!parentPaths.includes(nextPath) && umbrellaPaths.includes(nextPath)) {
-                    let filePath = singleIssueReportPath
-                    // if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
-                    texsSequence.push(`${filePath}/${fileName}.tex`)
-                    // }
-                    parentPaths.push(nextPath)
-                } else {
-                    let filePath = `${getReportPath()}reports/temp_multiIssueReport`
-                    // if (fs.existsSync(`${filePath}/${fileName}.tex`)) {
-                    texsSequence.push(`${filePath}/${fileName}.tex`)
-                    // }
-                }
-                createLog(FULL_REPORT_PATH, `Traversing recursively for the path and next path: ${nextPath}`)
-                await texPathTraverse(nestedValues, nextPath, texsSequence, umbrellaPaths, parentPaths)
-            }
-        }
-        return texsSequence
-    } catch (e) {
-        console.log(e)
-        createLog(FULL_REPORT_PATH, `Exceptions in full report generation with Exception: ${e.message}`)
-        createLog(ERROR_PATH, `calcEngineServices=>texPathTraverse()::Exceptions in full report generation with Exception: ${e.message}`)
-        throw e
-    }
-}
-
 
 const theftInfo = async (fromWorker = false, nation = 'USA') => {
     const exportFile = `${exportsDir}/calc_data/${nation}/calc_summary.json`
@@ -359,6 +309,36 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
     }
 }
 
+const setupForReportsInProgress = () => {
+    const time = new Date()
+    const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/${time.getHours()}-${time.getMinutes()}/reports`
+    // const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/reports`
+    fs.mkdirSync(`${reportsPath}/multiIssueReport`, { recursive: true })
+    fs.mkdirSync(`${reportsPath}/ztReport`, { recursive: true })
+    const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
+    try {
+        fs.unlinkSync(symLinkPath)
+    } catch { }
+    fs.symlinkSync(reportsPath, symLinkPath, 'dir')
+}
+
+const setupForReportsDirs = (replaceDirs = true) => {
+    const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
+    const currentReportsPath = `${config.APP_PATH}/zt_report/reports`
+
+    if (!replaceDirs && fs.existsSync(currentReportsPath)) return
+
+    if (!fs.existsSync(symLinkPath)) {
+        setupForReportsInProgress()
+    }
+
+    const reportsPath = fs.realpathSync(symLinkPath)
+    try {
+        fs.unlinkSync(currentReportsPath)
+    } catch { }
+    fs.symlinkSync(reportsPath, currentReportsPath, 'dir')
+}
+
 module.exports = {
     allYearCachedData,
     singleIssueReport,
@@ -366,4 +346,6 @@ module.exports = {
     theftInfo,
     nationReport,
     multiIssuesFullReport,
+    setupForReportsInProgress,
+    setupForReportsDirs
 }

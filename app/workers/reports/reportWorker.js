@@ -3,7 +3,7 @@ const PromisePool = require('@supercharge/promise-pool')
 const IORedis = require('ioredis')
 const { allNations } = require('zerotheft-node-utils').paths
 const { cacheServer } = require('../../services/redisService')
-const { singleIssueReport, multiIssuesFullReport, nationReport } = require('../../services/calcEngineServices')
+const { singleIssueReport, multiIssuesFullReport, nationReport, setupForReportsInProgress, setupForReportsDirs } = require('../../services/calcEngineServices')
 const { createLog, FULL_REPORT_PATH } = require('../../services/LogInfoServices')
 
 const connection = new IORedis()
@@ -19,6 +19,7 @@ const reportWorker = new Worker('ReportQueue', async job => {
             // await theftInfo(true, null)
             const isDatainCache = await cacheServer.getAsync('CALC_SUMMARY_SYNCED')
             if (isDatainCache) {
+                setupForReportsInProgress()
                 console.log('Report generation initiated')
                 createLog(FULL_REPORT_PATH, `All path reports generation worker initiated`)
                 let nationPaths = await allNations()
@@ -34,6 +35,7 @@ const reportWorker = new Worker('ReportQueue', async job => {
                     await nationReport(true, country[0])
                 })
                 await Promise.all(promises)
+                setupForReportsDirs()
             }
 
         } catch (e) {
