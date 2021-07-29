@@ -190,7 +190,7 @@ const multiIssuesFullReport = async (path, fromWorker = false) => {
             await multiIssuesReport(path, fromWorker)
 
             // create full umbrealla report
-            await mergePdfLatex(fullFileName, texsSequence)
+            await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
             return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
             return { report: `${fullFileName}.pdf` }
@@ -221,7 +221,7 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
             await multiIssuesReport(nation, fromWorker)
 
             // create full nation report
-            await mergePdfLatex(fullFileName, texsSequence, fromWorker)
+            await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
             return { report: `${fullFileName}.pdf` }
         } else if (reportExists) {
             return { report: `${fullFileName}.pdf` }
@@ -316,27 +316,27 @@ const setupForReportsInProgress = () => {
     fs.mkdirSync(`${reportsPath}/multiIssueReport`, { recursive: true })
     fs.mkdirSync(`${reportsPath}/ztReport`, { recursive: true })
     const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
-    try {
+    if (fs.existsSync(symLinkPath)) {
         fs.unlinkSync(symLinkPath)
-    } catch { }
+    }
     fs.symlinkSync(reportsPath, symLinkPath, 'dir')
 }
 
 const setupForReportsDirs = (replaceDirs = true) => {
     const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
-    const currentReportsPath = `${config.APP_PATH}/zt_report/reports`
+    const currentReportsSymLinkPath = `${config.APP_PATH}/zt_report/reports`
 
-    if (!replaceDirs && fs.existsSync(currentReportsPath)) return
+    if (!(replaceDirs || !fs.existsSync(currentReportsSymLinkPath))) return
 
     if (!fs.existsSync(symLinkPath)) {
         setupForReportsInProgress()
     }
 
     const reportsPath = fs.realpathSync(symLinkPath)
-    try {
-        fs.unlinkSync(currentReportsPath)
-    } catch { }
-    fs.symlinkSync(reportsPath, currentReportsPath, 'dir')
+    if (fs.existsSync(currentReportsSymLinkPath)) {
+        fs.unlinkSync(currentReportsSymLinkPath)
+    }
+    fs.symlinkSync(reportsPath, currentReportsSymLinkPath, 'dir')
 }
 
 module.exports = {

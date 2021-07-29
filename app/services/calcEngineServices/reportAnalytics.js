@@ -205,7 +205,7 @@ const yesNoVoteTotalsSummary = (voteTotals) => {
 const splitPath = (path) => {
     let pathData = path.split('/').map((pathChunk) => startCase(pathChunk))
     const pathTitle = pathData.pop()
-    const pathPrefix = pathData.join(' - ')
+    const pathPrefix = pathData.join(' / ')
 
     return { pathTitle, pathPrefix }
 }

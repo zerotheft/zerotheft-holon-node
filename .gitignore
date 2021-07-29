@@ -37,3 +37,4 @@ scripts
 debinstall
 nodemon.json
 .vscode
+zt_report

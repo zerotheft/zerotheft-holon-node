@@ -79,7 +79,7 @@ const generateReportData = async (fileName, fromWorker) => {
     const pathSummary = analyticsPathSummary(voteTotals)
 
     const { pathTitle, pathPrefix } = splitPath(path)
-    pdfData.title = pathTitle
+    pdfData.title = '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
 
     let pathData = leafPath.split('/')
@@ -650,7 +650,7 @@ const generateNoVoteReportData = async (fileName, path, holon) => {
     pdfData.pageID = 'ztReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = pathTitle
+    pdfData.title = '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -711,7 +711,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
     pdfData.pageID = 'multiIssueReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -789,8 +789,9 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
     pdfData.generatedFrom = generatedFrom
 
+    const path = actualPath == nation ? nation : noNationPath
     const { pathTitle, pathPrefix } = splitPath(actualPath)
-    pdfData.title = pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
 
     let slugData = actualPath.split('/')
@@ -801,7 +802,6 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? nation : noNationPath
     let sumTotals = {}
 
     const yearPaths = summaryTotals['paths']
@@ -1022,7 +1022,7 @@ const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths
     return await generateLatexMultiPDF(pdfData, fileName, fromWorker)
 }
 
-const mergePdfLatex = async (fileName, texsSequence, fromWorker) => {
+const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) => {
     return new Promise((resolve, reject) => {
         let mergedTex = ''
         texsSequence.forEach((texFile) => {
@@ -1035,6 +1035,8 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker) => {
         })
 
         let mergedTemplate = fs.readFileSync(`${templates}/mixedReport.tex`, 'utf8')
+        mergedTemplate = mergedTemplate.replace(/--generatedTime--/g, reportTime)
+        mergedTemplate = mergedTemplate.replace(/--holonUrl--/g, holonUrl)
         mergedTemplate = mergedTemplate.replace(/--mixedContent--/g, mergedTex)
 
         const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
