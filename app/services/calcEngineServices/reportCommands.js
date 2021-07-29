@@ -240,7 +240,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) => {
             height: 280,
             axisX: {
                 type: Chartist.AutoScaleAxis,
-                scaleMinSpace: 40,
+                scaleMinSpace: 50,
                 onlyInteger: true,
                 labelOffset: { y: 10 },
                 offset: 0,
@@ -507,7 +507,7 @@ const breakLines = (line, lineChars, indent, start) => {
     return brokenLines
 }
 
-const limitTextLines = (content, lineLimit = 124, lineChars = 95) => {
+const limitTextLines = (content, lineLimit = 118, lineChars = 95) => {
     content = content.replace(/\\n/g, '\n')
     const lineArray = content.split(/\n/g)
 
