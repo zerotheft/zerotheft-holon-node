@@ -29,8 +29,8 @@ const reportTime = moment.tz(moment.now(), 'America/Los_Angeles').format('MMM DD
 var currentDate = new Date();
 var inflationDate = currentDate.getFullYear();
 
-const multiIssueReportPath = `${getReportPath()}reports/multiIssueReport`
-const singleIssueReportPath = `${getReportPath()}reports/ztReport`
+const multiIssueReportPath = (fromWorker) => `${getReportPath()}reports${fromWorker ? '_in_progress' : ''}/multiIssueReport`
+const singleIssueReportPath = (fromWorker) => `${getReportPath()}reports${fromWorker ? '_in_progress' : ''}/ztReport`
 const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
 const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
 const yesNoTemplate = `${apiPath}/app/assets/YesNo.svg`
@@ -53,7 +53,7 @@ if (!fs.existsSync(inflatedValuesPath)) {
 }
 const inflatedValues = require(inflatedValuesPath)
 
-const generateReportData = async (fileName) => {
+const generateReportData = async (fileName, fromWorker) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
     let hideBlocks = []
@@ -79,7 +79,7 @@ const generateReportData = async (fileName) => {
     const pathSummary = analyticsPathSummary(voteTotals)
 
     const { pathTitle, pathPrefix } = splitPath(path)
-    pdfData.title = pathTitle
+    pdfData.title = '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
 
     let pathData = leafPath.split('/')
@@ -119,7 +119,7 @@ const generateReportData = async (fileName) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    const filePath = `${singleIssueReportPath}/${fileName}`
+    const filePath = `${singleIssueReportPath(fromWorker)}/${fileName}`
     await getTheftValueChart(yearTh, filePath)
     pdfData.theftValueChart = `${filePath}-theftValue.png`
 
@@ -535,7 +535,7 @@ const limitTextLines = (content, lineLimit = 124, lineChars = 95) => {
     return limitedLinesArray
 }
 
-const generateLatexPDF = async (pdfData, fileName) => {
+const generateLatexPDF = async (pdfData, fileName, fromWorker) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
         Object.keys(pdfData).forEach((key) => {
@@ -550,8 +550,8 @@ const generateLatexPDF = async (pdfData, fileName) => {
         const templatePart = template.replace(/--leadingProposalDetail--/g, pdfData['leadingProposalDetailPart'])
             .replace(/--viewMore--/g, `\\href{${pdfData['holonUrl']}/path/${pdfData['pathSlug']}/issue/${pdfData['leafSlug']}}{\\color{blue}View More}`)
 
-        const reportPrepd = `${singleIssueReportPath}/${fileName}.tex`
-        const reportPDF = `${singleIssueReportPath}/${fileName}.pdf`
+        const reportPrepd = `${singleIssueReportPath(fromWorker)}/${fileName}.tex`
+        const reportPDF = `${singleIssueReportPath(fromWorker)}/${fileName}.pdf`
 
         fs.writeFileSync(reportPrepd, templateFull, function (err) {
             if (err) {
@@ -586,7 +586,7 @@ const generateLatexPDF = async (pdfData, fileName) => {
 }
 
 
-const generateLatexMultiPDF = async (pdfData, fileName) => {
+const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
 
@@ -602,8 +602,8 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
 
         template = template.replace(/--viewMore--/g, `\\href{${pdfData['holonUrl']}/path/${pdfData['pathSlug']}/issue/${pdfData['leafSlug']}}{\\color{blue}View More}`)
 
-        const reportPrepd = `${multiIssueReportPath}/${fileName}.tex`
-        const reportPDF = `${multiIssueReportPath}/${fileName}.pdf`
+        const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
+        const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
 
         fs.writeFileSync(reportPrepd, template, function (err) {
             if (err) {
@@ -631,10 +631,10 @@ const generateLatexMultiPDF = async (pdfData, fileName) => {
     })
 }
 
-const generatePDFReport = async (noteBookName, fileName, isPdf = 'false') => {
+const generatePDFReport = async (noteBookName, fileName, fromWorker) => {
     createLog(MAIN_PATH, `Generating Report with filename: ${fileName}`)
-    const pdfData = await generateReportData(fileName)
-    return await generateLatexPDF(pdfData, fileName)
+    const pdfData = await generateReportData(fileName, fromWorker)
+    return await generateLatexPDF(pdfData, fileName, fromWorker)
 }
 
 const generateNoVoteReportData = async (fileName, path, holon) => {
@@ -650,14 +650,14 @@ const generateNoVoteReportData = async (fileName, path, holon) => {
     pdfData.pageID = 'ztReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = pathTitle
+    pdfData.title = '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
     return pdfData
 }
 
-const generateNoVoteLatexPDF = async (pdfData, fileName) => {
+const generateNoVoteLatexPDF = async (pdfData, fileName, fromWorker) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/reportNoVote.tex`, 'utf8')
         Object.keys(pdfData).forEach((key) => {
@@ -665,8 +665,8 @@ const generateNoVoteLatexPDF = async (pdfData, fileName) => {
             template = template.replace(regex, pdfData[key])
         })
 
-        const reportPrepd = `${singleIssueReportPath}/${fileName}.tex`
-        const reportPDF = `${singleIssueReportPath}/${fileName}.pdf`
+        const reportPrepd = `${singleIssueReportPath(fromWorker)}/${fileName}.tex`
+        const reportPDF = `${singleIssueReportPath(fromWorker)}/${fileName}.pdf`
 
         fs.writeFileSync(reportPrepd, template, function (err) {
             if (err) {
@@ -693,10 +693,10 @@ const generateNoVoteLatexPDF = async (pdfData, fileName) => {
     })
 }
 
-const generateNoVotePDFReport = async (noteBookName, fileName, path, holon) => {
+const generateNoVotePDFReport = async (noteBookName, fileName, path, holon, fromWorker) => {
     createLog(MAIN_PATH, `Generating No Vote Report with filename: ${fileName}`)
     const pdfData = await generateNoVoteReportData(fileName, path, holon)
-    return await generateNoVoteLatexPDF(pdfData, fileName)
+    return await generateNoVoteLatexPDF(pdfData, fileName, fromWorker)
 }
 
 const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, availablePdfsPaths) => {
@@ -711,7 +711,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
     pdfData.pageID = 'multiIssueReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -722,7 +722,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
     return pdfData
 }
 
-const generateNoVoteMultiLatexPDF = async (pdfData, fileName) => {
+const generateNoVoteMultiLatexPDF = async (pdfData, fileName, fromWorker) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/reportNoVoteMulti.tex`, 'utf8')
         Object.keys(pdfData).forEach((key) => {
@@ -730,8 +730,8 @@ const generateNoVoteMultiLatexPDF = async (pdfData, fileName) => {
             template = template.replace(regex, pdfData[key])
         })
 
-        const reportPrepd = `${multiIssueReportPath}/${fileName}.tex`
-        const reportPDF = `${multiIssueReportPath}/${fileName}.pdf`
+        const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
+        const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
 
         fs.writeFileSync(reportPrepd, template, function (err) {
             if (err) {
@@ -759,13 +759,13 @@ const generateNoVoteMultiLatexPDF = async (pdfData, fileName) => {
     })
 }
 
-const generateNoVoteMultiPDFReport = async (noteBookName, fileName, path, holon, subPaths, availablePdfsPaths) => {
+const generateNoVoteMultiPDFReport = async (noteBookName, fileName, path, holon, subPaths, availablePdfsPaths, fromWorker) => {
     createLog(MAIN_PATH, `Generating No Vote Report with filename: ${fileName}`)
     const pdfData = await generateNoVoteMultiReportData(fileName, path, holon, subPaths, availablePdfsPaths)
-    return await generateNoVoteMultiLatexPDF(pdfData, fileName)
+    return await generateNoVoteMultiLatexPDF(pdfData, fileName, fromWorker)
 }
 
-const generateMultiReportData = async (fileName, availablePdfsPaths) => {
+const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker) => {
     const { summaryTotals, actualPath, holon, allPaths, subPaths } = loadAllIssues(fileName)
 
     const pathData = actualPath.split('/')
@@ -789,8 +789,9 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
     pdfData.generatedFrom = generatedFrom
 
+    const path = actualPath == nation ? nation : noNationPath
     const { pathTitle, pathPrefix } = splitPath(actualPath)
-    pdfData.title = pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
     pdfData.subtitle = pathPrefix
 
     let slugData = actualPath.split('/')
@@ -801,7 +802,6 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
 
     const paths = allPaths[nation]
 
-    const path = actualPath == nation ? nation : noNationPath
     let sumTotals = {}
 
     const yearPaths = summaryTotals['paths']
@@ -857,7 +857,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths) => {
     pdfData.minYear = minYr
     pdfData.maxYear = maxYr
 
-    const filePath = `${multiIssueReportPath}/${fileName}`
+    const filePath = `${multiIssueReportPath(fromWorker)}/${fileName}`
     await getTheftValueChart(yearTh, filePath)
     pdfData.theftValueChart = `${filePath}-theftValue.png`
 
@@ -1017,12 +1017,12 @@ const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPa
     return disp
 }
 
-const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths) => {
-    const pdfData = await generateMultiReportData(fileName, availablePdfsPaths)
-    return await generateLatexMultiPDF(pdfData, fileName)
+const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths, fromWorker) => {
+    const pdfData = await generateMultiReportData(fileName, availablePdfsPaths, fromWorker)
+    return await generateLatexMultiPDF(pdfData, fileName, fromWorker)
 }
 
-const mergePdfLatex = async (fileName, texsSequence) => {
+const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) => {
     return new Promise((resolve, reject) => {
         let mergedTex = ''
         texsSequence.forEach((texFile) => {
@@ -1035,10 +1035,12 @@ const mergePdfLatex = async (fileName, texsSequence) => {
         })
 
         let mergedTemplate = fs.readFileSync(`${templates}/mixedReport.tex`, 'utf8')
+        mergedTemplate = mergedTemplate.replace(/--generatedTime--/g, reportTime)
+        mergedTemplate = mergedTemplate.replace(/--holonUrl--/g, holonUrl)
         mergedTemplate = mergedTemplate.replace(/--mixedContent--/g, mergedTex)
 
-        const reportPrepd = `${multiIssueReportPath}/${fileName}.tex`
-        const mergedLatexPDF = `${multiIssueReportPath}/${fileName}.pdf`
+        const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
+        const mergedLatexPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
         fs.writeFileSync(reportPrepd, mergedTemplate, function (err) {
             if (err) {
                 console.error('generateLatexPDF::', err)
