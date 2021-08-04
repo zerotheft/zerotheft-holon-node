@@ -65,8 +65,7 @@ module.exports = async args => {
             const holonContract = getHolonContract()
             const params = [{ t: 'string', v: name }, { t: 'string', v: url }, { t: 'address', v: donationAddr }, { t: 'string', v: response.data.status }, { t: 'address', v: storage.address }]
             const signedMessage = await signMessage(params)
-            //assign holon ownership to the citizen who executes command
-            await grantRole(storage.address, "holonowner")
+
             //now add holon data in the blockchain
             await holonContract.createTransaction('registerHolon', [name, url, donationAddr, response.data.status, signedMessage.signature], 900000)
 
