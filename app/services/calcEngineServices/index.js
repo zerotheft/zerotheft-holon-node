@@ -42,7 +42,7 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
                 await generatePDFReport('ztReport', fileName, fromWorker)
                 return { report: `${fileName}.pdf` }
             } else {
-                await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false), fromWorker)
+                await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false), nationPaths, fromWorker)
                 return { report: `${fileName}.pdf` }
                 // return { message: 'Issue not present' }
             }
@@ -185,9 +185,8 @@ const multiIssuesFullReport = async (path, fromWorker = false) => {
         const filePath = multiIssueReportPath(fromWorker)
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(path, fromWorker)
-
             await multiIssuesReport(path, fromWorker)
+            const texsSequence = await getTexsSequence(path, fromWorker)
 
             // create full umbrealla report
             await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
@@ -216,9 +215,8 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
         const fullFileName = `${nation}_full`
         const reportExists = fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(nation, fromWorker)
-
             await multiIssuesReport(nation, fromWorker)
+            const texsSequence = await getTexsSequence(nation, fromWorker)
 
             // create full nation report
             await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
@@ -311,14 +309,14 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
 
 const setupForReportsInProgress = () => {
     const time = new Date()
-    const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/${time.getHours()}-${time.getMinutes()}/reports`
+    const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth() + 1}/${time.getDate()}/${time.getHours()}_hrs_${time.getMinutes()}_mins_${time.getSeconds()}_secs/reports`
     // const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/reports`
     fs.mkdirSync(`${reportsPath}/multiIssueReport`, { recursive: true })
     fs.mkdirSync(`${reportsPath}/ztReport`, { recursive: true })
     const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
-    if (fs.existsSync(symLinkPath)) {
+    try {
         fs.unlinkSync(symLinkPath)
-    }
+    } catch (e) { }
     fs.symlinkSync(reportsPath, symLinkPath, 'dir')
 }
 
@@ -333,9 +331,9 @@ const setupForReportsDirs = (replaceDirs = true) => {
     }
 
     const reportsPath = fs.realpathSync(symLinkPath)
-    if (fs.existsSync(currentReportsSymLinkPath)) {
+    try {
         fs.unlinkSync(currentReportsSymLinkPath)
-    }
+    } catch (e) { }
     fs.symlinkSync(reportsPath, currentReportsSymLinkPath, 'dir')
 }
 
