@@ -23,8 +23,10 @@ const { pathSummary: analyticsPathSummary,
     assignPageNumbers
 } = require('./reportAnalytics')
 
+const timeZone = 'America/Los_Angeles'
+const dateFormat = 'MMM DD, YYYY hh:mmA z'
 const moment = require('moment-timezone')
-const reportTime = moment.tz(moment.now(), 'America/Los_Angeles').format('MMM DD, YYYY hh:mmA z')
+const reportTime = moment.tz(moment.now(), timeZone).format(dateFormat)
 
 var currentDate = new Date();
 var inflationDate = currentDate.getFullYear();
@@ -79,7 +81,7 @@ const generateReportData = async (fileName, fromWorker) => {
     const pathSummary = analyticsPathSummary(voteTotals)
 
     const { pathTitle, pathPrefix } = splitPath(path)
-    pdfData.title = '/ ' + pathTitle
+    pdfData.title = '/ ' + get(allPaths, `${leafPath.replace(/\//g, '.')}.display_name`, pathTitle)
     pdfData.subtitle = pathPrefix
 
     let pathData = leafPath.split('/')
@@ -157,7 +159,7 @@ const generateReportData = async (fileName, fromWorker) => {
         const yamlJSON = await getProposalYaml(proposalID, path)
         pdfData.leadingProposalID = proposalID
         pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-        pdfData.leadingProposalDate = leadingProp['date']
+        pdfData.leadingProposalDate = moment.tz(leadingProp['date'], timeZone).format(dateFormat)
 
         const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
         limitedLinesArray = limitTextLines(leadingProposalDetail)
@@ -637,7 +639,7 @@ const generatePDFReport = async (noteBookName, fileName, fromWorker) => {
     return await generateLatexPDF(pdfData, fileName, fromWorker)
 }
 
-const generateNoVoteReportData = async (fileName, path, holon) => {
+const generateNoVoteReportData = async (fileName, path, holon, allPaths) => {
     const pathData = path.split('/')
     const nation = pathData[0]
     const noNationPath = pathData.slice(1).join('/')
@@ -650,7 +652,7 @@ const generateNoVoteReportData = async (fileName, path, holon) => {
     pdfData.pageID = 'ztReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = '/ ' + pathTitle
+    pdfData.title = '/ ' + get(allPaths, `${path.replace(/\//g, '.')}.display_name`, pathTitle)
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -693,9 +695,9 @@ const generateNoVoteLatexPDF = async (pdfData, fileName, fromWorker) => {
     })
 }
 
-const generateNoVotePDFReport = async (noteBookName, fileName, path, holon, fromWorker) => {
+const generateNoVotePDFReport = async (noteBookName, fileName, path, holon, allPaths, fromWorker) => {
     createLog(MAIN_PATH, `Generating No Vote Report with filename: ${fileName}`)
-    const pdfData = await generateNoVoteReportData(fileName, path, holon)
+    const pdfData = await generateNoVoteReportData(fileName, path, holon, allPaths)
     return await generateNoVoteLatexPDF(pdfData, fileName, fromWorker)
 }
 
@@ -711,7 +713,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
     pdfData.pageID = 'multiIssueReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle)
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -791,7 +793,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
     const path = actualPath == nation ? nation : noNationPath
     const { pathTitle, pathPrefix } = splitPath(actualPath)
-    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + pathTitle
+    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle)
     pdfData.subtitle = pathPrefix
 
     let slugData = actualPath.split('/')
@@ -908,7 +910,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
             const yamlJSON = await getProposalYaml(proposalID, path)
             pdfData.leadingProposalID = proposalID
             pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
-            pdfData.leadingProposalDate = leadingProp['date']
+            pdfData.leadingProposalDate = moment.tz(leadingProp['date'], timeZone).format(dateFormat)
 
             const leadingProposalDetail = yamlConverter.stringify(yamlJSON)
             limitedLinesArray = limitTextLines(leadingProposalDetail)
@@ -924,8 +926,11 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     return pdfData
 }
 
+const escapeSpecialChars = (text) => {
+    return text.replace(/&/g, '\\&').replace(/%/g, '\\%')
+}
+
 const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availablePdfsPaths) => {
-    const probPretty = startCase(prob)
     const legit = tots['legit'] ? 'legit' : ''
     let votepct = tots['votes'] > 0 ? tots['for'] / tots['votes'] : 0
 
@@ -945,9 +950,9 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
     if (pathMatch) {
         fullPath = pathMatch[1]
     }
-    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
+    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (fullPath !== nation ? nation + '/' : '') + fullPath
 
-    return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
+    return `\\textbf{${'\\quad '.repeat(indent)}${escapeSpecialChars(prob)}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'}} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? (votepct * 100).toFixed(2) + '\\%' : ''}} &
     \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
@@ -960,7 +965,7 @@ const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, nation, av
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         const pp = prefix + p
-        disp += rowDisp(p, subPathTotals[pp], indent, sumTotals['theft'], pp, nation, !get(paths, `${p}.leaf`), availablePdfsPaths)
+        disp += rowDisp(get(paths, p + '.metadata.display_name', get(paths, p + '.display_name', startCase(p))), subPathTotals[pp], indent, sumTotals['theft'], pp, nation, !get(paths, `${p}.leaf`), availablePdfsPaths)
         disp += walkSubPath(prefix + p + '/', paths[p], indent + 1, subPathTotals, sumTotals, nation, availablePdfsPaths)
     })
 
@@ -969,7 +974,7 @@ const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, nation, av
 
 const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, nation, subPaths, subPathTotals, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDisp(path, sumTotals, 0, totalTheft, fullPath, nation, true, availablePdfsPaths)
+    disp = rowDisp(get(subPaths, 'metadata.display_name', get(subPaths, 'display_name', startCase(path))), sumTotals, 0, totalTheft, fullPath, nation, true, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = path == nation ? '' : path + '/'
@@ -979,14 +984,13 @@ const prepareSourcesOfTheft = (path, sumTotals, totalTheft, fullPath, nation, su
 }
 
 const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths) => {
-    const probPretty = startCase(prob)
     const pathMatch = fullPath.match(/^\/?([^*]+)/)
     if (pathMatch) {
         fullPath = pathMatch[1]
     }
-    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (prob !== nation ? nation + '/' : '') + fullPath
+    const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (fullPath !== nation ? nation + '/' : '') + fullPath
 
-    return `\\textbf{${'\\quad '.repeat(indent)}${probPretty}} &
+    return `\\textbf{${'\\quad '.repeat(indent)}${escapeSpecialChars(prob)}} &
     &
     \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
      \\\\ \n`
@@ -999,7 +1003,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
     Object.keys(paths).forEach((p) => {
         if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
         const pp = prefix + p
-        disp += rowDispNoVote(p, indent, nation, !get(paths, `${p}.leaf`), pp, availablePdfsPaths)
+        disp += rowDispNoVote(get(paths, p + '.metadata.display_name', get(paths, p + '.display_name', startCase(p))), indent, nation, !get(paths, `${p}.leaf`), pp, availablePdfsPaths)
         disp += walkSubPathNoVote(pp ? pp + '/' : '', paths[p], indent + 1, nation, availablePdfsPaths)
     })
 
@@ -1008,7 +1012,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
 
 const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPaths) => {
     // insert the area total as the first line
-    disp = rowDispNoVote(fullPath, 0, nation, true, fullPath, availablePdfsPaths)
+    disp = rowDispNoVote(get(subPaths, 'metadata.display_name', get(subPaths, 'display_name', startCase(fullPath))), 0, nation, true, fullPath, availablePdfsPaths)
 
     // now walk all the sub-paths from this path
     const firstPath = fullPath == nation ? '' : fullPath + '/'
