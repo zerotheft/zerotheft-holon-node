@@ -141,7 +141,6 @@ const generateReportData = async (fileName, fromWorker) => {
         hideBlocks.push('votesForTheftAllYearsBlock')
     }
 
-
     const lastYear = (new Date()).getFullYear() - 1
     const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
     if (propTheftslY.length) {
@@ -149,7 +148,7 @@ const generateReportData = async (fileName, fromWorker) => {
         await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
         pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
     } else {
-        hideBlocks.push('votesForTheftAllYearsBlock')
+        hideBlocks.push('votesForTheftLastYearBlock')
     }
 
 
@@ -160,7 +159,7 @@ const generateReportData = async (fileName, fromWorker) => {
         await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
         pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
     } else {
-        hideBlocks.push('votesForTheftAllYearsBlock')
+        hideBlocks.push('votesForTheft5yearsBlock')
     }
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
