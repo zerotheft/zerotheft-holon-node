@@ -133,21 +133,35 @@ const generateReportData = async (fileName, fromWorker) => {
     pdfData.yesNoChart = `${filePath}-yesNo.png`
 
     const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
-    const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-    await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
-    pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+    if (propThefts.length) {
+        const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+        await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
+        pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+    } else {
+        hideBlocks.push('votesForTheftAllYearsBlock')
+    }
+
 
     const lastYear = (new Date()).getFullYear() - 1
     const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
-    const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
-    await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
-    pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+    if (propTheftslY.length) {
+        const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+        await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
+        pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+    } else {
+        hideBlocks.push('votesForTheftAllYearsBlock')
+    }
+
 
     const fiveYearsAgo = lastYear - 5
     const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
-    const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
-    await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
-    pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
+    if (propTheftsFYA.length) {
+        const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+        await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
+        pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
+    } else {
+        hideBlocks.push('votesForTheftAllYearsBlock')
+    }
 
     pdfData.stolenByYearTableData = prepareStolenByYear(votedYearThefts)
     pdfData.inflationYear = inflationDate
@@ -886,21 +900,33 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
         pdfData.yesNoChart = `${filePath}-yesNo.png`
 
         const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
-        const bellCurveData = prepareBellCurveData(propThefts, propVotes)
-        await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
-        pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+        if (propThefts.length) {
+            const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+            await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
+            pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
+        } else {
+            hideBlocks.push('votesForTheftAllYearsBlock')
+        }
 
         const lastYear = (new Date()).getFullYear() - 1
         const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
-        const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
-        await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
-        pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+        if (propTheftslY.length) {
+            const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+            await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
+            pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
+        } else {
+            hideBlocks.push('votesForTheftLastYearBlock')
+        }
 
         const fiveYearsAgo = lastYear - 5
         const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
-        const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
-        await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
-        pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
+        if (propTheftsFYA.length) {
+            const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+            await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
+            pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
+        } else {
+            hideBlocks.push('votesForTheft5yearsBlock')
+        }
 
         const pathSummary = analyticsPathSummary(voteTotals)
 

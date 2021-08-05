@@ -185,9 +185,8 @@ const multiIssuesFullReport = async (path, fromWorker = false) => {
         const filePath = multiIssueReportPath(fromWorker)
         const reportExists = fs.existsSync(`${filePath}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(path, fromWorker)
-
             await multiIssuesReport(path, fromWorker)
+            const texsSequence = await getTexsSequence(path, fromWorker)
 
             // create full umbrealla report
             await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
@@ -216,9 +215,8 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
         const fullFileName = `${nation}_full`
         const reportExists = fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fullFileName}.pdf`)
         if (fromWorker || !reportExists) {
-            const texsSequence = await getTexsSequence(nation, fromWorker)
-
             await multiIssuesReport(nation, fromWorker)
+            const texsSequence = await getTexsSequence(nation, fromWorker)
 
             // create full nation report
             await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
