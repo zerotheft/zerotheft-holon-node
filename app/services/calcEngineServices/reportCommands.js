@@ -81,7 +81,7 @@ const generateReportData = async (fileName, fromWorker) => {
     const pathSummary = analyticsPathSummary(voteTotals)
 
     const { pathTitle, pathPrefix } = splitPath(path)
-    pdfData.title = '/ ' + get(allPaths, `${leafPath.replace(/\//g, '.')}.display_name`, pathTitle)
+    pdfData.title = escapeSpecialChars('/ ' + get(allPaths, `${leafPath.replace(/\//g, '.')}.display_name`, pathTitle))
     pdfData.subtitle = pathPrefix
 
     let pathData = leafPath.split('/')
@@ -553,6 +553,12 @@ const limitTextLines = (content, lineLimit = 118, lineChars = 95) => {
 const generateLatexPDF = async (pdfData, fileName, fromWorker) => {
     return new Promise((resolve, reject) => {
         let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
+
+        pdfData.hideBlocks.forEach((block) => {
+            const regex = new RegExp(`% ${block}Start[^~]+% ${block}End`, 'g')
+            template = template.replace(regex, '')
+        })
+
         Object.keys(pdfData).forEach((key) => {
             if (['leadingProposalDetail', 'leadingProposalDetailPart', 'viewMore'].includes(key)) return
 
@@ -665,7 +671,7 @@ const generateNoVoteReportData = async (fileName, path, holon, allPaths) => {
     pdfData.pageID = 'ztReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = '/ ' + get(allPaths, `${path.replace(/\//g, '.')}.display_name`, pathTitle)
+    pdfData.title = escapeSpecialChars('/ ' + get(allPaths, `${path.replace(/\//g, '.')}.display_name`, pathTitle))
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -726,7 +732,7 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
     pdfData.pageID = 'multiIssueReport/' + path
 
     const { pathTitle, pathPrefix } = splitPath(noNationPath)
-    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle)
+    pdfData.title = escapeSpecialChars(path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle))
     pdfData.subtitle = pathPrefix
     pdfData.pleaseVoteImage = pleaseVoteImage
 
@@ -806,7 +812,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
     const path = actualPath == nation ? nation : noNationPath
     const { pathTitle, pathPrefix } = splitPath(actualPath)
-    pdfData.title = path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle)
+    pdfData.title = escapeSpecialChars(path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle))
     pdfData.subtitle = pathPrefix
 
     let slugData = actualPath.split('/')
@@ -941,7 +947,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
             limitedLinesArray = limitTextLines(leadingProposalDetail)
         }
     } else {
-        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock']
+        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock', 'votesForTheftAllYearsBlock', 'votesForTheftLastYearBlock', 'votesForTheft5yearsBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
 
