@@ -947,7 +947,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
             limitedLinesArray = limitTextLines(leadingProposalDetail)
         }
     } else {
-        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock']
+        hideBlocks = [...hideBlocks, 'yesNoBlock', 'votesForTheftBlock', 'votesForTheftAllYearsBlock', 'votesForTheftLastYearBlock', 'votesForTheft5yearsBlock']
     }
     pdfData.leadingProposalDetail = limitedLinesArray.join('\n')
 
