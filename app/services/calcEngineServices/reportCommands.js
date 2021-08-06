@@ -35,6 +35,7 @@ const multiIssueReportPath = (fromWorker) => `${getReportPath()}reports${fromWor
 const singleIssueReportPath = (fromWorker) => `${getReportPath()}reports${fromWorker ? '_in_progress' : ''}/ztReport`
 const apiPath = `${APP_PATH}/Zerotheft-Holon/holon-api`
 const pleaseVoteImage = `${apiPath}/app/assets/please_vote.png`
+const stolenBlocksImage = `${apiPath}/app/assets/blocks_stolens.png`
 const yesNoTemplate = `${apiPath}/app/assets/YesNo.svg`
 const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedValues.json`
 const chartistSvg = require('./svg-chartist');
@@ -810,6 +811,11 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
     pdfData.generatedFrom = generatedFrom
 
+    if (actualPath == nation) {
+        pdfData.stolenBlocksImage = stolenBlocksImage
+    } else {
+        hideBlocks.push('forFullReportOnlyBlock')
+    }
     const path = actualPath == nation ? nation : noNationPath
     const { pathTitle, pathPrefix } = splitPath(actualPath)
     pdfData.title = escapeSpecialChars(path === nation ? nation + ' Full Economy' : '/ ' + get(subPaths, 'metadata.display_name', pathTitle))
