@@ -14,7 +14,7 @@ const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
 const processProposalIds = async (proposalContract, proposalIds, version, count, lastPid, isFailed = false) => {
   await PromisePool
-    .withConcurrency(10)
+    .withConcurrency(1)
     .for(proposalIds)
     .process(async pid => {
       try {
