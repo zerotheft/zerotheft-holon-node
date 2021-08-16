@@ -415,7 +415,7 @@ const getTheftValueChart = async (yearTh, filePath) => {
                 onlyInteger: true,
                 labelOffset: { y: 6 },
                 labelInterpolationFnc: function (value) {
-                    return theftAmountAbbr(value)
+                    return '$' + theftAmountAbbr(value)
                 }
             }
         }
@@ -471,7 +471,37 @@ const getTheftValueChart = async (yearTh, filePath) => {
                 console.log('theft value chart svg prepared')
                 await sharp(svgPath + '.svg').resize({ width: 1000 }).png().toFile(svgPath + '.png')
                 console.log('theft value chart png created')
-                resolve()
+
+                chartistSvg('line', data, {
+                    ...opts,
+                    onDraw: function (data) {
+                        let style = ''
+                        if (data.type === 'point' || data.type === 'line') {
+                            style += 'stroke: #7F51C1;'
+                        }
+                        if (data.type === 'point') {
+                            style += 'stroke-width: 7px;'
+                        }
+                        if (data.type === 'line') {
+                            style += 'stroke-width: 2px;'
+                        }
+
+                        data.element.attr({
+                            style: style
+                        });
+                    },
+                    options: { ...options, width: 550, height: 350 }
+                }).then((svg) => {
+                    svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
+                    fs.writeFile(svgPath + '-view.svg', svg, async (err) => {
+                        if (err) {
+                            console.error('theft value chart svg for frontend:', err)
+                            reject({ message: `'theft value chart svg for frontend: ${err}` })
+                        }
+                        console.log('theft value chart png created for frontend')
+                        resolve()
+                    });
+                })
             });
         })
     })
