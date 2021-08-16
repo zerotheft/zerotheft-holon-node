@@ -60,6 +60,7 @@ module.exports = function chart(type, chartData, opts = {}) {
                 // svg.setAttribute('height', h + th + sth + 0.2 * h);
                 svg.setAttribute('height', h + 40);
                 svg.setAttribute('style', '');
+                svg.setAttribute('viewBox', '0 0 ' + w + ' ' + (h + 40));
                 svg.appendChild(ttl);
                 svg.appendChild(stl);
                 window.setComputedStyle(div);
