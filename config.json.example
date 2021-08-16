@@ -5,11 +5,10 @@
   "HTTP_PROVIDER": "http://localhost:7545",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "ZERO_THEFT_CONTRACT": "/zerotheft/zerotheft/build/contracts",
-  "GIT_API_TOKEN": "<YOUR_GIT_API_TOKEN>",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "BUILD_PATH": "<YOUR_REACT_BUILD_PATH>",
   "REPORT_PATH": "zt_report",
   "APP_PATH": "/home/zt-holon/.zerotheft",
   "GAS_PRICE": 1,
-  "GAS_LIMIT": 4612388,
+  "GAS_LIMIT": 4612388
 }
