@@ -1,0 +1,13 @@
+<svg width="406" height="320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<style type="text/css">
+text{font-size:70px;font-weight:bold;font-family:sans-serif;}
+</style>
+
+<rect x="2" y="2" rx="10" ry="10" width="402" height="142" fill="#EDEDED" stroke="#7F51C1" stroke-width="2"/>
+<rect x="3" y="3" rx="9" ry="9" width="--yesProgress--" height="140" fill="#7F51C1"/>
+<text fill="white" dominant-baseline="hanging" text-anchor="middle"><tspan x="50%" y="100" stroke="#7F51C1" stroke-width="2">Yes --yesValue--%</tspan></text>
+
+<rect x="2" y="175" rx="10" ry="10" width="402" height="142" fill="#EDEDED" stroke="#E26C6C" stroke-width="2"/>
+<rect x="3" y="176" rx="9" ry="9" width="--noProgress--" height="140" fill="#E26C6C"/>
+<text fill="white" dominant-baseline="hanging" text-anchor="middle"><tspan x="50%" y="273" stroke="#E26C6C" stroke-width="2">No --noValue--%</tspan></text>
+</svg>

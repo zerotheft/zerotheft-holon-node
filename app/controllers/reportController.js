@@ -1,10 +1,12 @@
 const fs = require('fs')
-const { singleIssueReport, multiIssuesFullReport, theftInfo, nationReport } = require('../services/calcEngineServices');
+const { singleIssueReport, multiIssuesFullReport, theftInfo, nationReport, setupForReportsDirs } = require('../services/calcEngineServices');
 const { getAppRoute } = require('../../config');
 const { allReportWorker } = require('../workers/reports/reportWorker');
 
+setupForReportsDirs(false)
+
 const getSingleIssueReport = async (req, res, next) => {
-    const response = await singleIssueReport(req.params.path, false, req.params.year)
+    const response = await singleIssueReport(req.params.path, false)
     if (response.report) {
         return res.send({ report: `${getAppRoute()}/issueReports/${response.report}` })
     } else {
@@ -13,7 +15,7 @@ const getSingleIssueReport = async (req, res, next) => {
 }
 
 const getMultiIssuesReport = async (req, res, next) => {
-    const response = await multiIssuesFullReport(req.params.path, false, req.params.year)
+    const response = await multiIssuesFullReport(req.params.path, false)
     if (response.report) {
         return res.send({ report: `${getAppRoute()}/pathReports/${response.report}` })
     } else {
@@ -22,7 +24,7 @@ const getMultiIssuesReport = async (req, res, next) => {
 }
 
 const getNationReport = async (req, res, next) => {
-    const response = await nationReport(req.params.year, false, req.params.path)
+    const response = await nationReport(false, req.params.path)
     if (response.report) {
         return res.send({ report: `${getAppRoute()}/pathReports/${response.report}` })
     } else {
@@ -31,7 +33,7 @@ const getNationReport = async (req, res, next) => {
 }
 
 const getTheftInfo = async (req, res, next) => {
-    const response = await theftInfo(false, req.params.year)
+    const response = await theftInfo(false)
     if (response) {
         return res.send(response)
     }

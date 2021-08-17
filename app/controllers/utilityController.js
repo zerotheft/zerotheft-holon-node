@@ -5,10 +5,10 @@ const config = require('zerotheft-node-utils/config')
 const { executeDisableCommand, executeEnableCommand, executeUpdateCommand } = require('../services/utilityService');
 let configJSON = `${config.APP_PATH}/config.json`
 
-const checkUserPermission = async (req) => {
+const checkCitizenPermission = async (req) => {
   const address = getStorageValues() && getStorageValues().address
   if (address.toLowerCase() !== req.params.address.toLowerCase()) {
-    throw new Error('user has no permission to update.')
+    throw new Error('citizen has no permission to update.')
   }
 }
 //Return status of auto update either true or false
@@ -27,7 +27,7 @@ const getAutoUpdateStatus = async (req, res, next) => {
 // Update holon
 const updateHolon = async (req, res, next) => {
   try {
-    await checkUserPermission(req)
+    await checkCitizenPermission(req)
     const response = await executeUpdateCommand()
     return res.send(response)
   } catch (e) {
@@ -38,7 +38,7 @@ const updateHolon = async (req, res, next) => {
 //Disable auto update feature
 const disableAutoUpdate = async (req, res, next) => {
   try {
-    await checkUserPermission(req)
+    await checkCitizenPermission(req)
     const appconfig = fs.readFileSync(configJSON)
     const response = await executeDisableCommand(appconfig)
     return res.send(response)
@@ -52,7 +52,7 @@ const disableAutoUpdate = async (req, res, next) => {
 //Enable auto update feature
 const enableAutoUpdate = async (req, res, next) => {
   try {
-    await checkUserPermission(req)
+    await checkCitizenPermission(req)
     const appconfig = fs.readFileSync(configJSON)
     const response = await executeEnableCommand(appconfig)
     return res.send(response)

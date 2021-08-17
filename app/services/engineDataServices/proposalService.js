@@ -5,43 +5,47 @@ const yaml = require('js-yaml')
 const splitFile = require('split-file');
 const PromisePool = require('@supercharge/promise-pool')
 const { getProposalContract } = require('zerotheft-node-utils').contracts
-const { fetchProposalYaml, listProposalIds } = require('zerotheft-node-utils/contracts/proposals')
+const { contractIdentifier, fetchProposalYaml, listProposalIds, proposalYearTheftInfo, getProposalContractVersion } = require('zerotheft-node-utils/contracts/proposals')
 const { createDir, exportsDir } = require('../../common')
 const { exportsDirNation, lastExportedPid, failedProposalIDFile, keepCacheRecord, cacheToFileRecord } = require('./utils')
 const { createLog, EXPORT_LOG_PATH } = require('../LogInfoServices')
 const { writeCsv } = require('./readWriteCsv')
 const proposalsCsv = `${exportsDir}/proposals.csv`
 //main method that process all proposal IDs
-const processProposalIds = async (proposalContract, proposalIds, isFailed = false) => {
-  let lastPid = await lastExportedPid()
-
+const processProposalIds = async (proposalContract, proposalIds, version, count, lastPid, isFailed = false) => {
   await PromisePool
-    .withConcurrency(10)
+    .withConcurrency(1)
     .for(proposalIds)
     .process(async pid => {
       try {
-        if ((parseInt(pid) > parseInt(lastPid)) || isFailed) {
-          console.log('Exporting proposalId', pid)
-          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [parseInt(pid)])
+
+        const propKey = version === "v0" ? pid : `${contractIdentifier}:${version}:${pid}`
+        if (count > parseInt(lastPid) || isFailed) {
+          console.log('Exporting proposalId::', count, '::', propKey)
+          const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [propKey])
 
           let tmpYamlPath = `/tmp/main-${proposal.yamlBlock}.yaml`
-
           if (Object.keys(proposal).length > 0) {
-            outputFiles = await fetchProposalYaml(proposalContract, proposal.yamlBlock, 1)
+            let proposalYaml;
+            try { proposalYaml = await proposalContract.callSmartContractGetFunc('getProposalYaml', [proposal.yamlBlock]) }
+            catch (e) {
+              console.log(e)
+            }
+
+            outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
             file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
-            const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/${file.summary_year}/proposals`
-            await createDir(proposalDir)
-            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${pid}_proposal-${proposal.date}.yaml`));
+            let { theftAmt } = proposalYearTheftInfo(file)
 
+            const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
+            await createDir(proposalDir)
+            fs.createReadStream(tmpYamlPath).pipe(fs.createWriteStream(`${proposalDir}/${propKey}_proposal-${proposal.date}.yaml`));
             //save every proposal in csv
             writeCsv([{
-              "id": pid,
-              "name": proposal.name,
+              "id": propKey,
               "country": `${file.summary_country || 'USA'}`,
               "path": file.hierarchy,
-              "theft_amount": proposal.theftAmt,
-              "year": proposal.year,
+              "theft_amount": theftAmt,
               "date": proposal.date
             }], proposalsCsv)
 
@@ -50,18 +54,17 @@ const processProposalIds = async (proposalContract, proposalIds, isFailed = fals
             }
           }
         }
-        await keepCacheRecord('LAST_EXPORTED_PID', parseInt(pid))
+        await keepCacheRecord('LAST_EXPORTED_PID', count)
 
       } catch (e) {
-        fs.appendFileSync(failedProposalIDFile, `${parseInt(pid)}\n`);
+        fs.appendFileSync(failedProposalIDFile, `${propKey}\n`);
         console.log(e.message)
-        createLog(EXPORT_LOG_PATH, `'exportProposal Error:: ${pid} => ${e}`)
+        createLog(EXPORT_LOG_PATH, `'exportProposal Error:: ${count} => ${e}`)
 
       }
+      count++
     })
 
-  //write the last exported Proposal ID
-  cacheToFileRecord('LAST_EXPORTED_PID', "proposals")
 }
 
 /* get raw votes from the blockchain*/
@@ -70,15 +73,26 @@ const exportAllProposals = async () => {
     const proposalContract = await getProposalContract()
 
     //get the last exported proposal ID
-    const proposalIds = await listProposalIds(proposalContract)
-    console.log('Total proposals::', proposalIds.length)
+    const { allProposals, allProposalsCount } = await listProposalIds(proposalContract)
+    console.log('Total proposals::', allProposalsCount)
 
+    let count = 1;
+    let lastPid = await lastExportedPid()
+    console.log('lastPid', lastPid)
 
-    await processProposalIds(proposalContract, proposalIds)
+    await PromisePool
+      .withConcurrency(1)
+      .for(Object.keys(allProposals))
+      .process(async version => {
+        await processProposalIds(proposalContract, allProposals[version], version, count, lastPid)
+        count = allProposals[version].length + 1
+      })
+    //write the last exported Proposal ID
+    cacheToFileRecord('LAST_EXPORTED_PID', "proposals")
 
     console.log('proposals export is completed!!!!')
 
-    let lastPid = await lastExportedPid()
+    lastPid = await lastExportedPid()
 
     createLog(EXPORT_LOG_PATH, `All proposals exported. The last proposal ID exported is ${lastPid}`)
   }
@@ -92,14 +106,18 @@ const exportAllProposals = async () => {
 /*export proposals from failed list*/
 const exportFailedProposals = async () => {
   const proposalContract = await getProposalContract()
+  try {
+    var proposalIds = fs.readFileSync(failedProposalIDFile, 'utf8').trim().split('\n').map(i => i)
+    createLog(EXPORT_LOG_PATH, `Processing ${uniq(proposalIds).length} failed proposals.`)
 
-  var proposalIds = fs.readFileSync(failedProposalIDFile, 'utf8').trim().split('\n').map(i => parseInt(i))
-  createLog(EXPORT_LOG_PATH, `Processing ${uniq(proposalIds).length} failed proposals.`)
-
-  //remove failed report file
-  fs.unlinkSync(failedProposalIDFile)
-  await processProposalIds(proposalContract, uniq(proposalIds), true)
-
+    //remove failed report file
+    fs.unlinkSync(failedProposalIDFile)
+    await processProposalIds(proposalContract, uniq(proposalIds), "v0", 1, undefined, true)
+  } catch (e) {
+    console.log(e.message)
+  }
+  //write the last exported Proposal ID
+  cacheToFileRecord('LAST_EXPORTED_PID', "proposals")
 }
 
 /*convert csv file to json*/
@@ -108,9 +126,20 @@ const allProposalsJSON = async () => {
   return json
 }
 
+/* get all votes in json*/
+const getProposalData = async () => {
+  try {
+    const proposals = await csv().fromFile(`${exportsDir}/proposals.csv`)
+    return proposals
+  }
+  catch (e) {
+    console.log(`getting Votes Error::`, e)
+  }
+}
 
 module.exports = {
   exportAllProposals,
   exportFailedProposals,
-  allProposalsJSON
+  allProposalsJSON,
+  getProposalData
 }

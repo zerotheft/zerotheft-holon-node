@@ -4,10 +4,13 @@ const menus = {
 
     my-account                                                                                        ... view your account details
     create-account                                                                                    ... creates your new account
+    register-citizen  --firstname "<firstname>" --middlename "<middlename>" --lastname "<lastname>"  
+    --country "<country>" --citizenship "<citizenship>" --state "<state>" 
+    --city "<city>" --zip "<zip>" --linkedin "<linkedin>"                                             ... register citizen
     get-balance                                                                                       ... get the ETC balance in your account
     greeting                                                                                          ... greets
     import-account --private-key <privateKey>                                                         ... imports the account using private key
-    register-holon --url <url> --port <port> --country <country> --donation_address <address>         ... registers your holon into blockchain
+    register-holon --url <url> --name <name> --donation_address <address>                             ... registers your holon into blockchain
     register-proxy-voter                                                                              ... registers for proxy voting so that voter can vote through your account
     update-proxy-settings                                                                             ... updates the proxy settings
     version                                                                                           ... show package version

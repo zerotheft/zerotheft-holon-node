@@ -2,4 +2,6 @@
 !.gitignore
 !multiReport.tex
 !report.tex
+!reportNoVote.tex
+!reportNoVoteMulti.tex
 !mixedReport.tex

@@ -19,7 +19,17 @@ const priorVote = async (req, res, next) => {
   }
 }
 
+const voteRollups = async (req, res, next) => {
+  try {
+    const response = await voteService.voteRollups(req.body)
+    res.send(response)
+  } catch (e) {
+    next(e.message)
+  }
+}
+
 module.exports = {
   vote,
-  priorVote
+  priorVote,
+  voteRollups
 }
