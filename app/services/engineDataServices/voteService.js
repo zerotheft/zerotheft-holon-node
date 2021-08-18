@@ -56,7 +56,7 @@ const exportAllVotes = async (req) => {
                 //get the voter information
                 const cres = await getCitizenIdByAddress(voter, citizenContract)
                 const { name, linkedin, country } = await getCitizen(cres.citizenID, citizenContract)
-                let proposalID = (voteIsTheft) ? yesTheftProposal : noTheftProposal
+                let proposalID = (voteIsTheft === "True") ? yesTheftProposal : noTheftProposal
                 //get the voted proposal information
                 const proposalInfo = await proposalContract.callSmartContractGetFunc('getProposal', [proposalID])
                 const proposalYaml = await proposalContract.callSmartContractGetFunc('getProposalYaml', [proposalInfo.yamlBlock])
@@ -71,7 +71,7 @@ const exportAllVotes = async (req) => {
                 await createDir(voteDir)
                 writeCsv([{
                   "id": voteKey,
-                  "vote_type": voteIsTheft ? 'yes' : 'no',
+                  "vote_type": voteIsTheft,
                   "alt_theft_amt": customTheftAmount,
                   "yes_theft_proposal": yesTheftProposal,
                   "no_theft_proposal": noTheftProposal,
