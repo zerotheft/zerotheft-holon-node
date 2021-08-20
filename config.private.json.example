@@ -2,15 +2,15 @@
   "MODE": "private",
   "DESKTOP_APP": "http://localhost:6549",
   "PORT":40107,
-  "network": "geth",
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "http://privatenet.zerotheft.net",
-  "ZERO_THEFT_CONTRACT": "https://zerotheft-private-blockchain.s3.amazonaws.com/contracts",
+  "ZERO_THEFT_CONTRACT": "https://zerotheft-contract-artifacts.s3.amazonaws.com",
   "WEB_PROVIDER": "ws://privatenet.zerotheft.net",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "GAS_PRICE": 90,
   "GAS_LIMIT": 4612388,
   "NETWORK_ID":1440,
+  "NETWORK_NAME":"privatenet",
   "REPORT_PATH": "zt_report"
 }
