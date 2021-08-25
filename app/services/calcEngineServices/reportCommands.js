@@ -56,6 +56,7 @@ if (!fs.existsSync(inflatedValuesPath)) {
 }
 const inflatedValues = require(inflatedValuesPath)
 
+// Gen single report data
 const generateReportData = async (fileName, fromWorker) => {
     const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
@@ -133,9 +134,10 @@ const generateReportData = async (fileName, fromWorker) => {
     pdfData.totalVotes = yesVotes + noVotes
     pdfData.yesNoChart = `${filePath}-yesNo.png`
 
-    const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
-    if (propThefts.length) {
-        const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+    // const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
+    const bellCurveData = proposalVoteTotalsSummaryMulti(voteTotals, false)
+    if (bellCurveData.thefts.length) {
+        // const bellCurveData = prepareBellCurveData(propThefts, propVotes)
         await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
         pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
     } else {
@@ -143,9 +145,10 @@ const generateReportData = async (fileName, fromWorker) => {
     }
 
     const lastYear = (new Date()).getFullYear() - 1
-    const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
-    if (propTheftslY.length) {
-        const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+    // const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+    const bellCurveDataLY = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+    if (bellCurveDataLY.thefts.length) {
+        // const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
         await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
         pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
     } else {
@@ -154,9 +157,10 @@ const generateReportData = async (fileName, fromWorker) => {
 
 
     const fiveYearsAgo = lastYear - 5
-    const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
-    if (propTheftsFYA.length) {
-        const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+    // const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+    const bellCurveDataFYA = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+    if (bellCurveDataFYA.thefts.length) {
+        // const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
         await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
         pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
     } else {
@@ -216,7 +220,8 @@ const getYesNoChart = async (noVotes, yesVotes, filePath) => {
 
 const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) => {
     return new Promise((resolve, reject) => {
-        const { bellCurveThefts, bellCurveVotes } = bellCurveData
+        const { thefts, votes: bellCurveVotes } = bellCurveData
+        const bellCurveThefts = thefts.map(t => parseInt(t))
         const xLow = min(bellCurveThefts)
         const xHigh = max(bellCurveThefts)
         const yLow = 0
@@ -940,9 +945,10 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
         pdfData.totalVotes = yesVotes + noVotes
         pdfData.yesNoChart = `${filePath}-yesNo.png`
 
-        const { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
-        if (propThefts.length) {
-            const bellCurveData = prepareBellCurveData(propThefts, propVotes)
+        // const  { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
+        const bellCurveData = proposalVoteTotalsSummaryMulti(voteTotals, false)
+        if (bellCurveData.thefts.length) {
+            // const bellCurveData = prepareBellCurveData(propThefts, propVotes)
             await getVotesForTheftAmountChart(bellCurveData, `${filePath}-votesForTheftAmount`, `${minYr} - ${maxYr}`)
             pdfData.votesForTheftAmountChart = `${filePath}-votesForTheftAmount.png`
         } else {
@@ -950,9 +956,10 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
         }
 
         const lastYear = (new Date()).getFullYear() - 1
-        const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
-        if (propTheftslY.length) {
-            const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
+        // const { thefts: propTheftslY, votes: propVotesLY } = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+        const bellCurveDataLY = proposalVoteTotalsSummaryMulti(voteTotals, false, lastYear)
+        if (bellCurveDataLY.thefts.length) {
+            // const bellCurveDataLY = prepareBellCurveData(propTheftslY, propVotesLY)
             await getVotesForTheftAmountChart(bellCurveDataLY, `${filePath}-votesForTheftAmountLastYear`, `in ${lastYear}`)
             pdfData.votesForTheftAmountLastYearChart = `${filePath}-votesForTheftAmountLastYear.png`
         } else {
@@ -960,9 +967,10 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
         }
 
         const fiveYearsAgo = lastYear - 5
-        const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+        // const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
+        const bellCurveDataFYA = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
         if (propTheftsFYA.length) {
-            const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
+            // const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
             await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
             pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
         } else {
