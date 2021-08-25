@@ -969,7 +969,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
         const fiveYearsAgo = lastYear - 5
         // const { thefts: propTheftsFYA, votes: propVotesFYA } = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
         const bellCurveDataFYA = proposalVoteTotalsSummaryMulti(voteTotals, false, fiveYearsAgo)
-        if (propTheftsFYA.length) {
+        if (bellCurveDataFYA.thefts.length) {
             // const bellCurveDataFYA = prepareBellCurveData(propTheftsFYA, propVotesFYA)
             await getVotesForTheftAmountChart(bellCurveDataFYA, `${filePath}-votesForTheftAmountFiveYearsAgo`, `in ${fiveYearsAgo}`)
             pdfData.votesForTheftAmountFiveYearsAgoChart = `${filePath}-votesForTheftAmountFiveYearsAgo.png`
