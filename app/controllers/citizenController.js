@@ -1,4 +1,3 @@
-
 const { getCitizenInfo } = require('../services/citizenService')
 
 const citizenInfo = async (req, res, next) => {
@@ -11,5 +10,5 @@ const citizenInfo = async (req, res, next) => {
 }
 
 module.exports = {
-  citizenInfo
+  citizenInfo,
 }
