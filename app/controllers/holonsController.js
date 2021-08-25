@@ -1,4 +1,4 @@
-const { getHolonsService, getInfo } = require('../services/holonsService');
+const { getHolonsService, getInfo } = require('../services/holonsService')
 
 const getHolons = async (req, res, next) => {
   const response = await getHolonsService()
@@ -8,16 +8,16 @@ const getHolons = async (req, res, next) => {
   return res.send(response)
 }
 
-const getHolonInfo = async(req, res, next) => {
+const getHolonInfo = async (req, res, next) => {
   try {
     const response = await getInfo()
     res.send(response)
-  } catch(e) {
+  } catch (e) {
     next(e.message)
   }
 }
 
 module.exports = {
   getHolons,
-  getHolonInfo
+  getHolonInfo,
 }

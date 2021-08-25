@@ -16,17 +16,17 @@ module.exports = () => {
   switch (cmd) {
     case 'my-account':
       require('./cmds/myAccount')(args)
-      break;
+      break
     case 'create-account':
       require('./cmds/createAccount')(args)
-      break;
+      break
     case 'register-citizen':
       require('./cmds/registerCitizen')(args)
-      break;
+      break
 
     case 'get-balance':
       require('./cmds/getBalance')(args)
-      break;
+      break
 
     case 'greeting':
       require('./cmds/greeting')(args)
@@ -34,21 +34,21 @@ module.exports = () => {
 
     case 'import-account':
       require('./cmds/importAccount')(args)
-      break;
+      break
 
     case 'register-holon':
       require('./cmds/registerHolon')(args)
-      break;
+      break
     case 'donation-address':
       require('./cmds/donationAddress')(args)
       break
     case 'register-proxy-voter':
       require('./cmds/registerProxyVoter')(args)
-      break;
+      break
 
     case 'update-proxy-settings':
       require('./cmds/updateProxySettings')(args)
-      break;
+      break
 
     case 'version':
       require('./cmds/version')(args)
@@ -57,7 +57,6 @@ module.exports = () => {
     case 'help':
       require('./cmds/help')(args)
       break
-
 
     default:
       error(`"${cmd}" is not a valid command!`)

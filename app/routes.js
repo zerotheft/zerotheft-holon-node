@@ -1,33 +1,56 @@
 const express = require('express')
-const { getSingleIssueReport, generateReports, getMultiIssuesReport, getTheftInfo, getNationReport } = require('./controllers/reportController')
+const {
+  getSingleIssueReport,
+  generateReports,
+  getMultiIssuesReport,
+  getTheftInfo,
+  getNationReport,
+} = require('./controllers/reportController')
 const { getPath, allNations, pathsByNation, getUmbrellaPaths } = require('./controllers/pathsController')
 const { getProposalWithDetail, getTemplateDetail, pathProposalsByPath } = require('./controllers/proposalsController')
 const { vote, priorVote, voteRollups } = require('./controllers/voteController')
 const { citizenInfo } = require('./controllers/citizenController')
 const { getHolons, getHolonInfo } = require('./controllers/holonsController')
-const { exportVoteData, exportReportData, exportProposalData, exportFailedProposalData, exportHolonData, exportVoterData, exportedProposals, getVoters, getVotes, getProposals } = require('./controllers/engineDataController')
-const { getCurrentVersion, getAutoUpdateStatus, updateHolon, disableAutoUpdate, enableAutoUpdate } = require('./controllers/utilityController')
+const {
+  exportVoteData,
+  exportReportData,
+  exportProposalData,
+  exportFailedProposalData,
+  exportHolonData,
+  exportVoterData,
+  exportedProposals,
+  getVoters,
+  getVotes,
+  getProposals,
+} = require('./controllers/engineDataController')
+const {
+  getCurrentVersion,
+  getAutoUpdateStatus,
+  updateHolon,
+  disableAutoUpdate,
+  enableAutoUpdate,
+} = require('./controllers/utilityController')
 
 const router = express.Router()
 
 /*
-*COLLECTION OF ALL ROUTES
-*/
+ *COLLECTION OF ALL ROUTES
+ */
 /* GET home page. */
 
-//Path Routes
+// Path Routes
 router.get('/paths', pathsByNation)
 router.get('/nations', allNations)
 router.get('/path/:dir', getPath)
 router.get('/umbrella-paths', getUmbrellaPaths)
 
-//Report Routes
+// Report Routes
 router.get('/nationPath/:nation/:year/viewReport', getNationReport)
 router.get('/issue/:path/:year/viewReport', getSingleIssueReport)
 router.get('/issues/:path/:year/viewReport', getMultiIssuesReport)
 router.get('/issues/:path/theftInfo', getTheftInfo)
 router.get('/gen-reports', generateReports)
-//Proposals Routes
+// Proposals Routes
 router.get('/proposal-detail/:id', getProposalWithDetail)
 router.get('/proposals-by-path', pathProposalsByPath)
 // Vote Routes
@@ -35,21 +58,21 @@ router.post('/vote', vote)
 router.post('/vote-rollups', voteRollups)
 router.post('/prior-vote', priorVote)
 router.get('/citizen-info/:citizenID', citizenInfo)
-//Holons
+// Holons
 router.get('/holons', getHolons)
 router.get('/holon-info', getHolonInfo)
 
-//Holon Auto-Update
+// Holon Auto-Update
 router.get('/current-version', getCurrentVersion)
 router.get('/auto-update-status', getAutoUpdateStatus)
 router.get('/update-holon/:address', updateHolon)
 router.get('/disable-auto-update/:address', disableAutoUpdate)
 router.get('/enable-auto-update/:address', enableAutoUpdate)
 
-//template hierarchy
+// template hierarchy
 router.get('/get-template-detail/:path', getTemplateDetail)
 
-//export blockchain data APIs
+// export blockchain data APIs
 router.get('/export-proposals', exportProposalData)
 router.get('/export-failed-proposals', exportFailedProposalData)
 router.get('/export-report', exportReportData)

@@ -15,6 +15,10 @@
     "scripts": "node_modules/puppeteer/lib/*.js"
   },
   "scripts": {
+    "lint": "NODE_ENV=development eslint . --cache --ext .js,.jsx,.ts,.tsx",
+    "lint-fix": "yarn --silent lint --fix; exit 0",
+    "lint-styles": "stylelint --ignore-path .eslintignore '**/*.*(css|scss)' --syntax scss",
+    "lint-styles-fix": "yarn --silent lint-styles --fix; exit 0",
     "fetch-contract": "node contractAddress.js ",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js --ignore zt_report ",
@@ -75,5 +79,27 @@
     "split-file": "^2.2.1",
     "svgdom-css": "^0.1.5",
     "yaml": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "prettier": "2.3.2",
+    "husky": "^7.0.2",
+    "lint-staged": "^10.5.4",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.3.1"
+  },
+  "lint-staged": {
+    "app/**/*.js": [
+      "eslint --fix",
+      "prettier --write",
+      "git add ."
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }

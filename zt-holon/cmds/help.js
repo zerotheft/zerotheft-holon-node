@@ -18,13 +18,11 @@ const menus = {
 `,
 
   greeting: `
-    zt-holon greeting .....greets you`
+    zt-holon greeting .....greets you`,
 }
 
-module.exports = (args) => {
-  const subCmd = args._[0] === 'help'
-    ? args._[1]
-    : args._[0]
+module.exports = args => {
+  const subCmd = args._[0] === 'help' ? args._[1] : args._[0]
 
   console.log(menus[subCmd] || menus.main)
 }

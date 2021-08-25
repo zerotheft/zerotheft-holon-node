@@ -3,19 +3,24 @@ const { citizenPriorVote, voteDataRollups } = require('zerotheft-node-utils/cont
 const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
 const scrapedin = require('scrapedin')
 const { get } = require('lodash')
-const { getProxyHolonValues, getVoteValues, updateVoteValues, getLinkedinCookieValues } = require('zerotheft-node-utils/utils/storage')
+const {
+  getProxyHolonValues,
+  getVoteValues,
+  updateVoteValues,
+  getLinkedinCookieValues,
+} = require('zerotheft-node-utils/utils/storage')
 const { createLog, VOTERS_PATH, VOTES_PATH, ERROR_PATH } = require('./LogInfoServices')
 
 const MIN_WEIGHT = 3
 
-const vote = async (req) => {
+const vote = async req => {
   createLog(VOTES_PATH, `voting initiation with request details ${req}`)
   createLog(VOTES_PATH, `Validating Request for voting`)
   if (await validate(req)) {
     const voter = req.voter.toLowerCase()
     createLog(VOTERS_PATH, voter)
     createLog(VOTES_PATH, 'Voting proposal...')
-    let res = await voteProposal(req)
+    const res = await voteProposal(req)
     createLog(VOTES_PATH, 'Getting vote values...')
     const votedValues = getVoteValues()
     const totalVoted = parseInt(votedValues[voter] || 0)
@@ -23,21 +28,19 @@ const vote = async (req) => {
     createLog(VOTES_PATH, 'Completing votes...')
     return res
   }
-
 }
-const priorVote = async (req) => {
-  let res = await citizenPriorVote(req)
+const priorVote = async req => {
+  const res = await citizenPriorVote(req)
   return res
 }
 
-const voteRollups = async (req) => {
+const voteRollups = async req => {
   createLog(VOTES_PATH, `voteData rollups ${req}`)
-  let res = await voteDataRollups(req)
+  const res = await voteDataRollups(req)
   return res
 }
 
-
-const validate = async (req) => {
+const validate = async req => {
   try {
     const citizen = await getCitizen(req.voter)
     createLog(VOTES_PATH, `Checking if citizen is registered...`)
@@ -57,13 +60,13 @@ const validate = async (req) => {
     createLog(VOTES_PATH, `Getting linked in cookies values...`)
     const cookies = getLinkedinCookieValues()
     const options = {
-      cookies
+      cookies,
     }
     createLog(VOTES_PATH, `Scapping linked in profile...`)
 
     const profileScraper = await scrapedin(options)
     const profile = await profileScraper(citizen.linkedin)
-    if (!profile) throw new Error('We can\'t proceed with your request at the moment.')
+    if (!profile) throw new Error("We can't proceed with your request at the moment.")
 
     const connections = parseInt(profile.profile.connections)
     const linkedinError = 'Your linkedin profile does not fulfil our minimum requirements.'
@@ -89,5 +92,5 @@ const validate = async (req) => {
 module.exports = {
   vote,
   priorVote,
-  voteRollups
+  voteRollups,
 }

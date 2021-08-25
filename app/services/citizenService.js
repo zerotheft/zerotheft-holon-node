@@ -3,7 +3,7 @@ const { getCitizen } = require('zerotheft-node-utils/contracts/citizens')
 const getCitizenInfo = async voter => {
   try {
     const citizen = await getCitizen(voter)
-    if(!citizen) throw new Error('Citizen is not registered yet.')
+    if (!citizen) throw new Error('Citizen is not registered yet.')
     return citizen
   } catch (e) {
     throw e
@@ -11,5 +11,5 @@ const getCitizenInfo = async voter => {
 }
 
 module.exports = {
-  getCitizenInfo
+  getCitizenInfo,
 }

@@ -1,10 +1,9 @@
-
+const { proposals } = require('zerotheft-node-utils')
 const voteService = require('../services/engineDataServices/voteService')
 const proposalService = require('../services/engineDataServices/proposalService')
 const reportService = require('../services/engineDataServices/reportService')
 const holonService = require('../services/engineDataServices/holonService')
 const voterService = require('../services/engineDataServices/voterService')
-const { proposals } = require('zerotheft-node-utils')
 
 const exportVoteData = async (req, res, next) => {
   try {
@@ -16,13 +15,12 @@ const exportVoteData = async (req, res, next) => {
 }
 
 /* return votes from the stored exported data */
-const getVotes =  async (req, res, next) => {
+const getVotes = async (req, res, next) => {
   try {
-    let path = req.query['0']
+    const path = req.query['0']
     const response = await voteService.getVoteData(path)
     res.send(response)
-  }
-  catch (e) {
+  } catch (e) {
     res.status(400) && next(e.message)
   }
 }
@@ -77,12 +75,11 @@ const exportVoterData = async (req, res, next) => {
 }
 
 /* return proposals from the stored exported data */
-const getVoters =  async (req, res, next) => {
+const getVoters = async (req, res, next) => {
   try {
     const response = await voterService.getVoterData()
     res.send(response)
-  }
-  catch (e) {
+  } catch (e) {
     res.status(400) && next(e.message)
   }
 }
@@ -98,12 +95,11 @@ const exportedProposals = async (req, res, next) => {
 }
 
 /* return proposals from the stored exported data */
-const getProposals =  async (req, res, next) => {
+const getProposals = async (req, res, next) => {
   try {
     const response = await proposalService.getProposalData()
     res.send(response)
-  }
-  catch (e) {
+  } catch (e) {
     res.status(400) && next(e.message)
   }
 }
@@ -118,5 +114,5 @@ module.exports = {
   exportedProposals,
   getVoters,
   getVotes,
-  getProposals
+  getProposals,
 }

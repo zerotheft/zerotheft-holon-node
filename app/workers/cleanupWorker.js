@@ -9,41 +9,44 @@ const connection = new IORedis()
 const cleanupQueneScheduler = new QueueScheduler('cleanupQuene', { connection })
 const cleanupQuene = new Queue('cleanupQuene', { connection })
 
-const cleanupWorker = new Worker('cleanupQuene', async job => {
-  try {
-    //first remove everything inside log path
-    console.log('**Cleaner cleaning logs directory')
-    await removeDir(LOG_PATH)
+const cleanupWorker = new Worker(
+  'cleanupQuene',
+  async job => {
+    try {
+      // first remove everything inside log path
+      console.log('**Cleaner cleaning logs directory')
+      await removeDir(LOG_PATH)
 
-    //remove everything from tmp directory
-    console.log('**Cleaner cleaning tmp directory')
-    await removeDir(`${config.APP_PATH}/tmp`)
+      // remove everything from tmp directory
+      console.log('**Cleaner cleaning tmp directory')
+      await removeDir(`${config.APP_PATH}/tmp`)
 
-    //clean the cached directory of path yamls
-    console.log('**Cleaner cleaning cached path yaml')
-    await removeDir(`${config.APP_PATH}/.zt/pathYamls`)
-
-  } catch (e) {
-    console.log("cleanupWorker ", e)
-    createLog(MAIN_PATH, `cleanupWorker ${e}`)
-    throw e
-  }
-}, { connection })
+      // clean the cached directory of path yamls
+      console.log('**Cleaner cleaning cached path yaml')
+      await removeDir(`${config.APP_PATH}/.zt/pathYamls`)
+    } catch (e) {
+      console.log('cleanupWorker ', e)
+      createLog(MAIN_PATH, `cleanupWorker ${e}`)
+      throw e
+    }
+  },
+  { connection }
+)
 
 /**
  * Removes files and sub-directories of path
- * @param {string} path 
+ * @param {string} path
  */
-const removeDir = async (path) => {
+const removeDir = async path => {
   if (fs.existsSync(path)) {
     const files = fs.readdirSync(path)
 
     if (files.length > 0) {
-      files.forEach(function (filename) {
-        if (fs.statSync(path + "/" + filename).isDirectory()) {
-          removeDir(path + "/" + filename)
+      files.forEach(filename => {
+        if (fs.statSync(`${path}/${filename}`).isDirectory()) {
+          removeDir(`${path}/${filename}`)
         } else {
-          fs.unlinkSync(path + "/" + filename)
+          fs.unlinkSync(`${path}/${filename}`)
         }
       })
     } else {
@@ -53,8 +56,6 @@ const removeDir = async (path) => {
     console.log(`Directory path(${path}) not found.`)
   }
 }
-
-
 
 /**
  * Cleaner worker cleans up the tmp directory and all the log files every one @  23:00 on Friday
@@ -67,9 +68,8 @@ const cleanupInit = async () => {
     createLog(MAIN_PATH, `cleanupWorker ${e}`)
     throw e
   }
-
 }
 
 module.exports = {
-  cleanupInit
+  cleanupInit,
 }
