@@ -75,5 +75,9 @@
     "split-file": "^2.2.1",
     "svgdom-css": "^0.1.5",
     "yaml": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "prettier": "2.3.2"
   }
 }
