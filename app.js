@@ -38,6 +38,9 @@ app.use('/api', routes)
 app.use(logErrors)
 app.use(errorHandler)
 
+app.use('/pathReports', express.static(`${getReportPath()}reports/multiIssueReport`))
+app.use('/issueReports', express.static(`${getReportPath()}reports/ztReport`))
+
 app.use('/public', express.static(path.join(APP_PATH, 'public')))
 app.use('/public', serveIndex(path.join(APP_PATH, 'public')))
 
