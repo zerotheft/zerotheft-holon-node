@@ -22,6 +22,7 @@ const { getReportPath } = require('./config')
 app.use(express.static(path.join(APP_PATH, 'build')))
 
 function logErrors(err, req, res, next) {
+  // eslint-disable-next-line no-console
   console.error('Error', err)
   next(err)
 }
@@ -36,13 +37,32 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/api', routes)
 app.use(logErrors)
 app.use(errorHandler)
-app.use('/pathReports', express.static(`${getReportPath()}reports/multiIssueReport`))
+app.use('/pathReports', express.static(`${getReportPath()}reports/multiIssueReport`, { fallthrough: false }))
 app.use('/issueReports', express.static(`${getReportPath()}reports/ztReport`))
 // server public exports
-app.use('/exports', express.static(path.join(APP_PATH, 'exports')))
+app.use('/exports', express.static(path.join(APP_PATH, 'exports'), { fallthrough: false }))
 app.use('/exports', serveIndex(path.join(APP_PATH, 'exports')))
-app.use('/public', express.static(path.join(APP_PATH, 'public')))
+app.use('/public', express.static(path.join(APP_PATH, 'public'), { fallthrough: false }))
 app.use('/public', serveIndex(path.join(APP_PATH, 'public')))
+
+// app.use((req, res) => {
+//   res.status(404)
+
+//   // respond with html page
+//   if (req.accepts('html')) {
+//     res.render('404', { url: req.url })
+//     return
+//   }
+
+//   // respond with json
+//   if (req.accepts('json')) {
+//     res.send({ error: 'Not found' })
+//     return
+//   }
+
+//   // default to plain-text. send()
+//   res.type('txt').send('Not found')
+// })
 
 // health check route
 app.get('/healthcheck', (req, res, next) =>
@@ -89,6 +109,7 @@ Honeybadger.configure({
   developmentEnvironments: ['development'],
 })
 
+// eslint-disable-next-line no-console
 app.listen(port, () => console.log(`App running on port ${port}!`))
 createLog(MAIN_PATH, 'App listening now.')
 
