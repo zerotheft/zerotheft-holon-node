@@ -19,15 +19,7 @@ const {
   deleteJsonFile,
   mergePdfLatex,
 } = require('./reportCommands')
-const { defaultPropYear, firstPropYear, usaPopulation } = require('./helper')
-const {
-  createLog,
-  SINGLE_REPORT_PATH,
-  MULTI_REPORT_PATH,
-  FULL_REPORT_PATH,
-  ERROR_PATH,
-  MAIN_PATH,
-} = require('../LogInfoServices')
+const { createLog, SINGLE_REPORT_PATH, ERROR_PATH, MAIN_PATH } = require('../LogInfoServices')
 
 const reportsPath = fromWorker => `${getReportPath()}reports${fromWorker ? '_in_progress' : ''}`
 const multiIssueReportPath = fromWorker => `${reportsPath(fromWorker)}/multiIssueReport`

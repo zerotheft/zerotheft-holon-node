@@ -37,12 +37,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use('/api', routes)
 app.use(logErrors)
 app.use(errorHandler)
-app.use('/pathReports', express.static(`${getReportPath()}reports/multiIssueReport`, { fallthrough: false }))
-app.use('/issueReports', express.static(`${getReportPath()}reports/ztReport`))
-// server public exports
-app.use('/exports', express.static(path.join(APP_PATH, 'exports'), { fallthrough: false }))
-app.use('/exports', serveIndex(path.join(APP_PATH, 'exports')))
-app.use('/public', express.static(path.join(APP_PATH, 'public'), { fallthrough: false }))
+
+app.use('/public', express.static(path.join(APP_PATH, 'public')))
 app.use('/public', serveIndex(path.join(APP_PATH, 'public')))
 
 // health check route
