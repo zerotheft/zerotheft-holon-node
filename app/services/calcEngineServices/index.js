@@ -39,7 +39,13 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
       const allYearData = await allYearCachedData(nation)
 
       const lPath = leafPath.split('/').slice(1).join('/')
-      if (!isEmpty(allYearData) && get(allYearData, `paths.${lPath}`) && !get(allYearData, `paths.${lPath}.missing`)) {
+      if (
+        !isEmpty(allYearData) &&
+        get(allYearData, `paths.${lPath}`) &&
+        !get(allYearData, `paths.${lPath}.missing`) &&
+        get(allYearData, `paths.${lPath}._totals.votes`) > 0 &&
+        get(allYearData, `paths.${lPath}._totals.proposals`) > 0
+      ) {
         const leafJson = {
           yearData: allYearData,
           holon: getAppRoute(false),
