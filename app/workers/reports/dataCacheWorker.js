@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable import/no-extraneous-dependencies */
 const IORedis = require('ioredis')
 const fs = require('fs')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
@@ -12,7 +14,6 @@ const {
   parentVotedYearTheftsRollups,
 } = require('../../services/calcEngineServices/calcLogic')
 const { cacheServer } = require('../../services/redisService')
-// const { defaultPropYear, firstPropYear } = require('../../services/calcEngineServices/helper')
 const { createLog, MAIN_PATH, CRON_PATH } = require('../../services/LogInfoServices')
 const { lastExportedVid } = require('../../services/engineDataServices/utils')
 
