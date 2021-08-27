@@ -52,7 +52,7 @@ const watcherWorker = new Worker(
       console.log(`10. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
       console.log(`11. Data Resyncing(DATA_RESYNC): ${!!isResyncing}`)
 
-      const isNotExporting = !isVotesExporting || !isVotersExporting || !isProposalExporting
+      const isNotExporting = !isVotesExporting && !isVotersExporting && !isProposalExporting
       /**
        * If no vote data exported
        * Initiate vote data exports
@@ -93,7 +93,7 @@ const watcherWorker = new Worker(
        * If sync is complete and full report is not present.
        * Initiate full report
        */
-      if (!isSyncing && !isFullReport && isDatainCache && !isGeneratingReports && isNotExporting) {
+      if (!isSyncing && !isFullReport && isDatainCache && !isGeneratingReports && isNotExporting && cachedVid > 0) {
         console.log('Full reports missing. Inititated....')
         allReportWorker()
       } else if (isGeneratingReports) {

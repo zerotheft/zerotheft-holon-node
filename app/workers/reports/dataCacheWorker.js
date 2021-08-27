@@ -119,6 +119,7 @@ scanDataWorker.on(
     cacheServer.set('CALC_SUMMARY_SYNCED', true)
     cacheServer.del('SYNC_INPROGRESS')
     cacheServer.del('DATA_RESYNC')
+    cacheServer.del('DATA_RESYNC_FAILED')
 
     console.log(`Caching completed.`)
     createLog(MAIN_PATH, `Caching completed.`)
@@ -131,6 +132,8 @@ scanDataWorker.on(
   'failed',
   async () => {
     cacheServer.del('SYNC_INPROGRESS')
+    cacheServer.set('DATA_RESYNC_FAILED', true)
+    cacheServer.del('DATA_RESYNC')
     console.log(`Caching failed.`)
     createLog(MAIN_PATH, `Caching failed.`)
   },
