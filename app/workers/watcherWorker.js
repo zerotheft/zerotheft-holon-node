@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+// eslint-disable-next-line import/no-extraneous-dependencies
 const IORedis = require('ioredis')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
 const { singleYearCaching } = require('./reports/dataCacheWorker')
@@ -6,14 +8,17 @@ const { allReportWorker } = require('./reports/reportWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
-const { calculatePastYearThefts } = require('../services/calcEngineServices/calcLogic')
-const { defaultPropYear, firstPropYear } = require('../services/calcEngineServices/helper')
 
 const connection = new IORedis()
 
 const watcherQueueScheduler = new QueueScheduler('WatcherQueue', { connection })
 const watcherQueue = new Queue('WatcherQueue', { connection })
 
+/**
+ * Watcher worker is like heartbeat. It runs every  minute.
+ * It checks whether tasks are successfully completed or not. It keeps the track of every tracks based on redis status.
+ * It runs the individual task based on the task status.
+ */
 const watcherWorker = new Worker(
   'WatcherQueue',
   async job => {
@@ -47,7 +52,7 @@ const watcherWorker = new Worker(
       console.log(`10. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
       console.log(`11. Data Resyncing(DATA_RESYNC): ${!!isResyncing}`)
 
-      const isNotExporting = !isVotesExporting && !isVotersExporting && !isProposalExporting
+      const isNotExporting = !isVotesExporting || !isVotersExporting || !isProposalExporting
       /**
        * If no vote data exported
        * Initiate vote data exports
@@ -95,12 +100,14 @@ const watcherWorker = new Worker(
         console.log('Reports in progress!!')
       }
 
+      // eslint-disable-next-line no-console
       console.log('*****HEARTBEAT Report*****')
 
       // Print heatbeat in log file
       const logContent = `***HEARTBEAT***\nCaching in progress(SYNC_INPROGRESS): ${!!isSyncing}(${isSyncing})\nReports in progress(REPORTS_INPROGRESS): ${!!isGeneratingReports}\nFull report(FULL_REPORT): ${!!isFullReport}\nData in cache(CALC_SUMMARY_SYNCED): ${!!isDatainCache}\nLast Citizen ID Exported: ${cachedUid}\nCitizen Export in progress(VOTERS_EXPORT_INPROGRESS): ${!!isVotersExporting}\nLast Proposal ID Exported: ${cachedPid}\nProposal Export in progress(PROPOSALS_EXPORT_INPROGRESS): ${!!isProposalExporting}\nLast Vote ID Exported: ${cachedVid}\n Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}\nser ID Exported: ${cachedUid}\nLast Proposal ID Exported: ${cachedPid}\nLast Vote ID Exported: ${cachedVid}\n`
       createLog(WATCHER_LOG_PATH, logContent)
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.log('watcherWorker ', e)
       createLog(WATCHER_LOG_PATH, `watcherWorker ${e}`)
       throw e
@@ -110,10 +117,10 @@ const watcherWorker = new Worker(
 )
 
 // after worker finishes job
-watcherWorker.on('completed', async (job, returnvalue) => {}, { connection })
+watcherWorker.on('completed', async () => {}, { connection })
 
 // after worker failed
-watcherWorker.on('failed', async (job, returnvalue) => {}, { connection })
+watcherWorker.on('failed', async () => {}, { connection })
 
 /**
  * Its like heartbeat which actually monitors all the background jobs and also performs required operations
@@ -126,6 +133,7 @@ const watcherInit = async () => {
       { removeOnComplete: true, removeOnFail: true, repeat: { cron: '* * * * *' } }
     )
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.log('watcherWorker', e)
     createLog(WATCHER_LOG_PATH, `watcherWorker ${e}`)
     throw e

@@ -47,7 +47,7 @@ const generateReports = async (req, res, next) => {
     allReportWorker()
     res.send({ message: 'all report generation worker initiated' })
   } catch (e) {
-    res.status(400) && next(e.message)
+    res.status(newLocal) && next(e.message)
   }
 }
 
