@@ -1,4 +1,4 @@
-const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByPath } = require('../services/proposalsService');
+const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByPath } = require('../services/proposalsService')
 
 const getProposalWithDetail = async (req, res, next) => {
   const response = await proposalWithDetails(req.params.id, true)
@@ -19,12 +19,12 @@ const getTemplateDetail = async (req, res, next) => {
 const pathProposalsByPath = async (req, res, next) => {
   try {
     const response = await getPathProposalsByPath(req.query.path)
-    var votes = [],
-      theftAmt = []
-    response.map((proposal) => {
-      if (proposal && proposal['votes']) {
-        votes.push(proposal['votes']);
-        theftAmt.push(proposal['theftAmt'])
+    const votes = []
+    const theftAmt = []
+    response.map(proposal => {
+      if (proposal && proposal.votes) {
+        votes.push(proposal.votes)
+        theftAmt.push(proposal.theftAmt)
       }
     })
     return res.send({ data: response, chartData: { bellCurveThefts: theftAmt, bellCurveVotes: votes } })
@@ -33,9 +33,8 @@ const pathProposalsByPath = async (req, res, next) => {
   }
 }
 
-
 module.exports = {
   getProposalWithDetail,
   getTemplateDetail,
-  pathProposalsByPath
+  pathProposalsByPath,
 }

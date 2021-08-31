@@ -1,8 +1,8 @@
 const ora = require('ora')
 const chalk = require('chalk')
 
-const error = require('../utils/error')
 const { getBalance } = require('zerotheft-node-utils/utils/web3')
+const error = require('../utils/error')
 
 module.exports = async () => {
   const spinner = ora({ text: 'Loading...', color: 'green' }).start()
@@ -17,4 +17,3 @@ module.exports = async () => {
     error(chalk.red('There were some errors while performing action'), true)
   }
 }
-

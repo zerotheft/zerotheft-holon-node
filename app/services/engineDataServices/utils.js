@@ -1,5 +1,6 @@
 const fs = require('fs')
 const { writeFile, exportsDir } = require('../../common')
+
 const voteIDFile = `${exportsDir}/.last_exported_vid`
 const failedVoteIDFile = `${exportsDir}/.export_failed_vids`
 const proposalIdFile = `${exportsDir}/.last_exported_pid`
@@ -11,8 +12,7 @@ const failedCitizenIDFile = `${exportsDir}/.export_failed_uids`
 const exportsDirNation = `${exportsDir}/nation_data`
 const { cacheServer } = require('../redisService')
 
-
-//get the last exported vote ID
+// get the last exported vote ID
 const lastExportedVid = async () => {
   let lastVid = 0
   try {
@@ -20,11 +20,11 @@ const lastExportedVid = async () => {
   } catch (e) {
     console.log(e.message)
   }
-  let cachedPid = await cacheServer.getAsync('LAST_EXPORTED_VID')
+  const cachedPid = await cacheServer.getAsync('LAST_EXPORTED_VID')
   if (cachedPid) lastVid = parseInt(cachedPid)
   return lastVid
 }
-//get the last exported proposal ID
+// get the last exported proposal ID
 const lastExportedPid = async () => {
   let lastPid = 0
   try {
@@ -32,11 +32,11 @@ const lastExportedPid = async () => {
   } catch (e) {
     console.log(e.message)
   }
-  let cachedPid = await cacheServer.getAsync('LAST_EXPORTED_PID')
+  const cachedPid = await cacheServer.getAsync('LAST_EXPORTED_PID')
   if (cachedPid) lastPid = parseInt(cachedPid)
   return lastPid
 }
-//get the last exported holon ID
+// get the last exported holon ID
 const lastExportedHid = async () => {
   let lastHid = 0
   try {
@@ -44,12 +44,12 @@ const lastExportedHid = async () => {
   } catch (e) {
     console.log(e.message)
   }
-  let cachedHid = await cacheServer.getAsync('LAST_EXPORTED_HID')
+  const cachedHid = await cacheServer.getAsync('LAST_EXPORTED_HID')
   if (cachedHid) lastHid = parseInt(cachedHid)
   return lastHid
 }
 
-//get the last exported citizen ID
+// get the last exported citizen ID
 const lastExportedUid = async () => {
   let lastUid = 0
   try {
@@ -57,31 +57,34 @@ const lastExportedUid = async () => {
   } catch (e) {
     console.log(e.message)
   }
-  let cachedUid = await cacheServer.getAsync('LAST_EXPORTED_UID')
+  const cachedUid = await cacheServer.getAsync('LAST_EXPORTED_UID')
   if (cachedUid) lastUid = parseInt(cachedUid)
 
   return lastUid
 }
 
-//save the record temporarily in cache
+// save the record temporarily in cache
 const keepCacheRecord = async (key, count) => {
-  let cachedId = await cacheServer.getAsync(key)
-  if (!cachedId || count > parseInt(cachedId))
+  const cachedId = await cacheServer.getAsync(key)
+  if (!cachedId || count > parseInt(cachedId)) {
     cacheServer.set(key, count)
+  }
 }
 
-//save the record in file
+// save the record in file
 const cacheToFileRecord = async (key, entity) => {
-  if (entity === "citizens")
+  if (entity === 'citizens') {
     file = citizenIdFile
-  else if (entity === "votes")
+  } else if (entity === 'votes') {
     file = voteIDFile
-  else if (entity === "proposals")
+  } else if (entity === 'proposals') {
     file = proposalIdFile
-  let cachedUid = await cacheServer.getAsync(key)
+  }
+  const cachedUid = await cacheServer.getAsync(key)
   console.log(file)
-  if (cachedUid)
+  if (cachedUid) {
     await writeFile(file, parseInt(cachedUid))
+  }
   cacheServer.del(key)
 }
 
@@ -100,5 +103,5 @@ module.exports = {
   failedCitizenIDFile,
   lastExportedUid,
   keepCacheRecord,
-  cacheToFileRecord
+  cacheToFileRecord,
 }

@@ -5,46 +5,64 @@ const company = require('./company/company')
 const logger = require('./logger')(__filename)
 const path = require('path')
 
-module.exports = async ({ cookies, email, password, isHeadless, hasToLog, hasToGetContactInfo, puppeteerArgs, puppeteerAuthenticate, endpoint } = { isHeadless: true, hasToLog: false }) => {
+module.exports = async (
+  {
+    cookies,
+    email,
+    password,
+    isHeadless,
+    hasToLog,
+    hasToGetContactInfo,
+    puppeteerArgs,
+    puppeteerAuthenticate,
+    endpoint,
+  } = { isHeadless: true, hasToLog: false }
+) => {
   if (!hasToLog) {
     logger.stopLogging()
   }
   logger.info('initializing')
 
-  let browser;
-  if(endpoint){
+  let browser
+  if (endpoint) {
     browser = await puppeteer.connect({
       browserWSEndpoint: endpoint,
-    });
-  }else{
+    })
+  } else {
     const isPkg = typeof process.pkg !== 'undefined'
-    const chromiumExecutablePath = (isPkg
-    ? puppeteer.executablePath().replace(
-      /^.*?\/node_modules\/puppeteer\/\.local-chromium/,
-      path.join('/home', 'zt-holon', 'chromium')
-    )
-  : puppeteer.executablePath()
-)
-    const args = Object.assign({ executablePath: chromiumExecutablePath, headless: isHeadless, args: ['--no-sandbox'] }, puppeteerArgs)
+    const chromiumExecutablePath = isPkg
+      ? puppeteer
+          .executablePath()
+          .replace(/^.*?\/node_modules\/puppeteer\/\.local-chromium/, path.join('/home', 'zt-holon', 'chromium'))
+      : puppeteer.executablePath()
+    const args = {
+      executablePath: chromiumExecutablePath,
+      headless: isHeadless,
+      args: ['--no-sandbox'],
+      ...puppeteerArgs,
+    }
     browser = await puppeteer.launch(args)
   }
 
   if (cookies) {
     logger.info('using cookies, login will be bypassed')
   } else if (email && password) {
-    logger.info('email and password was provided, we\'re going to login...')
+    logger.info("email and password was provided, we're going to login...")
 
     try {
       await login(browser, email, password, logger)
     } catch (e) {
-      if(!endpoint){
+      if (!endpoint) {
         await browser.close()
       }
       throw e
     }
   } else {
-    logger.warn('email/password and cookies wasn\'t provided, only public data will be collected')
+    logger.warn("email/password and cookies wasn't provided, only public data will be collected")
   }
 
-  return (url, waitMs) => url.includes('/school/') || url.includes('/company/') ? company(browser, cookies, url, waitMs, hasToGetContactInfo, puppeteerAuthenticate) :profile(browser, cookies, url, waitMs, hasToGetContactInfo, puppeteerAuthenticate)
+  return (url, waitMs) =>
+    url.includes('/school/') || url.includes('/company/')
+      ? company(browser, cookies, url, waitMs, hasToGetContactInfo, puppeteerAuthenticate)
+      : profile(browser, cookies, url, waitMs, hasToGetContactInfo, puppeteerAuthenticate)
 }

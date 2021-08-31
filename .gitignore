@@ -38,3 +38,4 @@ debinstall
 nodemon.json
 .vscode
 zt_report
+.eslintcache

@@ -6,16 +6,16 @@ const { convertToAscii } = require('zerotheft-node-utils/utils/web3')
  * @param {string} id ID of a proposal
  * @returns JSON object with detail proposal information
  */
-const proposalWithDetails = async (id) => {
+const proposalWithDetails = async id => {
   try {
-    if (id === 0 || id === "" || id.includes(convertToAscii(0))) throw new Error(`Not valid proposal id. i.e ${id}`)
+    if (id === 0 || id === '' || id.includes(convertToAscii(0))) throw new Error(`Not valid proposal id. i.e ${id}`)
     const proposal = await getProposalDetails(id)
     return proposal
   } catch (e) {
     return { error: e.message }
   }
 }
-const fetchProposalTemplate = async (path) => {
+const fetchProposalTemplate = async path => {
   try {
     const proposal = await getProposalTemplate(path)
     return { content: proposal }

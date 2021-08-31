@@ -1,4 +1,3 @@
-
 const voteService = require('../services/voteService')
 
 const vote = async (req, res, next) => {
@@ -31,5 +30,5 @@ const voteRollups = async (req, res, next) => {
 module.exports = {
   vote,
   priorVote,
-  voteRollups
+  voteRollups,
 }

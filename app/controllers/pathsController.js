@@ -1,6 +1,5 @@
 const pathsService = require('../services/pathsService')
 
-
 const allNations = async (req, res, next) => {
   try {
     const nations = await pathsService.allNations()
@@ -15,15 +14,14 @@ const pathsByNation = async (req, res, next) => {
   try {
     const { nation } = req.query
     const paths = await pathsService.pathsByNation(nation)
-    if (!!paths) {
+    if (paths) {
       return res.send(paths)
-    } else {
-      next('no paths available')
     }
+    next('no paths available')
   } catch (e) {
     next(e.message)
   }
-};
+}
 
 const getPath = async (req, res, next) => {
   try {
@@ -34,7 +32,7 @@ const getPath = async (req, res, next) => {
   } catch (e) {
     next(e.message)
   }
-};
+}
 
 const getUmbrellaPaths = async (req, res, next) => {
   try {
@@ -43,11 +41,11 @@ const getUmbrellaPaths = async (req, res, next) => {
   } catch (e) {
     next(e.message)
   }
-};
+}
 
 module.exports = {
   allNations,
   pathsByNation,
   getPath,
-  getUmbrellaPaths
+  getUmbrellaPaths,
 }

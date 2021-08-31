@@ -2,12 +2,12 @@ const { allNations } = require('zerotheft-node-utils').paths
 const { allYearCachedData } = require('../calcEngineServices')
 const { createDir, writeFile, exportsDir } = require('../../common')
 
-/* get cached report information  and export in JSON file*/
+/* get cached report information  and export in JSON file */
 const exportCachedReport = async () => {
   try {
-    let allNationPaths = await allNations()
-    const promises = allNationPaths.map(async (nationData) => {
-      const nation = nationData.nation
+    const allNationPaths = await allNations()
+    const promises = allNationPaths.map(async nationData => {
+      const { nation } = nationData
       const allYearData = await allYearCachedData(nation)
       const nationDir = `${exportsDir}/nation_reports/${nation}`
       await createDir(nationDir)
@@ -15,15 +15,11 @@ const exportCachedReport = async () => {
     })
     await Promise.all(promises)
     return { message: `all year report exported` }
-  }
-  catch (e) {
+  } catch (e) {
     return { error: e.message }
   }
 }
 
-
-
-
 module.exports = {
-  exportCachedReport
+  exportCachedReport,
 }
