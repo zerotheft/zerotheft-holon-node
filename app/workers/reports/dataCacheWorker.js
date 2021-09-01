@@ -133,7 +133,7 @@ scanDataWorker.on(
   'failed',
   async () => {
     cacheServer.del('SYNC_INPROGRESS')
-    cacheServer.set('DATA_RESYNC_FAILED', true)
+    cacheServer.set('DATA_RESYNC_FAILED', new Date())
     cacheServer.del('DATA_RESYNC')
     console.log(`Caching failed.`)
     createLog(MAIN_PATH, `Caching failed.`)
@@ -172,7 +172,6 @@ const singleYearCaching = async nation => {
  */
 const allDataCache = async () => {
   try {
-    // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })// executes immediately
     allYearData.add(
       'allYearDataCachingCron',
       { nation: 'USA', reSync: true },
@@ -183,9 +182,25 @@ const allDataCache = async () => {
     throw e
   }
 }
+/**
+ * Immediately run the all data resyncing and recaching
+ */
+const allDataCacheImmediate = async () => {
+  try {
+    allYearData.add(
+      'allYearDataCaching',
+      { nation: 'USA', reSync: true },
+      { removeOnComplete: true, removeOnFail: true }
+    ) // executes immediately
+  } catch (e) {
+    console.log(`allDataCacheImmediate Error:: ${e}`)
+    throw e
+  }
+}
 
 module.exports = {
   singleYearCaching,
   allDataCache,
+  allDataCacheImmediate,
   allYearData,
 }

@@ -4,7 +4,7 @@
   "PORT":40107,
   "SHOULD_VALIDATE": false,
   "HTTP_PROVIDER": "https://www.ethercluster.com/etc",
-  "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/2e00c30810a048b582f070d2c732b9a9"
+  "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/<infura_key>"
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "GAS_PRICE": 10,
