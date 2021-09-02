@@ -69,13 +69,13 @@ if (!fs.existsSync(inflatedValuesPath)) {
 const inflatedValues = require(inflatedValuesPath)
 
 // Gen single report data
-const generateReportData = async (fileName, fromWorker) => {
+const generateReportData = async (nation, fileName, fromWorker) => {
   const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
   const hideBlocks = []
   const pdfData = {}
   pdfData.pdfLink = `/issueReports/${fileName}.pdf`
-  pdfData.country = 'USA'
+  pdfData.country = nation
   pdfData.generatedTime = reportTime
   pdfData.holonUrl = holon
   pdfData.pageID = `ztReport/${leafPath}`
@@ -189,7 +189,7 @@ const generateReportData = async (fileName, fromWorker) => {
   const proposalID = get(leadingProp, 'id')
   let limitedLinesArray = []
   if (proposalID) {
-    const yamlJSON = await getProposalYaml(proposalID, path)
+    const yamlJSON = await getProposalYaml(proposalID, `${nation}/${path}`)
     pdfData.leadingProposalID = proposalID
     pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
     pdfData.leadingProposalDate = moment.tz(leadingProp.date, timeZone).format(dateFormat)
@@ -708,9 +708,9 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
     })
   })
 
-const generatePDFReport = async (noteBookName, fileName, fromWorker) => {
+const generatePDFReport = async (nation, noteBookName, fileName, fromWorker) => {
   createLog(MAIN_PATH, `Generating Report with filename: ${fileName}`)
-  const pdfData = await generateReportData(fileName, fromWorker)
+  const pdfData = await generateReportData(nation, fileName, fromWorker)
   return await generateLatexPDF(pdfData, fileName, fromWorker)
 }
 
@@ -1026,7 +1026,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     const leadingProp = get(pathSummary, 'leading_proposal')
     const proposalID = get(leadingProp, 'id')
     if (proposalID) {
-      const yamlJSON = await getProposalYaml(proposalID, path)
+      const yamlJSON = await getProposalYaml(proposalID, `${nation}/${path}`)
       pdfData.leadingProposalID = proposalID
       pdfData.leadingProposalAuthor = get(yamlJSON, 'author.name')
       pdfData.leadingProposalDate = moment.tz(leadingProp.date, timeZone).format(dateFormat)
@@ -1072,8 +1072,8 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
     'need_votes' in tots && tots.need_votes > 0
       ? `Needs ${tots.need_votes} more votes for High Confidence`
       : theft
-      ? `\\$${theftAbbr}`
-      : ''
+        ? `\\$${theftAbbr}`
+        : ''
 
   const pathMatch = fullPath.match(/^\/?([^*]+)/)
   if (pathMatch) {
@@ -1082,8 +1082,7 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
   const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (fullPath !== nation ? `${nation}/` : '') + fullPath
 
   return `\\textbf{${'\\quad '.repeat(indent)}${escapeSpecialChars(prob)}} &
-    \\cellcolor{${
-      voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'
+    \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'
     }} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? `${(votepct * 100).toFixed(2)}\\%` : ''}} &
     \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
     ${notes} \\\\ \n`
