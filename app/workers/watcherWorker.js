@@ -2,7 +2,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const IORedis = require('ioredis')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
-const { singleYearCaching } = require('./reports/dataCacheWorker')
+const { dataCachingPerPath } = require('./reports/dataCacheWorker')
 const { exportDataQueue } = require('./exportDataWorker')
 const { allReportWorker } = require('./reports/reportWorker')
 const { allDataCacheImmediate } = require('./reports/dataCacheWorker')
@@ -86,8 +86,8 @@ const watcherWorker = new Worker(
        * If no extra process is running and data is not in cache or its 4 hours cron job
        * Initiate data caching
        */
-      if (!isSyncing && cachedVid > 0 && !isVotesExporting && (!isDatainCache || isResyncing)) {
-        await singleYearCaching(job.data.nation)
+      if (!isSyncing && cachedVid > 0 && !isVotesExporting && !isGeneratingReports && (!isDatainCache || isResyncing)) {
+        await dataCachingPerPath(job.data.nation)
       }
 
       /**
@@ -126,10 +126,10 @@ const watcherWorker = new Worker(
 )
 
 // after worker finishes job
-watcherWorker.on('completed', async () => {}, { connection })
+watcherWorker.on('completed', async () => { }, { connection })
 
 // after worker failed
-watcherWorker.on('failed', async () => {}, { connection })
+watcherWorker.on('failed', async () => { }, { connection })
 
 /**
  * Its like heartbeat which actually monitors all the background jobs and also performs required operations
