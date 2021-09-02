@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const fs = require('fs')
 const csv = require('csvtojson')
 const { uniq } = require('lodash')
@@ -29,8 +30,8 @@ const processProposalIds = async (proposalContract, proposalIds, version, count,
   await PromisePool.withConcurrency(1)
     .for(proposalIds)
     .process(async pid => {
+      const propKey = version === 'v0' ? pid : `${contractIdentifier}:${version}:${pid}`
       try {
-        const propKey = version === 'v0' ? pid : `${contractIdentifier}:${version}:${pid}`
         if (count > parseInt(lastPid) || isFailed) {
           console.log('Exporting proposalId::', count, '::', propKey)
           const proposal = await proposalContract.callSmartContractGetFunc('getProposal', [propKey])
@@ -44,9 +45,9 @@ const processProposalIds = async (proposalContract, proposalIds, version, count,
               console.log(e)
             }
 
-            outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1)
+            const outputFiles = await fetchProposalYaml(proposalContract, proposalYaml.firstBlock, 1)
             await splitFile.mergeFiles(outputFiles, tmpYamlPath)
-            file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
+            const file = yaml.load(fs.readFileSync(tmpYamlPath, 'utf-8'))
             const { theftAmt } = proposalYearTheftInfo(file)
 
             const proposalDir = `${exportsDirNation}/${file.summary_country || 'USA'}/${file.hierarchy}/proposals`
@@ -68,6 +69,7 @@ const processProposalIds = async (proposalContract, proposalIds, version, count,
               proposalsCsv
             )
 
+            // eslint-disable-next-line no-plusplus
             for (let index = 0; index < outputFiles.length; index++) {
               if (fs.existsSync(outputFiles[index])) {
                 fs.unlinkSync(outputFiles[index])
@@ -81,6 +83,7 @@ const processProposalIds = async (proposalContract, proposalIds, version, count,
         console.log(e.message)
         createLog(EXPORT_LOG_PATH, `'exportProposal Error:: ${count} => ${e}`)
       }
+      // eslint-disable-next-line no-plusplus
       count++
     })
 }
@@ -96,7 +99,6 @@ const exportAllProposals = async () => {
 
     let count = 1
     let lastPid = await lastExportedPid()
-    console.log('lastPid', lastPid)
 
     await PromisePool.withConcurrency(1)
       .for(Object.keys(allProposals))
@@ -152,6 +154,7 @@ const getProposalData = async () => {
     return proposals
   } catch (e) {
     console.log(`getting Votes Error::`, e)
+    return null
   }
 }
 

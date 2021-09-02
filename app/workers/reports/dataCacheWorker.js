@@ -39,8 +39,6 @@ const allYearDataWorker = new Worker(
       cacheServer.del('FULL_REPORT')
       cacheServer.del('REPORTS_INPROGRESS')
       cacheServer.set('DATA_RESYNC', true)
-
-      // cacheServer.del('CALC_SUMMARY_SYNCED')
     }
   },
   { connection }
@@ -133,7 +131,7 @@ scanDataWorker.on(
   'failed',
   async () => {
     cacheServer.del('SYNC_INPROGRESS')
-    cacheServer.set('DATA_RESYNC_FAILED', true)
+    cacheServer.set('DATA_RESYNC_FAILED', new Date())
     cacheServer.del('DATA_RESYNC')
     console.log(`Caching failed.`)
     createLog(MAIN_PATH, `Caching failed.`)
@@ -142,26 +140,26 @@ scanDataWorker.on(
 )
 
 /**
- * @dev Saves year wise data in cache
+ * @dev Scans every  proposals and votes from all the economic hierarchy paths.
+ * Manipulates and do all the processing required for the report generation and save data in cache.
  * @param {string} nation
  * @param {int} year
  * @returns JSON with success or failure
  */
-const singleYearCaching = async nation => {
+const dataCachingPerPath = async nation => {
   try {
     const syncProgressYear = await cacheServer.getAsync('SYNC_INPROGRESS')
     const isVotesExporting = await cacheServer.getAsync(`VOTES_EXPORT_INPROGRESS`)
     const cachedVid = await lastExportedVid()
 
-    // if (!syncProgressYear || parseInt(syncProgressYear) !== parseInt(year)) {
     if (!syncProgressYear && !isVotesExporting && cachedVid > 0) {
       scanData.add('saveDatainCache', { nation }, { removeOnComplete: true, removeOnFail: true })
       return { message: `caching initiated. Please wait...` }
     }
     return { message: `Process ongoing. Status: ${!!syncProgressYear} vote export: ${!!isVotesExporting}` }
   } catch (e) {
-    console.log('singleYearCaching', e)
-    createLog(MAIN_PATH, `singleYearCaching:: ${e}`)
+    console.log('dataCachingPerPath', e)
+    createLog(MAIN_PATH, `dataCachingPerPath:: ${e}`)
 
     throw e
   }
@@ -172,7 +170,6 @@ const singleYearCaching = async nation => {
  */
 const allDataCache = async () => {
   try {
-    // allYearData.add('allYearDataCaching', { nation: "USA" }, { removeOnComplete: true, removeOnFail: true })// executes immediately
     allYearData.add(
       'allYearDataCachingCron',
       { nation: 'USA', reSync: true },
@@ -183,9 +180,25 @@ const allDataCache = async () => {
     throw e
   }
 }
+/**
+ * Immediately run the all data resyncing and recaching
+ */
+const allDataCacheImmediate = async () => {
+  try {
+    allYearData.add(
+      'allYearDataCaching',
+      { nation: 'USA', reSync: true },
+      { removeOnComplete: true, removeOnFail: true }
+    ) // executes immediately
+  } catch (e) {
+    console.log(`allDataCacheImmediate Error:: ${e}`)
+    throw e
+  }
+}
 
 module.exports = {
-  singleYearCaching,
+  dataCachingPerPath,
   allDataCache,
+  allDataCacheImmediate,
   allYearData,
 }

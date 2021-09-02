@@ -6,8 +6,8 @@ const firstPropYear = defaultPropYear - 60
 
 // Number of taxpayers (returns) from 2001
 // source: IRS
-taxpayerMinYear = 2001
-taxpayerCounts = [
+const taxpayerMinYear = 2001
+const taxpayerCounts = [
   130255237, // 2001
   130076443,
   130423626,
@@ -31,8 +31,8 @@ taxpayerCounts = [
 
 // US citizen count, 2001-2019, in millions
 // source: https://www.multpl.com/united-states-population/table/by-year
-citizenMinYear = 2001
-citizenCounts = [
+const citizenMinYear = 2001
+const citizenCounts = [
   180670000, // 1960
   183690000,
   186540000,
@@ -125,6 +125,7 @@ const realTheftAmount = dollar => {
   let multiplier = 1
   if (values[6]) {
     const denotor = values[6].toUpperCase()
+    // eslint-disable-next-line default-case
     switch (denotor) {
       case 'K':
         multiplier = Math.pow(10, 3)
@@ -162,7 +163,7 @@ const getCitizenAmounts = year => ({
 })
 
 const usaPopulation = year => {
-  populations = {
+  const populations = {
     2020: 330660000,
     2019: 329880000,
     2018: 326690000,
@@ -288,6 +289,13 @@ const usaPopulation = year => {
   return populations[year]
 }
 
+/**
+ * This was a way to spread the bars out across a bar chart proportionally to the amount.
+ *  So if you had $1M, $7M, and $9M it would show bars like 1.....7.9  rather than the normal bar chart of 1 7 9.  No data is changed, just spacing.
+ * @param {array} propThefts - Collection of all theft amounts
+ * @param {array} propVotes - Collection of all votes given to respective propTheft amount
+ * @return {Object} JSON object with refined and proper data of theft amounts and votes for chart plotting.
+ */
 const prepareBellCurveData = (propThefts, propVotes) => {
   const axTh = []
   const axVt = []
@@ -301,7 +309,7 @@ const prepareBellCurveData = (propThefts, propVotes) => {
 
     // find the minimum increment between thefts
     propThefts.forEach((t, i) => {
-      if (i == 0) return
+      if (i === 0) return
       const incr = t - propThefts[i - 1]
       if (minIncr === null || incr < minIncr) minIncr = incr
     })
@@ -315,9 +323,9 @@ const prepareBellCurveData = (propThefts, propVotes) => {
     // special cases
     // - single theft, three "columns"
     // - two thefts , five "columns"
-    if (propThefts.length == 1) {
+    if (propThefts.length === 1) {
       minIncr = propThefts[0] * 0.2
-    } else if (propThefts.length == 2) {
+    } else if (propThefts.length === 2) {
       minIncr /= 3
     }
 
@@ -327,7 +335,7 @@ const prepareBellCurveData = (propThefts, propVotes) => {
     const rng = maxTh - minTh
 
     let cells
-    if (minIncr == 0) {
+    if (minIncr === 0) {
       cells = 0
     } else {
       cells = parseInt(rng / minIncr)
@@ -343,10 +351,10 @@ const prepareBellCurveData = (propThefts, propVotes) => {
     maxTh = parseInt(maxTh)
 
     // now we create a new dataset that is distributed across the axis
-    thIdx = 0
-    nextTh = propThefts[0]
+    let thIdx = 0
+    let nextTh = propThefts[0]
 
-    for (th = minTh; th < maxTh; th += minIncr) {
+    for (let th = minTh; th < maxTh; th += minIncr) {
       axTh.push(th)
       // we have to allow for some slop, so the "next_th" and "max_th" checks need to be reduced by
       // about 1% of the increment to allow for rounding errors

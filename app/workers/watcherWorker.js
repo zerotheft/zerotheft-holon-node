@@ -2,9 +2,10 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const IORedis = require('ioredis')
 const { Queue, Worker, QueueScheduler } = require('bullmq')
-const { singleYearCaching } = require('./reports/dataCacheWorker')
+const { dataCachingPerPath } = require('./reports/dataCacheWorker')
 const { exportDataQueue } = require('./exportDataWorker')
 const { allReportWorker } = require('./reports/reportWorker')
+const { allDataCacheImmediate } = require('./reports/dataCacheWorker')
 const { cacheServer } = require('../services/redisService')
 const { createLog, WATCHER_LOG_PATH } = require('../services/LogInfoServices')
 const { lastExportedUid, lastExportedPid, lastExportedVid } = require('../services/engineDataServices/utils')
@@ -26,12 +27,11 @@ const watcherWorker = new Worker(
 
     try {
       console.log('*****HEARTBEAT Report*****')
-
       const isSyncing = await cacheServer.getAsync(`SYNC_INPROGRESS`)
       const isGeneratingReports = await cacheServer.getAsync(`REPORTS_INPROGRESS`)
       const isFullReport = await cacheServer.getAsync(`FULL_REPORT`)
       const isResyncing = await cacheServer.getAsync(`DATA_RESYNC`)
-      // const pastThefts = await cacheServer.hgetallAsync(`PAST_THEFTS`)
+      const isResyncingFailed = await cacheServer.getAsync(`DATA_RESYNC_FAILED`)
       const isDatainCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
       const cachedUid = await lastExportedUid()
       const cachedPid = await lastExportedPid()
@@ -51,6 +51,7 @@ const watcherWorker = new Worker(
       console.log(`9. Last Vote ID Exported: ${cachedVid}`)
       console.log(`10. Vote Export in progress(VOTES_EXPORT_INPROGRESS): ${!!isVotesExporting}`)
       console.log(`11. Data Resyncing(DATA_RESYNC): ${!!isResyncing}`)
+      console.log(`12. Data Resyn failed(DATA_RESYNC_FAILED): ${!!isResyncingFailed}(${isResyncingFailed})`)
 
       const isNotExporting = !isVotesExporting && !isVotersExporting && !isProposalExporting
       /**
@@ -85,8 +86,8 @@ const watcherWorker = new Worker(
        * If no extra process is running and data is not in cache or its 4 hours cron job
        * Initiate data caching
        */
-      if (!isSyncing && cachedVid > 0 && !isVotesExporting && (!isDatainCache || isResyncing)) {
-        await singleYearCaching(job.data.nation)
+      if (!isSyncing && cachedVid > 0 && !isVotesExporting && !isGeneratingReports && (!isDatainCache || isResyncing)) {
+        await dataCachingPerPath(job.data.nation)
       }
 
       /**
@@ -98,6 +99,14 @@ const watcherWorker = new Worker(
         allReportWorker()
       } else if (isGeneratingReports) {
         console.log('Reports in progress!!')
+      }
+
+      /**
+       * If resycing every 4 hours failed then watcher detects and re-reuns it
+       */
+      if (isResyncingFailed && !isFullReport && isDatainCache && !isGeneratingReports && isNotExporting) {
+        console.log('All data resycing triggered from failed status....')
+        allDataCacheImmediate()
       }
 
       // eslint-disable-next-line no-console
@@ -117,10 +126,10 @@ const watcherWorker = new Worker(
 )
 
 // after worker finishes job
-watcherWorker.on('completed', async () => {}, { connection })
+watcherWorker.on('completed', async () => { }, { connection })
 
 // after worker failed
-watcherWorker.on('failed', async () => {}, { connection })
+watcherWorker.on('failed', async () => { }, { connection })
 
 /**
  * Its like heartbeat which actually monitors all the background jobs and also performs required operations

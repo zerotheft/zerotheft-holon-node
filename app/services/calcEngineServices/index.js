@@ -1,16 +1,14 @@
+/* eslint-disable no-underscore-dangle */
 const fs = require('fs')
 const { get, min, max, isEmpty, difference } = require('lodash')
-const { pathsByNation, getUmbrellaPaths } = require('zerotheft-node-utils').paths
-const { convertStringToHash } = require('zerotheft-node-utils').web3
+const { pathsByNation } = require('zerotheft-node-utils').paths
 const config = require('zerotheft-node-utils/config')
 
-const PUBLIC_PATH = `${config.APP_PATH}/public`
 const cacheDir = `${config.APP_PATH}/.cache/calc_data`
-const { getPastYearThefts } = require('./calcLogic')
 const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config')
 const { cacheServer } = require('../redisService')
-const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
+const { dataCachingPerPath } = require('../../workers/reports/dataCacheWorker')
 const {
   generatePDFReport,
   generateNoVotePDFReport,
@@ -25,6 +23,24 @@ const reportsPath = fromWorker => `${getReportPath()}reports${fromWorker ? '_in_
 const multiIssueReportPath = fromWorker => `${reportsPath(fromWorker)}/multiIssueReport`
 const singleIssueReportPath = fromWorker => `${reportsPath(fromWorker)}/ztReport`
 
+/**
+ * Before report generation, all data from the blockchain were exported and go through a calculation algorithm.
+ * Calculation engine creates a summary json file that is then used for report generation process.
+ * This method actually scans the calc_summary.json file and returns a JSON object whereever needed in the report generation process.
+ */
+const allYearCachedData = async nation => {
+  createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
+  try {
+    const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/calc_summary.json`)
+    return JSON.parse(jsonFile)
+  } catch {
+    return {}
+  }
+}
+/**
+ * Generate sigle report based on economic hierarchy path. This method is also called from worker itself
+ * Ultimate pdf is generated for a single path.
+ */
 const singleIssueReport = async (leafPath, fromWorker = false) => {
   createLog(SINGLE_REPORT_PATH, 'Single report generation initiation......', leafPath)
   const fileName = `${leafPath.replace(/\//g, '-')}`
@@ -34,8 +50,6 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
       const nation = leafPath.split('/')[0]
       const nationPaths = await pathsByNation(nation)
 
-      // let allYearData = { '2001': '' }
-      // TODO: uncomment this
       const allYearData = await allYearCachedData(nation)
 
       const lPath = leafPath.split('/').slice(1).join('/')
@@ -54,7 +68,6 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
           allPaths: nationPaths,
         }
         createLog(SINGLE_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, leafPath)
-        // TODO: uncomment this
         await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
         createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName}`, leafPath)
@@ -63,13 +76,13 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
       }
       await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false), nationPaths, fromWorker)
       return { report: `${fileName}.pdf` }
-      // return { message: 'Issue not present' }
     }
     if (fs.existsSync(`${filePath}/${fileName}.pdf`)) {
       return { report: `${fileName}.pdf` }
     }
     return { message: 'Issue not present' }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.log(`path: ${leafPath}`, e)
     createLog(SINGLE_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, leafPath)
     createLog(
@@ -79,22 +92,14 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
     return { error: e.message }
   } finally {
     createLog(SINGLE_REPORT_PATH, `Deleting json file => ${fileName}`, leafPath)
-    // TODO: uncomment this
     await deleteJsonFile(fileName)
   }
 }
 
-/*
- * fetch data from cache and do year wise mapping
+/**
+ * Get the avilable paths for report generation.
+ * All pdf files are named after the specific paths. It runs through all the paths passed as method params and create a tex file name based on path.
  */
-const allYearCachedData = async nation => {
-  createLog(MAIN_PATH, 'Fetching data from cache and do year wise mapping...')
-  try {
-    const jsonFile = fs.readFileSync(`${cacheDir}/${nation}/calc_summary.json`)
-    return JSON.parse(jsonFile)
-  } catch {}
-}
-
 const listAvailablePdfsPaths = (paths, path, fromWorker) => {
   let availablePaths = []
   const childrenKeys = difference(Object.keys(paths), ['metadata', 'parent'])
@@ -119,6 +124,10 @@ const listAvailablePdfsPaths = (paths, path, fromWorker) => {
   return [`multiIssueReport/${path}`, ...availablePaths]
 }
 
+/**
+ * This method generates a umbrella report.
+ * Paths are either a umbrella or leaf path. Report for umbrella path is quite different than the leaft path.
+ */
 const multiIssuesReport = async (path, fromWorker = false) => {
   // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
   const fileName = `${path.replace(/\//g, '-')}`
@@ -175,6 +184,7 @@ const multiIssuesReport = async (path, fromWorker = false) => {
   } catch (e) {
     // createLog(MULTI_REPORT_PATH, `Exceptions in single report generation with Exception: ${e.message}`, path)
     // createLog(ERROR_PATH, `calcEngineServices=>multiIssuesReport()::Exceptions in single report generation for ${path} with Exception: ${e.message}`)
+    // eslint-disable-next-line no-console
     console.log(`path: ${path}`, e)
     return { error: e.message }
   } finally {
@@ -281,9 +291,11 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
       const nationData = JSON.parse(fs.readFileSync(exportFile))
       // = JSON.parse(result[nation])
       const { paths } = nationData
+      // eslint-disable-next-line no-underscore-dangle
       const agg = { [nation]: nationData._totals }
       let allTheftYears = []
       Object.keys(paths).forEach(path => {
+        // eslint-disable-next-line no-underscore-dangle
         const totals = paths[path]._totals
         if (totals.votes !== 0) {
           agg[`${nation}/${path}`] = totals
@@ -333,8 +345,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
       return agg
     }
 
-    // cacheServer.del('PAST_THEFTS')
-    const response = singleYearCaching(nation) // Background task for processing and saving data into cache
+    const response = dataCachingPerPath(nation) // Background task for processing and saving data into cache
     createLog(MAIN_PATH, `Background task for processing and saving data into cache for ${nation}`)
     return response
   } catch (e) {
@@ -344,21 +355,27 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
   }
 }
 
+/**
+ * Reports are generated in every 4 hours. No reports are purged or deleted. Report generation always takes time.
+ * Util report generation is completed in progress reports are kept in different directory as `reports_in_progress` and then directory name is changed to `reports`
+ */
 const setupForReportsInProgress = () => {
   const time = new Date()
-  const reportsPath = `${exportsDir}/${time.getFullYear()}/${
-    time.getMonth() + 1
-  }/${time.getDate()}/${time.getHours()}_hrs_${time.getMinutes()}_mins_${time.getSeconds()}_secs/reports`
-  // const reportsPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/reports`
-  fs.mkdirSync(`${reportsPath}/multiIssueReport`, { recursive: true })
-  fs.mkdirSync(`${reportsPath}/ztReport`, { recursive: true })
+  const reportPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth() + 1
+    }/${time.getDate()}/${time.getHours()}_hrs_${time.getMinutes()}_mins_${time.getSeconds()}_secs/reports`
+  // const reportPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/reports`
+  fs.mkdirSync(`${reportPath}/multiIssueReport`, { recursive: true })
+  fs.mkdirSync(`${reportPath}/ztReport`, { recursive: true })
   const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
   try {
     fs.unlinkSync(symLinkPath)
-  } catch (e) {}
-  fs.symlinkSync(reportsPath, symLinkPath, 'dir')
+  } catch (e) { }
+  fs.symlinkSync(reportPath, symLinkPath, 'dir')
 }
 
+/**
+ * When report generation is complete then `reports_in_progress` is then changed to `reports` and served in holon UI
+ */
 const setupForReportsDirs = (replaceDirs = true) => {
   const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
   const currentReportsSymLinkPath = `${config.APP_PATH}/zt_report/reports`
@@ -369,11 +386,11 @@ const setupForReportsDirs = (replaceDirs = true) => {
     setupForReportsInProgress()
   }
 
-  const reportsPath = fs.realpathSync(symLinkPath)
+  const reportPath = fs.realpathSync(symLinkPath)
   try {
     fs.unlinkSync(currentReportsSymLinkPath)
-  } catch (e) {}
-  fs.symlinkSync(reportsPath, currentReportsSymLinkPath, 'dir')
+  } catch (e) { }
+  fs.symlinkSync(reportPath, currentReportsSymLinkPath, 'dir')
 }
 
 module.exports = {
