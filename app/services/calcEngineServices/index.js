@@ -8,7 +8,7 @@ const cacheDir = `${config.APP_PATH}/.cache/calc_data`
 const { writeFile, exportsDir, createAndWrite } = require('../../common')
 const { getReportPath, getAppRoute } = require('../../../config')
 const { cacheServer } = require('../redisService')
-const { singleYearCaching } = require('../../workers/reports/dataCacheWorker')
+const { dataCachingPerPath } = require('../../workers/reports/dataCacheWorker')
 const {
   generatePDFReport,
   generateNoVotePDFReport,
@@ -345,8 +345,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
       return agg
     }
 
-    // cacheServer.del('PAST_THEFTS')
-    const response = singleYearCaching(nation) // Background task for processing and saving data into cache
+    const response = dataCachingPerPath(nation) // Background task for processing and saving data into cache
     createLog(MAIN_PATH, `Background task for processing and saving data into cache for ${nation}`)
     return response
   } catch (e) {
@@ -362,16 +361,15 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
  */
 const setupForReportsInProgress = () => {
   const time = new Date()
-  const reportPath = `${exportsDir}/${time.getFullYear()}/${
-    time.getMonth() + 1
-  }/${time.getDate()}/${time.getHours()}_hrs_${time.getMinutes()}_mins_${time.getSeconds()}_secs/reports`
+  const reportPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth() + 1
+    }/${time.getDate()}/${time.getHours()}_hrs_${time.getMinutes()}_mins_${time.getSeconds()}_secs/reports`
   // const reportPath = `${exportsDir}/${time.getFullYear()}/${time.getMonth()}/${time.getDate()}/reports`
   fs.mkdirSync(`${reportPath}/multiIssueReport`, { recursive: true })
   fs.mkdirSync(`${reportPath}/ztReport`, { recursive: true })
   const symLinkPath = `${config.APP_PATH}/zt_report/reports_in_progress`
   try {
     fs.unlinkSync(symLinkPath)
-  } catch (e) {}
+  } catch (e) { }
   fs.symlinkSync(reportPath, symLinkPath, 'dir')
 }
 
@@ -391,7 +389,7 @@ const setupForReportsDirs = (replaceDirs = true) => {
   const reportPath = fs.realpathSync(symLinkPath)
   try {
     fs.unlinkSync(currentReportsSymLinkPath)
-  } catch (e) {}
+  } catch (e) { }
   fs.symlinkSync(reportPath, currentReportsSymLinkPath, 'dir')
 }
 
