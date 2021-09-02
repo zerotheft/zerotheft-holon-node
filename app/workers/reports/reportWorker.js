@@ -82,7 +82,7 @@ const reportWorker = new Worker(
       }
     }
   },
-  { connection }
+  { connection, lockDuration: 600000 }
 )
 
 // raise flag when report worker job is completed
