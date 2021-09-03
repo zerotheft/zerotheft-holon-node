@@ -2,7 +2,9 @@ const minimist = require('minimist')
 const error = require('./utils/error')
 
 module.exports = () => {
-  const args = minimist(process.argv.slice(2), { string: ['from', 'to', 'citizen', 'donation_address'] })
+  const args = minimist(process.argv.slice(2), {
+    string: ['from', 'to', 'citizen', 'donation_address', 'owner_address'],
+  })
   let cmd = args._[0] || 'help'
 
   if (args.version || args.v) {
@@ -38,6 +40,9 @@ module.exports = () => {
 
     case 'register-holon':
       require('./cmds/registerHolon')(args)
+      break
+    case 'update-holon-status':
+      require('./cmds/updateHolonStatus')(args)
       break
     case 'donation-address':
       require('./cmds/donationAddress')(args)
