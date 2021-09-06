@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const { exec } = require('child_process')
 const { get, startCase, isEmpty, min, max } = require('lodash')
 const latex = require('node-latex')
@@ -207,6 +208,13 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   return pdfData
 }
 
+/**
+ * Generate Yes or No percentage image based on number of yes and no votes.
+ * Svg is generated and then saved.
+ * @param {integer} noVotes - number of no votes given.
+ * @param {integer} yesVotes - number of yes votes given.
+ * @param {string} filePath - path where create svg is saved then.
+ */
 const getYesNoChart = async (noVotes, yesVotes, filePath) =>
   new Promise((resolve, reject) => {
     const totalVotes = yesVotes + noVotes
@@ -275,7 +283,7 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) =>
       height: 280,
       axisX: {
         type: Chartist.AutoScaleAxis,
-        scaleMinSpace: 50,
+        scaleMinSpace: 60,
         onlyInteger: true,
         labelOffset: { y: 10 },
         offset: 0,
@@ -337,7 +345,9 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) =>
             }
             .ct-label.ct-horizontal {
                 text-anchor: middle !important;
+                
             }
+            
         </style>
         `
 

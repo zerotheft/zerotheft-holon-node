@@ -38,7 +38,7 @@ const allYearCachedData = async nation => {
   }
 }
 /**
- * Generate sigle report based on economic hierarchy path. This method is also called from worker itself
+ * Generate single report based on economic hierarchy path. This method is also called from worker itself
  * Ultimate pdf is generated for a single path.
  */
 const singleIssueReport = async (leafPath, fromWorker = false) => {
