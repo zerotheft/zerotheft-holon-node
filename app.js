@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
+const process = require('process')
 
 const app = express()
 const Honeybadger = require('honeybadger')
@@ -32,22 +33,22 @@ function errorHandler(err, req, res, next) {
   return res.status(code).send({ error: error || 'There was some errors while performing action.' })
 }
 app.use(cors())
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 app.use('/api', routes)
 app.use(logErrors)
 app.use(errorHandler)
 
 app.use('/public', serveIndex(path.join(APP_PATH, 'public')))
+app.use('/public', express.static(path.join(APP_PATH, 'public'), { fallthrough: false }))
 app.use('/pathReports', express.static(`${getReportPath()}reports/multiIssueReport`, { fallthrough: false }))
 app.use('/issueReports', express.static(`${getReportPath()}reports/ztReport`))
-
-app.use('/public', express.static(path.join(APP_PATH, 'public'), { fallthrough: false }))
 
 // health check route
 app.get('/healthcheck', (req, res, next) =>
   res.send({
     status: 'Running',
+    upTime: Math.floor(process.uptime()),
     success: true,
     message: 'holon is running fine',
   })
