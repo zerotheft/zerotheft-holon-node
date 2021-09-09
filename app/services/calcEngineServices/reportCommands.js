@@ -627,7 +627,7 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
 
     // Remove a overlay watermark only when the environment is production.
     if (MODE === 'production') {
-      template = template.replace(/Test Data/g, '')
+      template = template.replace(/Testing/g, '')
     }
 
     const templateFull = template
@@ -695,7 +695,7 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
 
     // Remove a overlay watermark only when the environment is production.
     if (MODE === 'production') {
-      template = template.replace(/Test Data/g, '')
+      template = template.replace(/Testing/g, '')
     }
 
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
@@ -766,7 +766,7 @@ const generateNoVoteLatexPDF = async (pdfData, fileName, fromWorker) =>
 
     // Remove a overlay watermark only when the environment is production.
     if (MODE === 'production') {
-      template = template.replace(/Test Data/g, '')
+      template = template.replace(/Testing/g, '')
     }
     const reportPrepd = `${singleIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${singleIssueReportPath(fromWorker)}/${fileName}.pdf`
@@ -835,7 +835,7 @@ const generateNoVoteMultiLatexPDF = async (pdfData, fileName, fromWorker) =>
     })
     // Remove a overlay watermark only when the environment is production.
     if (MODE === 'production') {
-      template = template.replace(/Test Data/g, '')
+      template = template.replace(/Testing/g, '')
     }
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
@@ -1245,7 +1245,7 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
 
     // Remove a overlay watermark only when the environment is production.
     if (MODE === 'production') {
-      mergedTemplate = mergedTemplate.replace(/Test Data/g, '')
+      mergedTemplate = mergedTemplate.replace(/Testing/g, '')
     }
 
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
