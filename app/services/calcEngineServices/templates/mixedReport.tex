@@ -16,6 +16,7 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
+\usepackage[printwatermark]{xwatermark}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
@@ -73,6 +74,16 @@ anchorcolor = blue]{hyperref}
 
 \pagestyle{empty}
 \AtBeginShipout{\AtBeginShipoutAddToBox{\Footer}}
+
+\newsavebox\mybox
+\savebox\mybox{\tikz[color=red,opacity=0.3]\node{Test Data};}
+\newwatermark*[
+  allpages,
+  angle=45,
+  scale=10,
+  xpos=-20,
+  ypos=15
+]{\usebox\mybox}
 
 \begin{document}
 \sffamily

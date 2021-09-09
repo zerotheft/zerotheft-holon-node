@@ -2,18 +2,16 @@
 const { exec } = require('child_process')
 const { get, startCase, isEmpty, min, max } = require('lodash')
 const latex = require('node-latex')
-const yaml = require('js-yaml')
 const yamlConverter = require('json2yaml')
 
 const fs = require('fs')
 const os = require('os')
 
 const homedir = os.homedir()
-const platform = os.platform()
 const templates = `${homedir}/.zerotheft/Zerotheft-Holon/holon-api/app/services/calcEngineServices/templates`
-const { APP_PATH } = require('zerotheft-node-utils/config')
-const { getReportPath } = require('../../../config')
+const { MODE, APP_PATH } = require('zerotheft-node-utils/config')
 const { getProposalYaml } = require('zerotheft-node-utils').proposals
+const { getReportPath } = require('../../../config')
 const { createLog, MAIN_PATH } = require('../LogInfoServices')
 const {
   loadSingleIssue,
@@ -110,7 +108,7 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   let minYr = null
   let maxYr = null
   let totalTh = 0
-  for (i = 0; i < yearTh.length; i++) {
+  for (let i = 0; i < yearTh.length; i++) {
     const yr = yearTh[i]
     minYr = minYr === null || yr.Year < minYr ? yr.Year : minYr
     maxYr = maxYr === null || yr.Year > maxYr ? yr.Year : maxYr
@@ -627,6 +625,11 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
       template = template.replace(regex, pdfData[key])
     })
 
+    // Remove a overlay watermark only when the environment is production.
+    if (MODE === 'production') {
+      template = template.replace(/Test Data/g, '')
+    }
+
     const templateFull = template
       .replace(/--leadingProposalDetail--/g, pdfData.leadingProposalDetail)
       .replace(/--viewMore--/g, '')
@@ -690,6 +693,11 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
       `\\href{${pdfData.holonUrl}/path/${pdfData.pathSlug}/issue/${pdfData.leafSlug}}{\\color{blue}View More}`
     )
 
+    // Remove a overlay watermark only when the environment is production.
+    if (MODE === 'production') {
+      template = template.replace(/Test Data/g, '')
+    }
+
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
 
@@ -744,6 +752,10 @@ const generateNoVoteReportData = async (fileName, path, holon, allPaths) => {
   return pdfData
 }
 
+/**
+ * There is a chance that proposals from specific hierarchy path might not get a single vote.
+ * In such case we simply generate a No Vote PDF.
+ */
 const generateNoVoteLatexPDF = async (pdfData, fileName, fromWorker) =>
   new Promise((resolve, reject) => {
     let template = fs.readFileSync(`${templates}/reportNoVote.tex`, 'utf8')
@@ -752,6 +764,10 @@ const generateNoVoteLatexPDF = async (pdfData, fileName, fromWorker) =>
       template = template.replace(regex, pdfData[key])
     })
 
+    // Remove a overlay watermark only when the environment is production.
+    if (MODE === 'production') {
+      template = template.replace(/Test Data/g, '')
+    }
     const reportPrepd = `${singleIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${singleIssueReportPath(fromWorker)}/${fileName}.pdf`
 
@@ -817,7 +833,10 @@ const generateNoVoteMultiLatexPDF = async (pdfData, fileName, fromWorker) =>
       const regex = new RegExp(`--${key}--`, 'g')
       template = template.replace(regex, pdfData[key])
     })
-
+    // Remove a overlay watermark only when the environment is production.
+    if (MODE === 'production') {
+      template = template.replace(/Test Data/g, '')
+    }
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
 
@@ -885,12 +904,12 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
   pdfData.generatedFrom = generatedFrom
 
-  if (actualPath == nation) {
+  if (actualPath === nation) {
     pdfData.stolenBlocksImage = stolenBlocksImage
   } else {
     hideBlocks.push('forFullReportOnlyBlock')
   }
-  const path = actualPath == nation ? nation : noNationPath
+  const path = actualPath === nation ? nation : noNationPath
   const { pathTitle, pathPrefix } = splitPath(actualPath)
   pdfData.title = escapeSpecialChars(
     path === nation ? `${nation} Full Economy` : `/ ${get(subPaths, 'metadata.display_name', pathTitle)}`
@@ -1132,7 +1151,7 @@ const prepareSourcesOfTheft = (
   availablePdfsPaths
 ) => {
   // insert the area total as the first line
-  disp = rowDisp(
+  let disp = rowDisp(
     get(subPaths, 'metadata.display_name', get(subPaths, 'display_name', startCase(path))),
     sumTotals,
     0,
@@ -1144,7 +1163,7 @@ const prepareSourcesOfTheft = (
   )
 
   // now walk all the sub-paths from this path
-  const firstPath = path == nation ? '' : `${path}/`
+  const firstPath = path === nation ? '' : `${path}/`
   disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, nation, availablePdfsPaths)
 
   return disp
@@ -1186,7 +1205,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
 
 const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPaths) => {
   // insert the area total as the first line
-  disp = rowDispNoVote(
+  let disp = rowDispNoVote(
     get(subPaths, 'metadata.display_name', get(subPaths, 'display_name', startCase(fullPath))),
     0,
     nation,
@@ -1196,7 +1215,7 @@ const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPa
   )
 
   // now walk all the sub-paths from this path
-  const firstPath = fullPath == nation ? '' : `${fullPath}/`
+  const firstPath = fullPath === nation ? '' : `${fullPath}/`
   disp += walkSubPathNoVote(firstPath, subPaths, 1, nation, availablePdfsPaths)
 
   return disp
@@ -1223,6 +1242,11 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
     mergedTemplate = mergedTemplate.replace(/--generatedTime--/g, reportTime)
     mergedTemplate = mergedTemplate.replace(/--holonUrl--/g, holonUrl)
     mergedTemplate = mergedTemplate.replace(/--mixedContent--/g, mergedTex)
+
+    // Remove a overlay watermark only when the environment is production.
+    if (MODE === 'production') {
+      mergedTemplate = mergedTemplate.replace(/Test Data/g, '')
+    }
 
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const mergedLatexPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
