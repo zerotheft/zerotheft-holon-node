@@ -12,6 +12,7 @@ linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
 anchorcolor = blue]{hyperref}
+\usepackage[printwatermark]{xwatermark}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
 \definecolor{primary}{RGB}{115,54,163}
@@ -30,6 +31,7 @@ anchorcolor = blue]{hyperref}
 \newcommand\Footer{%
   \sffamily
   \begin{tikzpicture}[remember picture,overlay]
+  
     \node[leftFooterText] at (124pt, -734pt) (leftTop) {\Large Amount taken unethically from citizens in a rigged economy};
     \node[leftFooterText, below=-3pt of leftTop] (leftBottom) {Numbers and Theft vs. not Theft come from citizen voting
     and not ZTM Technologies SPC or this website};
@@ -45,6 +47,16 @@ anchorcolor = blue]{hyperref}
 
 \pagestyle{empty}
 \AtBeginShipout{\AtBeginShipoutAddToBox{\Footer}}
+
+\newsavebox\mybox
+\savebox\mybox{\tikz[color=gray,opacity=0.3]\node{Testing};}
+\newwatermark*[
+  pages=1-800,
+  angle=45,
+  scale=10,
+  xpos=-20,
+  ypos=15
+]{\usebox\mybox}
 
 \begin{document}
 \sffamily
