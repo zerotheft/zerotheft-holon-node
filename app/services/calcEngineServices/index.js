@@ -38,7 +38,7 @@ const allYearCachedData = async nation => {
   }
 }
 /**
- * Generate sigle report based on economic hierarchy path. This method is also called from worker itself
+ * Generate single report based on economic hierarchy path. This method is also called from worker itself
  * Ultimate pdf is generated for a single path.
  */
 const singleIssueReport = async (leafPath, fromWorker = false) => {
@@ -71,7 +71,7 @@ const singleIssueReport = async (leafPath, fromWorker = false) => {
         await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, leafJson)
 
         createLog(SINGLE_REPORT_PATH, `Generating report for => ${fileName}`, leafPath)
-        await generatePDFReport('ztReport', fileName, fromWorker)
+        await generatePDFReport(nation, 'ztReport', fileName, fromWorker)
         return { report: `${fileName}.pdf` }
       }
       await generateNoVotePDFReport('ztReport', fileName, leafPath, getAppRoute(false), nationPaths, fromWorker)

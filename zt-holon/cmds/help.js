@@ -11,6 +11,7 @@ const menus = {
     greeting                                                                                          ... greets
     import-account --private-key <privateKey>                                                         ... imports the account using private key
     register-holon --url <url> --name <name> --donation_address <address>                             ... registers your holon into blockchain
+    update-holon-status  --id <holon_id> --owner_address <holon_address> --status <holon_status>      ... update holon status by holon owner in the blockchain
     register-proxy-voter                                                                              ... registers for proxy voting so that voter can vote through your account
     update-proxy-settings                                                                             ... updates the proxy settings
     version                                                                                           ... show package version
@@ -19,6 +20,8 @@ const menus = {
 
   greeting: `
     zt-holon greeting .....greets you`,
+  'update-holon-status': `zt-holon update-holon-status --id <holon_id> --owner_address <holon_address> --status <holon_status>            ... Update holon status by holon owner in the blockchain
+  `,
 }
 
 module.exports = args => {
