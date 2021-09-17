@@ -2,7 +2,7 @@
   "MODE": "development",
   "PORT": 3000,
   "SHOULD_VALIDATE": false,
-  "HTTP_PROVIDER": "http://localhost:7545",
+  "HTTP_PROVIDER": "http://localhost:8545",
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "ZERO_THEFT_CONTRACT": "/zerotheft/zerotheft/build/contracts",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",

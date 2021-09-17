@@ -37,6 +37,7 @@ const allYearDataWorker = new Worker(
 
       cacheServer.del('SYNC_INPROGRESS')
       cacheServer.del('FULL_REPORT')
+      cacheServer.del('CALC_SUMMARY_SYNCED')
       cacheServer.del('REPORTS_INPROGRESS')
       cacheServer.set('DATA_RESYNC', true)
     }
