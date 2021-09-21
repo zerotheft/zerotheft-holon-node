@@ -33,7 +33,11 @@ const allYearDataWorker = new Worker(
       createLog(CRON_PATH, `Cron job started for data re-sync and full report`)
       // Reset voting exports
       fs.unlinkSync(`${exportsDir}/.last_exported_vid`)
+      // Reset voters exports
+      fs.unlinkSync(`${exportsDir}/.last_exported_uid`)
+
       cacheServer.del('VOTES_EXPORT_INPROGRESS')
+      cacheServer.del('VOTERS_EXPORT_INPROGRESS')
 
       cacheServer.del('SYNC_INPROGRESS')
       cacheServer.del('FULL_REPORT')
