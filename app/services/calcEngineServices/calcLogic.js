@@ -1,3 +1,9 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-console */
+/* eslint-disable no-plusplus */
+/* eslint-disable no-continue */
+/* eslint-disable no-underscore-dangle */
 const fs = require('fs')
 const { uniq, mean, isEmpty, filter } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
@@ -112,8 +118,8 @@ const getPathYearVoteTotals = async (path, proposals, votes, years) => {
           const yrAmt = !v.voteType
             ? 0
             : !isEmpty(v.altTheftAmt) && v.altTheftAmt[year] && v.voteType
-            ? v.altTheftAmt[year]
-            : prop.theftYears[year]
+              ? v.altTheftAmt[year]
+              : prop.theftYears[year]
           propAllTheftAmts[year] ? propAllTheftAmts[year].push(yrAmt) : (propAllTheftAmts[year] = [yrAmt])
         })
       tots.props[voteProposalId].all_theft_amounts = propAllTheftAmts
@@ -171,9 +177,6 @@ const getHierarchyTotals = async (
 
   if (!vtby) {
     vtby = {}
-    // set up yearly totals
-    // for (let yr = firstPropYear; yr < defaultPropYear + 1; yr++) {
-    // if (parseInt(yr) === parseInt(year))
     vtby = {
       _totals: {
         votes: 0,
@@ -189,7 +192,6 @@ const getHierarchyTotals = async (
       },
       paths: {},
     }
-    // }
   }
   // walk the path hierarchy (depth-first recursive)
   for (pathName in pathH) {
@@ -414,7 +416,7 @@ const doPathRollUpsForYear = (
       pathData.missing = allMissing // if we have any sub-path summary (even a bad one, it is no longer missing, though probably not legit)
     } else if (isUmbrella) {
       if (umbrellaPaths[fullPath].value_parent === 'children') {
-        // if umbrella total is legit, and roll - up total is legit, and roll - up total theft greater than umbrella, use roll - up data
+        // if umbrella total is legit, and roll-up total is legit, and roll-up total theft greater than umbrella, use roll-up data
         if (totalsData.legit && childrenSum.legit && childrenSum.theft > totalsData.theft) {
           secondaryData = totalsData
           totalsData = {
@@ -583,6 +585,7 @@ const manipulatePaths = async (
     const nextPath = `${currentPath}/${key}`
     if (nestedValues.leaf) {
       try {
+        // eslint-disable-next-line no-await-in-loop
         const details = await getPathDetail(nextPath, proposalContract, voterContract, true)
         if (details.success) {
           proposals = proposals.concat(details.allDetails)
@@ -614,6 +617,7 @@ const manipulatePaths = async (
           console.log('manipulatePaths(nested) Error::', e)
         }
       }
+      // eslint-disable-next-line no-await-in-loop
       const pvData = await manipulatePaths(
         nestedValues,
         proposalContract,
@@ -629,8 +633,6 @@ const manipulatePaths = async (
       votes = pvData.votes
     }
   }
-  // save proposals and votes in temp file
-  // await createAndWrite(`${cacheDir}/calc_data/${nation}`, `proposals.json`, JSON.stringify)
 
   return { proposals, votes }
 }

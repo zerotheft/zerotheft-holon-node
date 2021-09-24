@@ -46,7 +46,7 @@ const exportAllVotes = async req => {
     await PromisePool.withConcurrency(1)
       .for(Object.keys(allVotes))
       .process(async version => {
-        await PromisePool.withConcurrency(10)
+        await PromisePool.withConcurrency(1)
           .for(allVotes[version])
           .process(async voteID => {
             try {
