@@ -287,7 +287,7 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
   try {
     const dataInCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
 
-    if (!fromWorker && (dataInCache || fs.existsSync(exportFile)) {
+    if (!fromWorker && (dataInCache || fs.existsSync(exportFile))) {
       // if path has been sychrnoized and not from worker
       // const result = await cacheServer.getAsync(nation)
       const nationData = JSON.parse(fs.readFileSync(exportFile))
