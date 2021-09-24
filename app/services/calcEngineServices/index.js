@@ -285,7 +285,9 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
   const exportFile = `${exportsDir}/calc_data/${nation}/calc_summary.json`
 
   try {
-    if (!fromWorker && (await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)) && fs.existsSync(exportFile)) {
+    const dataInCache = await cacheServer.getAsync(`CALC_SUMMARY_SYNCED`)
+
+    if (!fromWorker && (dataInCache || fs.existsSync(exportFile)) {
       // if path has been sychrnoized and not from worker
       // const result = await cacheServer.getAsync(nation)
       const nationData = JSON.parse(fs.readFileSync(exportFile))
@@ -341,7 +343,10 @@ const theftInfo = async (fromWorker = false, nation = 'USA') => {
       }
       exportFileData.info = agg.info
       await createAndWrite(`${exportsDir}/calc_data/${nation}`, `calc_summary.json`, exportFileData)
-
+      // If data is not in redis cache then run in background
+      if (!dataInCache) {
+        dataCachingPerPath(nation) // Background task for processing and saving data into cache
+      }
       return agg
     }
 
