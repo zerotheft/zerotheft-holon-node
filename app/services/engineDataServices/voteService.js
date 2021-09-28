@@ -57,7 +57,10 @@ const exportAllVotes = async () => {
                 // First get the votes info
                 const { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } =
                   await voterContract.callSmartContractGetFunc('getVote', [voteKey])
-                const { holon } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteKey])
+                const { holon, voteReplaces, voteReplacedBy } = await voterContract.callSmartContractGetFunc(
+                  'getVoteExtra',
+                  [voteKey]
+                )
                 // get the voter information
                 const cres = await getCitizenIdByAddress(voter, citizenContract)
                 const { name, linkedin, country } = await getCitizen(cres.citizenID, citizenContract)
@@ -92,6 +95,9 @@ const exportAllVotes = async () => {
                       yes_theft_proposal: yesTheftProposal,
                       no_theft_proposal: noTheftProposal,
                       comment,
+                      is_archive: voteReplacedBy !== '' ? 'yes' : 'no',
+                      vote_replaces: voteReplaces,
+                      vote_replaced_by: voteReplacedBy,
                       timestamp: date,
                       holon_id: holon,
                       holon_name: get(allHolons[holon], 'name', ''),
