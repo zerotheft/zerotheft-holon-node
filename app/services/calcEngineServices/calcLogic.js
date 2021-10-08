@@ -194,7 +194,7 @@ const getHierarchyTotals = async (
     }
   }
   // walk the path hierarchy (depth-first recursive)
-  for (pathName in pathH) {
+  for (const pathName in pathH) {
     let fullPath
     if (isRoot) {
       fullPath = pathName
@@ -233,7 +233,7 @@ const getHierarchyTotals = async (
     const yesTheftAmts = []
 
     if ('props' in pvt) {
-      for (pid in pvt.props) {
+      for (const pid in pvt.props) {
         const p = pvt.props[pid]
         let actlVotedAmt = 0
         Object.keys(p.all_theft_amounts).forEach(yr => {
@@ -245,7 +245,7 @@ const getHierarchyTotals = async (
         // p['voted_theft_amount'] = p['all_theft_amounts'].length > 0 ? mean(p['all_theft_amounts']) : p['theftAmt']
         if (!propMax || p.count > propMax.count) {
           propMax = p
-        } else if (p.count == propMax.count && p.wining_theft_amt > propMax.wining_theft_amt) {
+        } else if (p.count === propMax.count && p.wining_theft_amt > propMax.wining_theft_amt) {
           propMax = p
         }
         // collect all theft amounts that got YES vote
@@ -302,12 +302,20 @@ const getHierarchyTotals = async (
       },
       props: pvt.props,
     }
-    ytots.theft += theft
+    // Only add in total theft if the path is umbrella. This case can be visualized where there are no any proposals in umbrella
+    if (Object.keys(umbrellaPaths).includes(fullPath)) {
+      ytots.theft += theft
+    }
   }
 
   return vtby
 }
 
+/**
+ * Method that does the umbrella and children data rollups.
+ * It loops through all the path and manipulates individually.
+ * It gives the proper reason why the rollups are done per path
+ */
 const doPathRollUpsForYear = (
   yearData,
   umbrellaPaths,
@@ -376,7 +384,7 @@ const doPathRollUpsForYear = (
       voted_year_thefts: {},
     }
     let allMissing = true
-    for (tpath in yearData.paths) {
+    for (const tpath in yearData.paths) {
       // we are only looking for children
       if (!startsWith(tpath, `${fullPath}/`)) {
         continue
@@ -405,10 +413,12 @@ const doPathRollUpsForYear = (
       childrenSum.against += pdt.against
       childrenSum.theft += pdt.theft
     }
-
     let totalsData = pathData._totals
-    let secondaryData
     const isUmbrella = Object.keys(umbrellaPaths).includes(fullPath)
+    // if (!isUmbrella) {
+    //   totalsData.theft = 0
+    // }
+    let secondaryData
 
     // if total is missing for non umbrella or total is missing for umbrella and umbrella's value parent is children
     if (get(pathData, 'missing') && !isUmbrella) {
@@ -490,7 +500,6 @@ const doPathRollUpsForYear = (
     if (!yearData.paths[fullPath]._totals.legit) {
       allLegit = false
     }
-
     // if (Object.keys(umbrellaPaths).includes(fullPath) && !isEmpty(yearData['paths'][fullPath]['_totals']['voted_year_thefts'])) {
     //     Object.keys(yearData['paths'][fullPath]['_totals']['voted_year_thefts']).forEach((yr) => {
     //         let th = yearData['paths'][fullPath]['_totals']['voted_year_thefts'][yr]
