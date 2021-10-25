@@ -85,7 +85,6 @@ const scanDataWorker = new Worker(
       if (hierarchyData) {
         console.log('DPRFY')
         doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)
-
         console.log('PVYTR')
         parentVotedYearTheftsRollups(hierarchyData, umbrellaInfo)
         // check if its valid before caching

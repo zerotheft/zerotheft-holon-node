@@ -3,13 +3,13 @@
     "DESKTOP_APP": "http://localhost:6549",
     "PORT":40107,
     "SHOULD_VALIDATE": false,    
-    "HTTP_PROVIDER": "https://www.ethercluster.com/kotti",
-    "WEB_PROVIDER": "wss://www.ethercluster.com/kotti",
+    "HTTP_PROVIDER": "https://matic-mumbai.chainstacklabs.com",
+    "WEB_PROVIDER": "wss://ws-matic-mumbai.chainstacklabs.com",
     "ADDRESS_ENCRYPT_KEY": "zerotheft123",
     "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
-    "GAS_PRICE": 10,
+    "GAS_PRICE": 3,
     "GAS_LIMIT": 4612388,
-    "REPORT_PATH": "zt_report",
-    "NETWORK_NAME":"kotti",
-    "NETWORK_ID":6
+    "NETWORK_ID":80001,
+    "NETWORK_NAME":"stagingnet",
+    "REPORT_PATH": "zt_report"
 }
