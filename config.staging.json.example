@@ -5,6 +5,7 @@
     "SHOULD_VALIDATE": false,    
     "HTTP_PROVIDER": "https://matic-mumbai.chainstacklabs.com",
     "WEB_PROVIDER": "wss://ws-matic-mumbai.chainstacklabs.com",
+    "ZERO_THEFT_CONTRACT": "https://zerotheft-contract-artifacts.s3.amazonaws.com",
     "ADDRESS_ENCRYPT_KEY": "zerotheft123",
     "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
     "GAS_PRICE": 3,
