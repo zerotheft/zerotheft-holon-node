@@ -3,11 +3,15 @@
   "DESKTOP_APP": "http://localhost:6549",
   "PORT":40107,
   "SHOULD_VALIDATE": false,
-  "HTTP_PROVIDER": "https://www.ethercluster.com/etc",
+  "HTTP_PROVIDER": "https://matic-mainnet.chainstacklabs.com",
+  "WEB_PROVIDER": "wss://ws-matic-mainnet.chainstacklabs.com",
+  "ZERO_THEFT_CONTRACT": "https://zerotheft-contract-artifacts.s3.amazonaws.com",
   "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/<infura_key>"
   "ADDRESS_ENCRYPT_KEY": "zerotheft123",
   "HONEYBADGER_KEY": "<YOUR_HONEYBADGER_KEY>",
   "GAS_PRICE": 10,
   "GAS_LIMIT": 4612388,
+  "NETWORK_ID":137,
+  "NETWORK_NAME":"stagingnet",
   "REPORT_PATH": "zt_report"
 }
