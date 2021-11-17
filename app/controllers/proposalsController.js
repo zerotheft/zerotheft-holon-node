@@ -1,5 +1,9 @@
 const { proposalWithDetails, fetchProposalTemplate, getPathProposalsByPath } = require('../services/proposalsService')
 
+/**
+ * Get the detail information of a proposal based on the proposalId.
+ * It parses proposal yaml and displays content.
+ */
 const getProposalWithDetail = async (req, res, next) => {
   const response = await proposalWithDetails(req.params.id, true)
   if (response.error) {

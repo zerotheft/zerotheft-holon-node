@@ -9,7 +9,7 @@ const {
 const { getPath, allNations, pathsByNation, getUmbrellaPaths } = require('./controllers/pathsController')
 const { getProposalWithDetail, getTemplateDetail, pathProposalsByPath } = require('./controllers/proposalsController')
 const { vote, priorVote, voteRollups } = require('./controllers/voteController')
-const { citizenInfo } = require('./controllers/citizenController')
+const { citizenInfo, citizenProposalRating } = require('./controllers/citizenController')
 const { getHolons, getHolonInfo } = require('./controllers/holonsController')
 const {
   exportVoteData,
@@ -53,11 +53,16 @@ router.get('/gen-reports', generateReports)
 // Proposals Routes
 router.get('/proposal-detail/:id', getProposalWithDetail)
 router.get('/proposals-by-path', pathProposalsByPath)
+
 // Vote Routes
 router.post('/vote', vote)
 router.post('/vote-rollups', voteRollups)
 router.post('/prior-vote', priorVote)
 router.get('/citizen-info/:citizenID', citizenInfo)
+
+// Citizen proposal rating routes
+router.get('/citizen-proposal-rating/:citizenAddress/:proposalID', citizenProposalRating)
+
 // Holons
 router.get('/holons', getHolons)
 router.get('/holon-info', getHolonInfo)
