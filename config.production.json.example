@@ -3,7 +3,7 @@
   "DESKTOP_APP": "http://localhost:6549",
   "PORT":40107,
   "SHOULD_VALIDATE": false,
-  "HTTP_PROVIDER": "https://matic-mainnet.chainstacklabs.com",
+  "HTTP_PROVIDER": "https://rpc-mainnet.maticvigil.com/v1/e470f19ce821d23aa91758983c622e2faa880638",
   "WEB_PROVIDER": "wss://ws-matic-mainnet.chainstacklabs.com",
   "ZERO_THEFT_CONTRACT": "https://zerotheft-contract-artifacts.s3.amazonaws.com",
   "ETH_HTTP_PROVIDER": "https://mainnet.infura.io/v3/<infura_key>"

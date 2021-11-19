@@ -3,7 +3,7 @@
     "DESKTOP_APP": "http://localhost:6549",
     "PORT":40107,
     "SHOULD_VALIDATE": false,    
-    "HTTP_PROVIDER": "https://rpc-mumbai.maticvigil.com",
+    "HTTP_PROVIDER": "https://rpc-mumbai.maticvigil.com/v1/e470f19ce821d23aa91758983c622e2faa880638",
     "WEB_PROVIDER": "wss://ws-matic-mumbai.chainstacklabs.com",
     "ZERO_THEFT_CONTRACT": "https://zerotheft-contract-artifacts.s3.amazonaws.com",
     "ADDRESS_ENCRYPT_KEY": "zerotheft123",
