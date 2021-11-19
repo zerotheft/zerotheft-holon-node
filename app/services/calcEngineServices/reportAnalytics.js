@@ -1,12 +1,14 @@
 const { get, max, startCase, isEmpty } = require('lodash')
-const { paths } = require('zerotheft-node-utils')
-const { theftAmountAbbr, realTheftAmount } = require('./helper')
+const { theftAmountAbbr } = require('./helper')
 
+/**
+ * Prepares a json with theft amounts and votes to generate bell curve
+ */
 const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true, year) => {
   const sums = {}
   Object.keys(voteTotals.props).forEach(key => {
     const prop = voteTotals.props[key]
-    const theft = year ? get(prop, `voted_year_thefts.${year}`) : prop.theftAmt
+    const theft = year ? get(prop, `voted_year_thefts.${year}`) : prop.wining_theft_amt
     if (theft <= 0) {
       return
     }

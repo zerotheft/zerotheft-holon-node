@@ -67,7 +67,10 @@ if (!fs.existsSync(inflatedValuesPath)) {
 }
 const inflatedValues = require(inflatedValuesPath)
 
-// Gen single report data
+/**
+ * Generate single report data
+ *
+ */
 const generateReportData = async (nation, fileName, fromWorker) => {
   const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
 
@@ -79,7 +82,7 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   pdfData.holonUrl = holon
   pdfData.pageID = `ztReport/${leafPath}`
 
-  const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
+  // const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
   const props = getPathYearProposals(summaryTotals, path)
   const votes = getPathYearVotes(props)
   const vt = getPathVoteTotals(summaryTotals, path)
@@ -726,6 +729,10 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
     })
   })
 
+/**
+ * This method generates report for single issue. It is called from `getSingleIssueReport` method in reportController
+ *
+ */
 const generatePDFReport = async (nation, noteBookName, fileName, fromWorker) => {
   createLog(MAIN_PATH, `Generating Report with filename: ${fileName}`)
   const pdfData = await generateReportData(nation, fileName, fromWorker)

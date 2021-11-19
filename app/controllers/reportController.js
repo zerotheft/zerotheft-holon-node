@@ -11,7 +11,10 @@ const { allReportWorker } = require('../workers/reports/reportWorker')
 
 setupForReportsDirs(false)
 
-const getSingleIssueReport = async (req, res, next) => {
+/**
+ * Generate report of single issue.
+ */
+const getSingleIssueReport = async (req, res) => {
   const response = await singleIssueReport(req.params.path, false)
   if (response.report) {
     return res.send({ report: `${getAppRoute()}/issueReports/${response.report}` })
