@@ -63,7 +63,7 @@ const pathSummary = (voteTotals, isSummary = false, cleanTheft = true) => {
       return
     }
     const { count } = prop
-    leadingProp = leadingProp === null || leadingProp.count < count ? prop : leadingProp
+    leadingProp = leadingProp === null || leadingProp.count <= count ? prop : leadingProp
   })
 
   const { thefts: t, votes: v } = proposalVoteTotalsSummaryMulti(voteTotals, cleanTheft)
