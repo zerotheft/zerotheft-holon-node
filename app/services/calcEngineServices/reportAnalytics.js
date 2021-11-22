@@ -34,6 +34,13 @@ const proposalVoteTotalsSummaryMulti = (voteTotals, cleanTheft = true, year) => 
   return { thefts, votes }
 }
 
+/**
+ * Summarize the information of a leading proposal
+ * @param {object} voteTotals  - vote totals of a leading proposal
+ * @param {boolean} isSummary - whether the report is a summary report
+ * @param {boolean} cleanTheft - whether a theft is clean theft or not
+ * @returns JSON object with the leading proposal information needed for report generation
+ */
 const pathSummary = (voteTotals, isSummary = false, cleanTheft = true) => {
   if (isSummary) {
     const thv = cleanTheft ? theftAmountAbbr(voteTotals.theft) : voteTotals.theft
@@ -56,15 +63,15 @@ const pathSummary = (voteTotals, isSummary = false, cleanTheft = true) => {
     leading_prop: null,
   }
 
-  let leadingProp = null
-  Object.keys(voteTotals.props).forEach(key => {
-    const prop = voteTotals.props[key]
-    if (prop.voted_theft_amount <= 0) {
-      return
-    }
-    const { count } = prop
-    leadingProp = leadingProp === null || leadingProp.count <= count ? prop : leadingProp
-  })
+  const leadingProp = voteTotals.props[voteTotals.leading_proposal]
+  // Object.keys(voteTotals.props).forEach(key => {
+  //   const prop = voteTotals.props[key]
+  //   if (prop.voted_theft_amount <= 0) {
+  //     return
+  //   }
+  //   const { count } = prop
+  //   leadingProp = leadingProp === null || leadingProp.count <= count ? prop : leadingProp
+  // })
 
   const { thefts: t, votes: v } = proposalVoteTotalsSummaryMulti(voteTotals, cleanTheft)
   const maxVotesIndex = v.indexOf(max(v))
@@ -79,8 +86,8 @@ const pathSummary = (voteTotals, isSummary = false, cleanTheft = true) => {
 const getPastYearsTheftForMulti = (sumtotals, path, nation = 'USA') => {
   const yearTh = []
   // simple estimator - use the prior theft until it changes
-  const priorTheft = null
-  const firstTheft = null
+  // const priorTheft = null
+  // const firstTheft = null
   let p
   if (path === nation) {
     p = sumtotals

@@ -68,8 +68,133 @@ if (!fs.existsSync(inflatedValuesPath)) {
 const inflatedValues = require(inflatedValuesPath)
 
 /**
+ * This method generates the line chart for the amount of votes for the theft amount.
+ * It saves the chart as a png and a svg which is later used in the report
+ */
+const getTheftValueChart = async (yearTh, filePath) =>
+  new Promise((resolve, reject) => {
+    const series = []
+    yearTh.forEach(theft => {
+      series.push({ x: theft.Year, y: theft.theft })
+    })
+
+    const data = {
+      series: [series],
+    }
+
+    const options = {
+      chartPadding: {
+        right: 30,
+        left: 30,
+      },
+      width: 1000,
+      height: 300,
+      axisX: {
+        type: Chartist.AutoScaleAxis,
+        scaleMinSpace: 40,
+        onlyInteger: true,
+        labelOffset: { y: 10 },
+        offset: 0,
+        showGrid: false,
+      },
+      axisY: {
+        scaleMinSpace: 40,
+        onlyInteger: true,
+        labelOffset: { y: 6 },
+        labelInterpolationFnc(value) {
+          return `$${theftAmountAbbr(value)}`
+        },
+      },
+    }
+
+    const opts = {
+      options,
+      onDraw(data) {
+        let style = ''
+        if (data.type === 'point' || data.type === 'line') {
+          style += 'stroke: #7F51C1;'
+        }
+        if (data.type === 'point') {
+          style += 'stroke-width: 10px;'
+        }
+        if (data.type === 'line') {
+          style += 'stroke-width: 2px;'
+        }
+
+        data.element.attr({
+          style,
+        })
+      },
+    }
+
+    const styles = `
+       <style>
+           text {
+               font-family:sans-serif;
+           }
+           .ct-grids line {
+               stroke-dasharray: none !important;
+           }
+           .ct-label {
+               font-size: 18px !important;
+               fill: #000000 !important;
+               color: #000000 !important;
+           }
+           .ct-label.ct-horizontal {
+               text-anchor: middle !important;
+           }
+       </style>
+       `
+
+    const svgPath = `${filePath}-theftValue`
+
+    chartistSvg('line', data, opts).then(svg => {
+      svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
+      fs.writeFile(`${svgPath}.svg`, svg, async err => {
+        if (err) {
+          console.error('theft value chart svg:', err)
+          reject({ message: `'theft value chart svg: ${err}` })
+        }
+        console.log('theft value chart svg prepared')
+        await sharp(`${svgPath}.svg`).resize({ width: 1000 }).png().toFile(`${svgPath}.png`)
+        console.log('theft value chart png created')
+
+        chartistSvg('line', data, {
+          ...opts,
+          onDraw(data) {
+            let style = ''
+            if (data.type === 'point' || data.type === 'line') {
+              style += 'stroke: #7F51C1;'
+            }
+            if (data.type === 'point') {
+              style += 'stroke-width: 7px;'
+            }
+            if (data.type === 'line') {
+              style += 'stroke-width: 2px;'
+            }
+
+            data.element.attr({
+              style,
+            })
+          },
+          options: { ...options, width: 550, height: 350 },
+        }).then(svg => {
+          svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
+          fs.writeFile(`${svgPath}-view.svg`, svg, async err => {
+            if (err) {
+              console.error('theft value chart svg for frontend:', err)
+              reject({ message: `'theft value chart svg for frontend: ${err}` })
+            }
+            console.log('theft value chart png created for frontend')
+            resolve()
+          })
+        })
+      })
+    })
+  })
+/**
  * Generate single report data
- *
+ * This method only generates report for the single issues but not the multi issues and umbrella issues.
  */
 const generateReportData = async (nation, fileName, fromWorker) => {
   const { yearData: summaryTotals, actualPath: path, leafPath, holon, allPaths } = loadSingleIssue(fileName)
@@ -91,9 +216,9 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   const voteTotals = {
     for: get(vt, '_totals.for', 0),
     against: get(vt, '_totals.against', 0),
+    leading_proposal: get(vt, '_totals.leading_proposal', null),
     props: get(vt, 'props', {}),
   }
-
   const pathSummary = analyticsPathSummary(voteTotals)
 
   const { pathTitle, pathPrefix } = splitPath(path)
@@ -411,128 +536,6 @@ const getVotesForTheftAmountChart = async (bellCurveData, filePath, title) =>
           await sharp(`${svgPath}.svg`).resize({ width: 1000 }).png().toFile(`${svgPath}.png`)
           console.log(`theft amount vote chart png created for ${filePath}`)
           resolve()
-        })
-      })
-    })
-  })
-
-const getTheftValueChart = async (yearTh, filePath) =>
-  new Promise((resolve, reject) => {
-    const series = []
-    yearTh.forEach(theft => {
-      series.push({ x: theft.Year, y: theft.theft })
-    })
-
-    const data = {
-      series: [series],
-    }
-
-    const options = {
-      chartPadding: {
-        right: 30,
-        left: 30,
-      },
-      width: 1000,
-      height: 300,
-      axisX: {
-        type: Chartist.AutoScaleAxis,
-        scaleMinSpace: 40,
-        onlyInteger: true,
-        labelOffset: { y: 10 },
-        offset: 0,
-        showGrid: false,
-      },
-      axisY: {
-        scaleMinSpace: 40,
-        onlyInteger: true,
-        labelOffset: { y: 6 },
-        labelInterpolationFnc(value) {
-          return `$${theftAmountAbbr(value)}`
-        },
-      },
-    }
-
-    const opts = {
-      options,
-      onDraw(data) {
-        let style = ''
-        if (data.type === 'point' || data.type === 'line') {
-          style += 'stroke: #7F51C1;'
-        }
-        if (data.type === 'point') {
-          style += 'stroke-width: 10px;'
-        }
-        if (data.type === 'line') {
-          style += 'stroke-width: 2px;'
-        }
-
-        data.element.attr({
-          style,
-        })
-      },
-    }
-
-    const styles = `
-        <style>
-            text {
-                font-family:sans-serif;
-            }
-            .ct-grids line {
-                stroke-dasharray: none !important;
-            }
-            .ct-label {
-                font-size: 18px !important;
-                fill: #000000 !important;
-                color: #000000 !important;
-            }
-            .ct-label.ct-horizontal {
-                text-anchor: middle !important;
-            }
-        </style>
-        `
-
-    const svgPath = `${filePath}-theftValue`
-
-    chartistSvg('line', data, opts).then(svg => {
-      svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
-      fs.writeFile(`${svgPath}.svg`, svg, async err => {
-        if (err) {
-          console.error('theft value chart svg:', err)
-          reject({ message: `'theft value chart svg: ${err}` })
-        }
-        console.log('theft value chart svg prepared')
-        await sharp(`${svgPath}.svg`).resize({ width: 1000 }).png().toFile(`${svgPath}.png`)
-        console.log('theft value chart png created')
-
-        chartistSvg('line', data, {
-          ...opts,
-          onDraw(data) {
-            let style = ''
-            if (data.type === 'point' || data.type === 'line') {
-              style += 'stroke: #7F51C1;'
-            }
-            if (data.type === 'point') {
-              style += 'stroke-width: 7px;'
-            }
-            if (data.type === 'line') {
-              style += 'stroke-width: 2px;'
-            }
-
-            data.element.attr({
-              style,
-            })
-          },
-          options: { ...options, width: 550, height: 350 },
-        }).then(svg => {
-          svg = svg.replace(/(<svg[^>]+>)/, `$1${styles}`)
-          fs.writeFile(`${svgPath}-view.svg`, svg, async err => {
-            if (err) {
-              console.error('theft value chart svg for frontend:', err)
-              reject({ message: `'theft value chart svg for frontend: ${err}` })
-            }
-            console.log('theft value chart png created for frontend')
-            resolve()
-          })
         })
       })
     })
