@@ -238,8 +238,8 @@ const getHierarchyTotals = async (
         let actlVotedAmt = 0
         Object.keys(p.all_theft_amounts).forEach(yr => {
           const avgYrTheft = mean(p.all_theft_amounts[yr])
-          actlVotedAmt += avgYrTheft
-          if (avgYrTheft) {
+          if (!Number.isNaN(avgYrTheft)) {
+            actlVotedAmt += avgYrTheft
             p.voted_year_thefts[yr] = avgYrTheft // average theft amount from every year. Theft amount can be custom theft amount entered.
           }
         })

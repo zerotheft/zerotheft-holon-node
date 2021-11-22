@@ -1014,6 +1014,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     const voteTotals = {
       for: get(vt, '_totals.for', 0),
       against: get(vt, '_totals.against', 0),
+      leading_proposal: get(vt, '_totals.leading_proposal', null),
       props: get(vt, 'props', {}),
     }
 
