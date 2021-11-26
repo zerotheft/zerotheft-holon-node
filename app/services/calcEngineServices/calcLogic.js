@@ -238,8 +238,10 @@ const getHierarchyTotals = async (
         let actlVotedAmt = 0
         Object.keys(p.all_theft_amounts).forEach(yr => {
           const avgYrTheft = mean(p.all_theft_amounts[yr])
-          actlVotedAmt += avgYrTheft
-          p.voted_year_thefts[yr] = avgYrTheft // average theft amount from every year. Theft amount can be custom theft amount entered.
+          if (!Number.isNaN(avgYrTheft)) {
+            actlVotedAmt += avgYrTheft
+            p.voted_year_thefts[yr] = avgYrTheft // average theft amount from every year. Theft amount can be custom theft amount entered.
+          }
         })
         p.wining_theft_amt = actlVotedAmt > 0 ? actlVotedAmt : p.theftAmt
         // p['voted_theft_amount'] = p['all_theft_amounts'].length > 0 ? mean(p['all_theft_amounts']) : p['theftAmt']
@@ -265,6 +267,7 @@ const getHierarchyTotals = async (
     //         avgData = { 'is_theft_avg': true, 'avg_from': yesTheftAmts, '_actual_leading_prop': { 'prop_id': propMax['id'], 'actual_theft': propMax['voted_theft_amount'], 'votes': propMax['count'] } }
     //     }
     // }
+
     if (propMax) {
       // if actual theft amount of proposal differs from voted theft amounts(which is if voter adds custom theft amount)
       if (propMax.wining_theft_amt !== propMax.theftAmt) {
@@ -285,6 +288,7 @@ const getHierarchyTotals = async (
         }
       }
     }
+
     const legit = tVotes >= legitimiateThreshold
     const need_votes = legit ? 0 : legitimiateThreshold - tVotes
     vtby.paths[fullPath] = {
@@ -296,6 +300,7 @@ const getHierarchyTotals = async (
         proposals: vprops,
         theft,
         reason,
+        leading_proposal: get(propMax, 'id', null),
         voted_year_thefts: propMax ? propMax.voted_year_thefts : {},
         need_votes,
         ...avgData,
