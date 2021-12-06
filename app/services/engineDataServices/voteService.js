@@ -31,7 +31,8 @@ const exportAllVotes = async () => {
     const voterContract = await getVoteContract()
     const holonContract = await getHolonContract()
 
-    const { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes } = await voteDataRollupsFile()
+    const { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes, hierarchyAreaVotes } =
+      await voteDataRollupsFile()
 
     // get all the holons
     const allHolons = await getHolons('object', holonContract)
@@ -57,7 +58,10 @@ const exportAllVotes = async () => {
                 // First get the votes info
                 const { voter, voteIsTheft, yesTheftProposal, noTheftProposal, customTheftAmount, comment, date } =
                   await voterContract.callSmartContractGetFunc('getVote', [voteKey])
-                const { holon } = await voterContract.callSmartContractGetFunc('getVoteExtra', [voteKey])
+                const { hierarchyPath: votedPath, holon } = await voterContract.callSmartContractGetFunc(
+                  'getVoteExtra',
+                  [voteKey]
+                )
                 // get the voter information
                 const cres = await getCitizenIdByAddress(voter, citizenContract)
                 const { name, linkedin, country } = await getCitizen(cres.citizenID, citizenContract)
@@ -112,8 +116,8 @@ const exportAllVotes = async () => {
 
                 // keep the roll ups record in file
                 await updateVoteDataRollups(
-                  { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes },
-                  { voter, voteID: voteKey, proposalID, castedOn: date },
+                  { citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes, hierarchyAreaVotes },
+                  { voter, votedPath, voteID: voteKey, proposalID, castedOn: date },
                   proposalInfo,
                   voterContract
                 )
@@ -138,7 +142,13 @@ const exportAllVotes = async () => {
 
     lastVid = await lastExportedVid()
     // save all the rollups
-    await saveVoteRollupsData({ citizenSpecificVotes, proposalVotes, proposalVoters, proposalArchiveVotes })
+    await saveVoteRollupsData({
+      citizenSpecificVotes,
+      proposalVotes,
+      proposalVoters,
+      proposalArchiveVotes,
+      hierarchyAreaVotes,
+    })
 
     createLog(EXPORT_LOG_PATH, `All voters exported. The last voter exported is ${lastVid}`)
   } catch (e) {
