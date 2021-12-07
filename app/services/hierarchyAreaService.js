@@ -1,5 +1,7 @@
 const { get } = require('lodash')
 const { getHierarchyAreaVotes, allNations } = require('zerotheft-node-utils/contracts/paths')
+const { proposalIdsByPath } = require('zerotheft-node-utils/contracts/proposals')
+const { getProposalContract } = require('zerotheft-node-utils/utils/contract')
 const defaultRank = 1 // If hierarchy area not falling in the range of min/max votes then rank is "1" by default
 const votesRank = [
   {
@@ -43,16 +45,23 @@ const votesRank = [
 const areaPriorityScore = async () => {
   let prioritizedArea = {}
   let winningScore = 0
+  const proposalContract = await getProposalContract()
   const areaVotes = await getHierarchyAreaVotes()
   const allNationsHierarchy = await allNations()
   const priorityList = allNationsHierarchy.find(hierarchy => hierarchy.nation === 'USA').priorityList
+
   // Looping through each priority list. Every priority have multiple hierarchy areas.
-  Object.keys(priorityList).forEach(pn => {
+  for (const pn of Object.keys(priorityList)) {
     let priority = parseInt(pn)
     const priorityAreas = priorityList[priority]
 
     // Calculate the score of every hierarchial areas sorted by priority
-    Object.keys(priorityAreas).forEach(hash => {
+    for (const hash of Object.keys(priorityAreas)) {
+
+      //Check if the area has proposals; if not we skip it
+      const proposalsInPath = await proposalIdsByPath(hash, proposalContract)
+      if (proposalsInPath.length === 0) { continue }
+
       let voteCount = areaVotes[hash] || 0
       // Get the rank of area based on votes given
       let voteRange = votesRank.find(p => voteCount >= p.minVote && voteCount <= p.maxVote)
@@ -70,8 +79,9 @@ const areaPriorityScore = async () => {
       prioritizedArea[score] = scoreSheetItem
       // Find the winning score i.e. the highest score
       if (score > winningScore) { winningScore = score }
-    })
-  })
+      console.log("=")
+    }
+  }
 
   // Find the most eligible hierarchy area for the next voting from the wining score sheet.
   const nextVotein = prioritizedArea[winningScore]['_areas'].reduce((previous, current) => {
