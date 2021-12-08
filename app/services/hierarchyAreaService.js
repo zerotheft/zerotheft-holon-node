@@ -1,4 +1,4 @@
-const { get } = require('lodash')
+const { get, orderBy } = require('lodash')
 const { getHierarchyAreaVotes, allNations } = require('zerotheft-node-utils/contracts/paths')
 const { proposalIdsByPath } = require('zerotheft-node-utils/contracts/proposals')
 const { getProposalContract } = require('zerotheft-node-utils/utils/contract')
@@ -43,7 +43,8 @@ const votesRank = [
  * @returns Result with winning score and the area to vote in next time.
  */
 const areaPriorityScore = async () => {
-  let prioritizedArea = {}
+  let scores = {}
+  let allAreas = []
   let winningScore = 0
   const proposalContract = await getProposalContract()
   const areaVotes = await getHierarchyAreaVotes()
@@ -68,29 +69,30 @@ const areaPriorityScore = async () => {
       const rank = voteRange ? voteRange.rank : defaultRank
       // Calculate the score based on rank
       let score = (10 - priority) * rank
-      let scoreSheetItem = get(prioritizedArea, score, { '_areas': [] })
-      scoreSheetItem['_areas'].push({
+      let scoreSheetItem = get(scores, score, { '_areas': [] })
+      let newArea = {
         hash,
         hierarchy: priorityAreas[hash],
         votes: voteCount,
+        proposals: proposalsInPath.length,
         priority,
         score
-      })
-      prioritizedArea[score] = scoreSheetItem
+      }
+      scoreSheetItem['_areas'].push(newArea)
+      allAreas.push(newArea)
+      scores[score] = scoreSheetItem
       // Find the winning score i.e. the highest score
       if (score > winningScore) { winningScore = score }
-      console.log("=")
     }
   }
 
   // Find the most eligible hierarchy area for the next voting from the wining score sheet.
-  const nextVotein = prioritizedArea[winningScore]['_areas'].reduce((previous, current) => {
+  const nextVotein = scores[winningScore]['_areas'].reduce((previous, current) => {
     //next priority if has highest priority or highest priority with less votes
     return (current.priority < previous.priority || (current.votes < previous.votes && current.priority === previous.priority)) ? current : previous
   })
-
-  // console.log(prioritizedArea[winningScore]['_areas'])
-  return { prioritizedArea, winningScore, nextVotein }
+  //Sort all areas based on priority and score
+  return { nextAreas: orderBy(allAreas, ['score', 'priority', 'votes'], ['desc', 'asc', 'asc']), winningScore, scores, nextVotein }
 }
 module.exports = {
   areaPriorityScore,
