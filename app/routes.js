@@ -11,6 +11,7 @@ const { getProposalWithDetail, getTemplateDetail, pathProposalsByPath } = requir
 const { vote, priorVote, voteRollups } = require('./controllers/voteController')
 const { citizenInfo, citizenProposalRating } = require('./controllers/citizenController')
 const { getHolons, getHolonInfo } = require('./controllers/holonsController')
+const { findNextPriorityArea } = require('./controllers/hierarchyAreaController')
 const {
   exportVoteData,
   exportReportData,
@@ -90,5 +91,8 @@ router.get('/exported-proposals', exportedProposals)
 router.get('/citizen-data', getVoters)
 router.get('/votes-data', getVotes)
 router.get('/proposals-data', getProposals)
+
+// Endpoint to figure out the next priority area to vote in
+router.get('/next-priority', findNextPriorityArea)
 
 module.exports = router

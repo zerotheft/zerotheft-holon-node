@@ -26,6 +26,7 @@
     "no-param-reassign": "off",
     "no-await-in-loop": "warn",
     "no-plusplus": "off",
-    "radix": "off"
+    "radix": "off",
+    "no-extraneous-dependencies": "off",
   }
 }
