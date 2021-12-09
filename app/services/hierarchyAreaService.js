@@ -1,4 +1,4 @@
-const { get, orderBy } = require('lodash')
+const { get, orderBy, isEmpty } = require('lodash')
 const { getHierarchyAreaVotes, allNations } = require('zerotheft-node-utils/contracts/paths')
 const { proposalIdsByPath } = require('zerotheft-node-utils/contracts/proposals')
 const { getProposalContract } = require('zerotheft-node-utils/utils/contract')
@@ -44,6 +44,7 @@ const votesRank = [
  */
 const areaPriorityScore = async () => {
   let scores = {}
+  let nextVotein = {}
   let allAreas = []
   let winningScore = 0
   const proposalContract = await getProposalContract()
@@ -87,7 +88,7 @@ const areaPriorityScore = async () => {
   }
 
   // Find the most eligible hierarchy area for the next voting from the wining score sheet.
-  const nextVotein = scores[winningScore]['_areas'].reduce((previous, current) => {
+  nextVotein = !isEmpty(scores) && scores[winningScore]['_areas'].reduce((previous, current) => {
     //next priority if has highest priority or highest priority with less votes
     return (current.priority < previous.priority || (current.votes < previous.votes && current.priority === previous.priority)) ? current : previous
   })
