@@ -1,5 +1,6 @@
 const fs = require('fs')
 const { get } = require('lodash')
+const { ExcludedKeys } = require('zerotheft-node-utils/contracts/paths')
 const { getReportPath } = require('../../../config')
 
 const loadSingleIssue = fileName => {
@@ -44,7 +45,7 @@ const getLeafPaths = (paths, prePath = '') => {
   let leafPaths = []
 
   Object.keys(paths).forEach(p => {
-    if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
+    if (ExcludedKeys.includes(p)) return
     if (!paths[p]) {
       leafPaths.push(prePath + p)
     } else {
@@ -59,7 +60,7 @@ const getFlatPaths = (paths, prePath = '') => {
   let flatPaths = []
 
   Object.keys(paths).forEach(p => {
-    if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
+    if (ExcludedKeys.includes(p)) return
     flatPaths.push(prePath + p)
     flatPaths = [...flatPaths, ...getFlatPaths(paths[p], `${prePath + p}/`)]
   })
