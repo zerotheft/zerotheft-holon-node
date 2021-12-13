@@ -1,4 +1,5 @@
 const { get, max, startCase, isEmpty } = require('lodash')
+const { ExcludedKeys } = require('zerotheft-node-utils/contracts/paths')
 const { theftAmountAbbr } = require('./helper')
 
 /**
@@ -224,7 +225,7 @@ const rollupPageCount = 3 // summary page, 2 breakdown table page (including bla
 
 const assignPageNumbers = (summaryTotalsPaths, paths, prefix = '', pageNo = 1) => {
   Object.keys(paths).forEach(p => {
-    if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
+    if (ExcludedKeys.includes(p)) return
 
     const pp = prefix + p
     if (pp in summaryTotalsPaths) {

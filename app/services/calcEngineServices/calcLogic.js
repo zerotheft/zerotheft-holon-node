@@ -7,7 +7,7 @@
 const fs = require('fs')
 const { uniq, mean, isEmpty, filter } = require('lodash')
 const PromisePool = require('@supercharge/promise-pool')
-const { getPathDetail, getUmbrellaPaths } = require('zerotheft-node-utils/contracts/paths')
+const { getPathDetail, getUmbrellaPaths, ExcludedKeys } = require('zerotheft-node-utils/contracts/paths')
 const { get, startsWith } = require('lodash')
 const { exportsDir, createAndWrite } = require('../../common')
 const { createLog, CALC_STATUS_PATH, ERROR_PATH } = require('../LogInfoServices')
@@ -164,7 +164,7 @@ const getHierarchyTotals = async (
     return
   }
   pathH &&
-    ['leaf', 'umbrella', 'display_name', 'parent', 'metadata'].forEach(k => {
+    ExcludedKeys.forEach(k => {
       delete pathH[k]
     })
 
@@ -330,7 +330,7 @@ const doPathRollUpsForYear = (
   nation = 'USA'
 ) => {
   pathH &&
-    ['leaf', 'umbrella', 'display_name', 'parent', 'metadata'].forEach(k => {
+    ExcludedKeys.forEach(k => {
       delete pathH[k]
     })
 
@@ -593,7 +593,7 @@ const manipulatePaths = async (
   for (let i = 0; i < nestedKeys.length; i++) {
     const key = nestedKeys[i]
     const nestedValues = paths[key]
-    if (['display_name', 'leaf', 'umbrella', 'parent', 'metadata'].includes(key)) {
+    if (ExcludedKeys.includes(key)) {
       continue
     }
     const nextPath = `${currentPath}/${key}`
