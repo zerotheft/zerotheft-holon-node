@@ -288,11 +288,14 @@ const getHierarchyTotals = async (
         }
       }
     }
-
+    //TODO: We might need to used unlockVotes as legitimateThreshold later
+    const unlockVotes = parseInt(path.unlock_votes)
+    console.log(fullPath, "==", path, unlockVotes)
     const legit = tVotes >= legitimiateThreshold
     const need_votes = legit ? 0 : legitimiateThreshold - tVotes
     vtby.paths[fullPath] = {
       _totals: {
+        unlockVotes,
         legit,
         votes: tVotes,
         for: votesFor,
