@@ -52,6 +52,7 @@ const inflatedValuesPath = `${apiPath}/app/services/calcEngineServices/inflatedV
 const chartistSvg = require('./svg-chartist')
 const Chartist = require('chartist')
 const sharp = require('sharp')
+const { ExcludedKeys } = require('zerotheft-node-utils/contracts/paths')
 
 if (!fs.existsSync(inflatedValuesPath)) {
   const yearlyAverageUSInflationRate = require('./yearlyAverageUSInflationRate.json')
@@ -1133,7 +1134,7 @@ const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, nation, av
   if (!paths) return disp
 
   Object.keys(paths).forEach(p => {
-    if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
+    if (ExcludedKeys.includes(p)) return
     const pp = prefix + p
     disp += rowDisp(
       get(paths, `${p}.metadata.display_name`, get(paths, `${p}.display_name`, startCase(p))),
@@ -1198,7 +1199,7 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
   if (!paths) return disp
 
   Object.keys(paths).forEach(p => {
-    if (['parent', 'display_name', 'umbrella', 'leaf', 'metadata'].includes(p)) return
+    if (ExcludedKeys.includes(p)) return
     const pp = prefix + p
     disp += rowDispNoVote(
       get(paths, `${p}.metadata.display_name`, get(paths, `${p}.display_name`, startCase(p))),

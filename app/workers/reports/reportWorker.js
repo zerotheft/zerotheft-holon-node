@@ -12,6 +12,7 @@ const {
   setupForReportsDirs,
 } = require('../../services/calcEngineServices')
 const { createLog, FULL_REPORT_PATH } = require('../../services/LogInfoServices')
+const { ExcludedKeys } = require('zerotheft-node-utils/contracts/paths')
 
 const connection = new IORedis()
 
@@ -29,7 +30,7 @@ const runPathReport = async (path, currPath) => {
     await PromisePool.withConcurrency(10)
       .for(Object.keys(path))
       .process(async key => {
-        if (['parent', 'leaf', 'display_name', 'umbrella', 'metadata'].includes(key)) {
+        if (ExcludedKeys.includes(key)) {
           return
         }
         const currentPath = path[key]
