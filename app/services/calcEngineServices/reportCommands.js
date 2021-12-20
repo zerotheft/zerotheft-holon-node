@@ -1307,13 +1307,12 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
     const output = fs.createWriteStream(mergedLatexPDF)
     const pdf = latex(input, { args: ['-shell-escape'] })
     pdf.pipe(output)
-    console.log(reportPrepd)
 
     pdf.on('error', err => {
       console.error('pdfonError: generateLatexPDF::', err)
       reject({ message: err })
       fs.unlinkSync(mergedLatexPDF)
-      // fs.unlinkSync(reportPrepd)
+      fs.unlinkSync(reportPrepd)
     })
     pdf.on('finish', () => {
       console.log('PDF generated!')
