@@ -81,8 +81,7 @@ const scanDataWorker = new Worker(
         []
       )
       console.log('GHT', proposals.length, votes.length)
-
-      const hierarchyData = await getHierarchyTotals(umbrellaPaths, proposals, votes, nationPaths)
+      const hierarchyData = await getHierarchyTotals(umbrellaInfo, proposals, votes, nationPaths)
       if (hierarchyData) {
         console.log('DPRFY')
         doPathRollUpsForYear(hierarchyData, umbrellaInfo, nationPaths)

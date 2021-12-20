@@ -225,6 +225,10 @@ const getTexsSequence = async (path, fromWorker) => {
   return texsSequence
 }
 
+/**
+ * Generate mixed report after merging umbrella node and the children nodes.
+ * It uses mixedReport.tex and generates a pdf.
+ */
 const multiIssuesFullReport = async (path, fromWorker = false) => {
   // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
   try {

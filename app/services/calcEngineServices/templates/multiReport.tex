@@ -1,5 +1,6 @@
 % headsectionstart
 % update mixedReport hedsection if any changes done in this headsection
+\RequirePackage[2020-02-02]{latexrelease}
 \documentclass{article}
 \usepackage[a4paper, left=15pt, top=30pt, right=15pt, bottom=65pt]{geometry}
 \usepackage{longtable}
@@ -47,6 +48,9 @@ anchorcolor = blue]{hyperref}
 	theftBlockContent/.style={text=black, text width=100pt},
 	isTheftBlock/.style={align=left, text width=140pt}
 }
+
+
+
 \newcommand\Footer{%
   \sffamily
   \begin{tikzpicture}[remember picture,overlay]
@@ -100,6 +104,15 @@ anchorcolor = blue]{hyperref}
       \end{scope}
   \end{tikzpicture}
 }
+
+% ==========LITTLE DISCLAIMER BOX STARTS HERE===========
+%disclaimerboxstart
+\trimbox{5pt -15pt 0 0}{
+  \begin{tikzpicture}
+    \node[] (disclaimer) {To make this formal we need at least --neededVotes-- votes. We are currently at --totalVotes--.};  
+  \end{tikzpicture}
+} 
+%disclaimerboxend
 
 % do not remove this comment
 % theftAmountBlockStart

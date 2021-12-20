@@ -150,7 +150,7 @@ const getPathYearVotes = async (path, votes) => {
 }
 
 const getHierarchyTotals = async (
-  umbrellaPaths,
+  umbrellaInfo,
   proposals,
   votes,
   pathHierarchy,
@@ -201,12 +201,13 @@ const getHierarchyTotals = async (
     } else {
       fullPath = `${pathPrefix}/${pathName}`
     }
+
     let path = pathH[pathName]
     let isLeaf = false
+
     if (path) {
-      // console.log(pathHierarchy, path, fullPath)
       // dive into children before doing any processing
-      await getHierarchyTotals(umbrellaPaths, proposals, votes, pathHierarchy, path, fullPath, vtby)
+      await getHierarchyTotals(umbrellaInfo, proposals, votes, pathHierarchy, path, fullPath, vtby)
     } else {
       path = {}
       isLeaf = true
@@ -214,9 +215,12 @@ const getHierarchyTotals = async (
 
     // distribute vote totals into path list
     const pvt = await getPathVoteTotals(fullPath, proposals, votes)
+    // if (fullPath === "industries/finance") {
+    //   console.log(umbrellaInfo, fullPath)
+
+    // }
     if (isEmpty(pvt)) continue
     // for (y in pvt) {
-
     const ytots = vtby._totals
 
     const votesFor = pvt.for
@@ -288,14 +292,18 @@ const getHierarchyTotals = async (
         }
       }
     }
-    //TODO: We might need to used unlockVotes as legitimateThreshold later
-    const unlockVotes = parseInt(path.unlock_votes)
-    console.log(fullPath, "==", path, unlockVotes)
+    //TODO: We might need to use unlockVotes as legitimateThreshold later
+    let unlockVotes = parseInt(path.unlock_votes)
+
+    //This is only true if for umbrella
+    if (Object.keys(umbrellaInfo).includes(fullPath) && !unlockVotes) {
+      unlockVotes = umbrellaInfo[fullPath].unlock_votes
+    }
     const legit = tVotes >= legitimiateThreshold
     const need_votes = legit ? 0 : legitimiateThreshold - tVotes
     vtby.paths[fullPath] = {
       _totals: {
-        unlockVotes,
+        unlock_votes: unlockVotes,
         legit,
         votes: tVotes,
         for: votesFor,
@@ -311,9 +319,11 @@ const getHierarchyTotals = async (
       props: pvt.props,
     }
     // Only add in total theft if the path is umbrella. This case can be visualized where there are no any proposals in umbrella
-    if (Object.keys(umbrellaPaths).includes(fullPath)) {
-      ytots.theft += theft
-    }
+    // console.log(Object.keys(umbrellaPaths), fullPath)
+    // if (Object.keys(umbrellaPaths).includes(fullPath)) {
+    //   console.log('vitra chiryo')
+    //   ytots.theft += theft
+    // }
   }
 
   return vtby
@@ -447,6 +457,7 @@ const doPathRollUpsForYear = (
             theft: childrenSum.theft,
             need_votes: childrenSum.need_votes,
             value_parent: umbrellaPaths[fullPath].value_parent,
+            unlock_votes: umbrellaPaths[fullPath].unlock_votes,
           }
         } else if (!totalsData.legit && childrenSum.legit) {
           // if umbrella is not legit and roll-up is legit, use roll-up data
@@ -454,6 +465,8 @@ const doPathRollUpsForYear = (
           totalsData = childrenSum
           totalsData.reason = `umbrella is not legit and roll-up is legit`
           totalsData.value_parent = umbrellaPaths[fullPath].value_parent
+          totalsData.unlock_votes = umbrellaPaths[fullPath].unlock_votes
+
         } else {
           // otherwise, use the umbrella total, and store the children sum as secondary
           secondaryData = childrenSum
@@ -462,6 +475,7 @@ const doPathRollUpsForYear = (
         totalsData.method = 'Umbrella Totals'
         secondaryData = childrenSum
         totalsData.value_parent = umbrellaPaths[fullPath].value_parent
+        totalsData.unlock_votes = umbrellaPaths[fullPath].unlock_votes
       }
     }
     // else {
