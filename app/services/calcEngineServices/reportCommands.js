@@ -964,8 +964,11 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
   const slugData = actualPath.split('/')
   const leafSlug = slugData.pop()
   const pathSlug = slugData.join('%2F')
+  const votePageUrl = `${holon}/path/${pathSlug}/issue/${leafSlug}/proposals`
+
   pdfData.leafSlug = leafSlug
   pdfData.pathSlug = pathSlug
+  pdfData.votePageUrl = votePageUrl
 
   const paths = allPaths[nation]
 
