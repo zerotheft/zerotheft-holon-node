@@ -228,10 +228,11 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   const pathData = leafPath.split('/')
   const leafSlug = pathData.pop()
   const pathSlug = pathData.join('%2F')
+  const votePageUrl = `${holon}/path/${pathSlug}/issue/${leafSlug}/proposals`
   pdfData.leafSlug = leafSlug
   pdfData.pathSlug = pathSlug
   pdfData.neededVotes = voteTotals.unlockVotes
-
+  pdfData.votePageUrl = votePageUrl
   const yearTh = getPastYearsTheftForMulti(summaryTotals, path)
 
   let minYr = null
@@ -646,11 +647,12 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
     * Check if this node has got enough votes. Vote is enough when it is greater or equals to unlock votes(which is for now "40")
     * We do not show the disclaimer section which informs the user that the votes are not enough. 
     */
-    if (pdfData.totalVotes >= pdfData.neededVotes) {
+    if ((!pdfData.totalVotes || !pdfData.neededVotes) || pdfData.totalVotes >= pdfData.neededVotes) {
       template = template.replace(/%disclaimerboxstart[\s\S]+%disclaimerboxend/, '')
+      template = template.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
     }
 
-    let templateFull = template
+    const templateFull = template
       .replace(/--leadingProposalDetail--/g, pdfData.leadingProposalDetail)
       .replace(/--viewMore--/g, '')
     const templatePart = template
@@ -703,6 +705,7 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
  */
 const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
   new Promise((resolve, reject) => {
+
     let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
 
     pdfData.hideBlocks.forEach(block => {
@@ -728,8 +731,9 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
     * Check if this node has got enough votes. Vote is enough when it is greater or equals to unlock votes(which is for now "40")
     * We do not show the disclaimer section which informs the user that the votes are not enough. 
     */
-    if (pdfData.totalVotes >= pdfData.neededVotes) {
+    if ((!pdfData.totalVotes || !pdfData.neededVotes) || pdfData.totalVotes >= pdfData.neededVotes) {
       template = template.replace(/%disclaimerboxstart[\s\S]+%disclaimerboxend/, '')
+      template = template.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
     }
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
@@ -1038,6 +1042,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     availablePdfsPaths
   )
   pdfData.sourcesOfTheft = sourcesOfTheft
+  console.log('getPathVoteTotals report')
 
   const vt = getPathVoteTotals(summaryTotals, path)
   let limitedLinesArray = []
@@ -1057,6 +1062,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     pdfData.totalVotes = yesVotes + noVotes
     pdfData.yesNoChart = `${filePath}-yesNo.png`
     pdfData.neededVotes = voteTotals.unlockVotes
+
     // const  { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
     const bellCurveData = proposalVoteTotalsSummaryMulti(voteTotals, false)
     if (bellCurveData.thefts.length) {

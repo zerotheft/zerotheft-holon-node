@@ -12,7 +12,7 @@
 \usepackage[sfdefault]{roboto}
 \usepackage[T1]{fontenc}
 \usepackage{minted}
-\usepackage[colorlinks = true,
+\usepackage[
 linkcolor = blue,
 urlcolor  = blue,
 citecolor = blue,
@@ -20,6 +20,7 @@ anchorcolor = blue]{hyperref}
 \usepackage[printwatermark]{xwatermark}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
+\definecolor{disclaimerBgColor}{RGB}{237,119,119}
 \definecolor{primary}{RGB}{115,54,163}
 \definecolor{theftBgColor1}{RGB}{235,215,249}
 \definecolor{theftBgColor2}{RGB}{238,229,197}
@@ -37,6 +38,7 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
+  fullHeaderText/.style={headerText, text width=521pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
 	rightHeaderText/.style={headerText, align=right,text width=225pt},
 	footerText/.style={text=white},
@@ -52,19 +54,6 @@ anchorcolor = blue]{hyperref}
 	isTheftBlock/.style={align=left, text width=140pt}
 }
 
-% \newcommand\allVotes{--totalVotes--}
-% \newcommand\neededVotes{--neededVotes--}
-% \newcommand{\isVoteNeeded}[1]
-% {
-%   \ifnum#1<\neededVotes{}
-%     \trimbox{5pt -15pt 0 0}{
-%       \begin{tikzpicture}
-%         \node[] (disclaimer) {To make this formal we need at least \neededVotes{} votes. We are currently at \allVotes{}.};  
-%       \end{tikzpicture}
-
-%     }  
-%   \fi
-% }
 \newcommand\Footer{%
   \sffamily
   \begin{tikzpicture}[remember picture,overlay]
@@ -94,16 +83,41 @@ anchorcolor = blue]{hyperref}
   ypos=15
 ]{\usebox\mybox}
 
+%disclaimerFooterStart
+  \newsavebox\disclaimerBox
+  \savebox\disclaimerBox{\tikz[color=disclaimerBgColor,opacity=0.5]\node{Unofficial. Need more votes.};}
+  \newwatermark*[
+    pages=1-800,
+    angle=90,
+    scale=1,
+    xpos=95,
+    ypos=0
+  ]{\usebox\disclaimerBox}
+%disclaimerFooterEnd
+
 \begin{document}
 \sffamily
 % headsectionend
 
 \hypertarget{--pageID--}{}
+
+% ==========LITTLE DISCLAIMER BOX STARTS HERE===========
+%disclaimerboxstart
+\trimbox{0 -5pt 0 0}{ 
+  \begin{tikzpicture}
+    \node[fullHeaderText] (neededVoteInfo) {To make this formal we need at least \textbf{--neededVotes--} votes. We are currently at \textbf{--totalVotes--}. Click \href{--votePageUrl--}{\color{blue} \textbf{here}} to vote.};  
+    \begin{scope}[on background layer]
+      \node[fill=disclaimerBgColor, fit=(neededVoteInfo)] (disclaimer) {};
+    \end{scope}
+  \end{tikzpicture}
+} 
+%disclaimerboxend
+
 % =========HEADER SECTION STARTS HERE==========
 \trimbox{0 -15pt 0 0}{ 
   \begin{tikzpicture}
       \node[leftHeaderText] (top) {ZeroTheft Movement (ZeroTheft.net)};
-      \node[leftHeaderText, below=5pt of top] (title) {--subtitle-- \huge \textbf{--title--}};
+      \node[leftHeaderText, below=5pt of top] (title) {--subtitle-- \textbf{--title--}};
       \node[leftHeaderText, below=5pt of title] (belowtitle) {Amount taken unethically from citizens in a rigged economy};
 
       \node[rightHeaderText, right=10pt of top] (calculated) {Calculated for --country-- on --generatedTime--};
@@ -117,15 +131,6 @@ anchorcolor = blue]{hyperref}
       \end{scope}
   \end{tikzpicture}
 }
-
-% ==========LITTLE DISCLAIMER BOX STARTS HERE===========
-%disclaimerboxstart
-\trimbox{5pt -15pt 0 0}{
-  \begin{tikzpicture}
-    \node[] (disclaimer) {To make this formal we need at least --neededVotes-- votes. We are currently at --totalVotes--.};  
-  \end{tikzpicture}
-} 
-%disclaimerboxend
 
 % ==========COLORED AMOUNT BOX STARTS HERE==========
 \trimbox{-136pt -15pt 0 0}{ 

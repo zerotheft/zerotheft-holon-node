@@ -131,7 +131,6 @@ const listAvailablePdfsPaths = (paths, path, fromWorker) => {
 const multiIssuesReport = async (path, fromWorker = false) => {
   // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
   const fileName = `${path.replace(/\//g, '-')}`
-
   try {
     if (fromWorker || !fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fileName}.pdf`)) {
       const pathData = path.split('/')
@@ -177,6 +176,7 @@ const multiIssuesReport = async (path, fromWorker = false) => {
       return { report: `${fileName}.pdf` }
       // return { message: 'No Issues for the path' }
     }
+
     if (fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fileName}.pdf`)) {
       return { report: `${fileName}.pdf` }
     }

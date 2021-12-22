@@ -157,7 +157,7 @@ const getHierarchyTotals = async (
   pathH = null,
   pathPrefix = null,
   vtby = null,
-  legitimiateThreshold = 25,
+  legitimiateThreshold = 40,
   nation = 'USA'
 ) => {
   if (pathH && pathH.leaf) {
