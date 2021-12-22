@@ -29,7 +29,6 @@ const {
   yesNoVoteTotalsSummary,
   proposalVoteTotalsSummaryMulti,
   getPastYearsTheftForMulti,
-  assignPageNumbers,
 } = require('./reportAnalytics')
 
 const timeZone = 'America/Los_Angeles'
@@ -207,18 +206,18 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   pdfData.generatedTime = reportTime
   pdfData.holonUrl = holon
   pdfData.pageID = `ztReport/${leafPath}`
-
   // const pdfReportPath = `${holon}/issueReports/${fileName}.pdf`
   const props = getPathYearProposals(summaryTotals, path)
   const votes = getPathYearVotes(props)
   const vt = getPathVoteTotals(summaryTotals, path)
   if (vt.missing) throw new Error(`generateReportData: Proposals not available for path: ${path}`)
-
   const voteTotals = {
     for: get(vt, '_totals.for', 0),
     against: get(vt, '_totals.against', 0),
     leading_proposal: get(vt, '_totals.leading_proposal', null),
     props: get(vt, 'props', {}),
+    unlockVotes: get(vt, '_totals.unlock_votes', 0),
+    votes: get(vt, '_totals.votes', 0),
   }
   const pathSummary = analyticsPathSummary(voteTotals)
 
@@ -229,9 +228,11 @@ const generateReportData = async (nation, fileName, fromWorker) => {
   const pathData = leafPath.split('/')
   const leafSlug = pathData.pop()
   const pathSlug = pathData.join('%2F')
+  const votePageUrl = `${holon}/path/${pathSlug}/issue/${leafSlug}/proposals`
   pdfData.leafSlug = leafSlug
   pdfData.pathSlug = pathSlug
-
+  pdfData.neededVotes = voteTotals.unlockVotes
+  pdfData.votePageUrl = votePageUrl
   const yearTh = getPastYearsTheftForMulti(summaryTotals, path)
 
   let minYr = null
@@ -616,6 +617,11 @@ const limitTextLines = (content, lineLimit = 118, lineChars = 95) => {
   return limitedLinesArray
 }
 
+/**
+ * When data is completely ready for the pdf generation, this function is called.
+ * pdfData - This holds all the dynamic values that are used to generate the pdf.
+ * Respective tex file is called and values from pdfData is then mapped to the tex file.
+ */
 const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
   new Promise((resolve, reject) => {
     let template = fs.readFileSync(`${templates}/report.tex`, 'utf8')
@@ -637,6 +643,15 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
       template = template.replace(/Testing/g, '')
     }
 
+    /*
+    * Check if this node has got enough votes. Vote is enough when it is greater or equals to unlock votes(which is for now "40")
+    * We do not show the disclaimer section which informs the user that the votes are not enough. 
+    */
+    if ((!pdfData.totalVotes || !pdfData.neededVotes) || pdfData.totalVotes >= pdfData.neededVotes) {
+      template = template.replace(/%disclaimerboxstart[\s\S]+%disclaimerboxend/, '')
+      template = template.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
+    }
+
     const templateFull = template
       .replace(/--leadingProposalDetail--/g, pdfData.leadingProposalDetail)
       .replace(/--viewMore--/g, '')
@@ -646,6 +661,7 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
         /--viewMore--/g,
         `\\href{${pdfData.holonUrl}/path/${pdfData.pathSlug}/issue/${pdfData.leafSlug}}{\\color{blue}View More}`
       )
+
 
     const reportPrepd = `${singleIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${singleIssueReportPath(fromWorker)}/${fileName}.pdf`
@@ -681,8 +697,15 @@ const generateLatexPDF = async (pdfData, fileName, fromWorker) =>
     })
   })
 
+/**
+ * Generate pdf report of umbrella end node.
+ * pdfData - Holds all the dyanmic values that are used to generate the pdf.
+ * It reads the tex file and replaces the dynamic values with the values from pdfData.
+ * Saves the pdf in the respective folder.
+ */
 const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
   new Promise((resolve, reject) => {
+
     let template = fs.readFileSync(`${templates}/multiReport.tex`, 'utf8')
 
     pdfData.hideBlocks.forEach(block => {
@@ -704,7 +727,14 @@ const generateLatexMultiPDF = async (pdfData, fileName, fromWorker) =>
     if (MODE === 'production') {
       template = template.replace(/Testing/g, '')
     }
-
+    /*
+    * Check if this node has got enough votes. Vote is enough when it is greater or equals to unlock votes(which is for now "40")
+    * We do not show the disclaimer section which informs the user that the votes are not enough. 
+    */
+    if ((!pdfData.totalVotes || !pdfData.neededVotes) || pdfData.totalVotes >= pdfData.neededVotes) {
+      template = template.replace(/%disclaimerboxstart[\s\S]+%disclaimerboxend/, '')
+      template = template.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
+    }
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const reportPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
 
@@ -837,6 +867,9 @@ const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, av
   return pdfData
 }
 
+/**
+ * This method is used to generate pdf using reportNoVoteMulti.tex file when there is no data(votes) for a specific umbrella path.
+ **/
 const generateNoVoteMultiLatexPDF = async (pdfData, fileName, fromWorker) =>
   new Promise((resolve, reject) => {
     let template = fs.readFileSync(`${templates}/reportNoVoteMulti.tex`, 'utf8')
@@ -890,13 +923,14 @@ const generateNoVoteMultiPDFReport = async (
   return await generateNoVoteMultiLatexPDF(pdfData, fileName, fromWorker)
 }
 
+/**
+ * Generate a PDF report for a umbrella issue.
+ */
 const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker) => {
   const { summaryTotals, actualPath, holon, allPaths, subPaths } = loadAllIssues(fileName)
-
   const pathData = actualPath.split('/')
   const nation = pathData[0]
   const noNationPath = pathData.slice(1).join('/')
-
   let hideBlocks = []
   const pdfData = {}
   pdfData.pdfLink = `/pathReports/${fileName}.pdf`
@@ -1008,6 +1042,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     availablePdfsPaths
   )
   pdfData.sourcesOfTheft = sourcesOfTheft
+  console.log('getPathVoteTotals report')
 
   const vt = getPathVoteTotals(summaryTotals, path)
   let limitedLinesArray = []
@@ -1017,6 +1052,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
       against: get(vt, '_totals.against', 0),
       leading_proposal: get(vt, '_totals.leading_proposal', null),
       props: get(vt, 'props', {}),
+      unlockVotes: get(vt, '_totals.unlock_votes', 0),
     }
 
     const { noVotes, yesVotes } = yesNoVoteTotalsSummary(voteTotals)
@@ -1025,6 +1061,7 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     pdfData.noVotes = noVotes
     pdfData.totalVotes = yesVotes + noVotes
     pdfData.yesNoChart = `${filePath}-yesNo.png`
+    pdfData.neededVotes = voteTotals.unlockVotes
 
     // const  { thefts: propThefts, votes: propVotes } = proposalVoteTotalsSummaryMulti(voteTotals, false)
     const bellCurveData = proposalVoteTotalsSummaryMulti(voteTotals, false)
@@ -1238,6 +1275,10 @@ const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths
   return await generateLatexMultiPDF(pdfData, fileName, fromWorker)
 }
 
+/**
+ * This method merges the umbrella report pdf and all the child pdfs into one pdf.
+ * It first merges the respective tex files of all the children and a umbrella node. Then, prepares a single merged tex file and then generates report
+ */
 const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
   new Promise((resolve, reject) => {
     let mergedTex = ''
@@ -1249,7 +1290,6 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
       mergedTex += `\\newpage
             ${texBody}`
     })
-
     let mergedTemplate = fs.readFileSync(`${templates}/mixedReport.tex`, 'utf8')
     mergedTemplate = mergedTemplate.replace(/--generatedTime--/g, reportTime)
     mergedTemplate = mergedTemplate.replace(/--holonUrl--/g, holonUrl)
@@ -1259,12 +1299,11 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
     if (MODE === 'production') {
       mergedTemplate = mergedTemplate.replace(/Testing/g, '')
     }
-
     const reportPrepd = `${multiIssueReportPath(fromWorker)}/${fileName}.tex`
     const mergedLatexPDF = `${multiIssueReportPath(fromWorker)}/${fileName}.pdf`
     fs.writeFileSync(reportPrepd, mergedTemplate, err => {
       if (err) {
-        console.error('generateLatexPDF::', err)
+        console.error('mergePdfLatex: generateLatexPDF::', err)
         reject({ message: err })
       }
       console.log('full report Prepared')
@@ -1274,8 +1313,9 @@ const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
     const output = fs.createWriteStream(mergedLatexPDF)
     const pdf = latex(input, { args: ['-shell-escape'] })
     pdf.pipe(output)
+
     pdf.on('error', err => {
-      console.error('generateLatexPDF::', err)
+      console.error('pdfonError: generateLatexPDF::', err)
       reject({ message: err })
       fs.unlinkSync(mergedLatexPDF)
       fs.unlinkSync(reportPrepd)
