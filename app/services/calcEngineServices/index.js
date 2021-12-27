@@ -131,7 +131,6 @@ const listAvailablePdfsPaths = (paths, path, fromWorker) => {
 const multiIssuesReport = async (path, fromWorker = false) => {
   // createLog(MULTI_REPORT_PATH, 'Multi report generation initiation......', path)
   const fileName = `${path.replace(/\//g, '-')}`
-
   try {
     if (fromWorker || !fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fileName}.pdf`)) {
       const pathData = path.split('/')
@@ -177,6 +176,7 @@ const multiIssuesReport = async (path, fromWorker = false) => {
       return { report: `${fileName}.pdf` }
       // return { message: 'No Issues for the path' }
     }
+
     if (fs.existsSync(`${multiIssueReportPath(fromWorker)}/${fileName}.pdf`)) {
       return { report: `${fileName}.pdf` }
     }
@@ -225,6 +225,10 @@ const getTexsSequence = async (path, fromWorker) => {
   return texsSequence
 }
 
+/**
+ * Generate mixed report after merging umbrella node and the children nodes.
+ * It uses mixedReport.tex and generates a pdf.
+ */
 const multiIssuesFullReport = async (path, fromWorker = false) => {
   // createLog(FULL_REPORT_PATH, `Full report generation initiation......`)
   try {

@@ -1,5 +1,6 @@
 % headsectionstart
 % any changes on headsection of multiReport and report headsection should be added here
+\RequirePackage[2020-02-02]{latexrelease}
 \documentclass{article}
 \usepackage[a4paper, left=15pt, top=30pt, right=15pt, bottom=65pt]{geometry}
 \usepackage{longtable}
@@ -19,6 +20,7 @@ anchorcolor = blue]{hyperref}
 \usepackage[printwatermark]{xwatermark}
 
 \usetikzlibrary{fit,backgrounds,positioning,decorations.markings,shapes,arrows,shadows}
+\definecolor{disclaimerBgColor}{RGB}{237,119,119}
 \definecolor{primary}{RGB}{115,54,163}
 \definecolor{theftBgColor1}{RGB}{235,215,249}
 \definecolor{theftBgColor2}{RGB}{238,229,197}
@@ -40,6 +42,7 @@ anchorcolor = blue]{hyperref}
 
 \tikzset{
 	headerText/.style={text=white},
+  fullHeaderText/.style={headerText, text width=521pt},
 	leftHeaderText/.style={headerText, align=left,text width=280pt},
 	rightHeaderText/.style={headerText, align=right,text width=225pt},
 	footerText/.style={text=white},
@@ -84,6 +87,18 @@ anchorcolor = blue]{hyperref}
   xpos=-20,
   ypos=15
 ]{\usebox\mybox}
+
+%disclaimerFooterStart
+\newsavebox\disclaimerBox
+\savebox\disclaimerBox{\tikz[color=disclaimerBgColor,opacity=0.5]\node{Unofficial. Need more votes.};}
+\newwatermark*[
+  pages=1-800,
+  angle=90,
+  scale=1,
+  xpos=95,
+  ypos=0
+]{\usebox\disclaimerBox}
+%disclaimerFooterEnd
 
 \begin{document}
 \sffamily
