@@ -83,21 +83,21 @@ anchorcolor = blue]{hyperref}
   ypos=15
 ]{\usebox\mybox}
 
-%disclaimerFooterStart
-  \newsavebox\disclaimerBox
-  \savebox\disclaimerBox{\tikz[color=disclaimerBgColor,opacity=0.5]\node{Unofficial. Need more votes.};}
-  \newwatermark*[
-    pages=1-800,
-    angle=90,
-    scale=1,
-    xpos=95,
-    ypos=0
-  ]{\usebox\disclaimerBox}
-%disclaimerFooterEnd
-
 \begin{document}
 \sffamily
 % headsectionend
+
+%disclaimerFooterStart
+\newsavebox\disclaimerBox
+\savebox\disclaimerBox{\tikz[color=disclaimerBgColor,opacity=0.5]\node{Unofficial. Need more votes.};}
+\newwatermark*[
+  pages=1-800,
+  angle=90,
+  scale=1,
+  xpos=95,
+  ypos=0
+]{\usebox\disclaimerBox}
+%disclaimerFooterEnd
 
 \hypertarget{--pageID--}{}
 
