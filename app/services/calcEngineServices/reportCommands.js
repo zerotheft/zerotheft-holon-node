@@ -1285,11 +1285,18 @@ const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths
 const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
   new Promise((resolve, reject) => {
     let mergedTex = ''
+    let disclaimerIncluded = false
     texsSequence.forEach(texFile => {
       if (!fs.existsSync(texFile)) return
       const texContent = fs.readFileSync(texFile, 'utf8')
-      const texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
-
+      let texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
+      if (texBody.match(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/)) {
+        if (disclaimerIncluded) {
+          texBody = texBody.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
+        } else {
+          disclaimerIncluded = true
+        }
+      }
       mergedTex += `\\newpage
             ${texBody}`
     })
