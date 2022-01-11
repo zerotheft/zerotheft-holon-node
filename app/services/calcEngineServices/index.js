@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const fs = require('fs')
-const { get, min, max, isEmpty, difference, remove } = require('lodash')
+const { get, min, max, isEmpty, difference } = require('lodash')
 const { pathsByNation } = require('zerotheft-node-utils').paths
 const config = require('zerotheft-node-utils/config')
 
