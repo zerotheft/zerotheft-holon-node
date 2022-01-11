@@ -138,7 +138,6 @@ const multiIssuesReport = async (path, fromWorker = false) => {
       const noNationPath = pathData.slice(1).join('/')
       const nationPaths = await pathsByNation(nation)
       const allPaths = get(nationPaths, path.split('/').join('.'))
-
       const availablePdfsPaths = listAvailablePdfsPaths(allPaths, path, fromWorker)
 
       // let allYearData = { '2001': '' }
@@ -160,7 +159,6 @@ const multiIssuesReport = async (path, fromWorker = false) => {
         // createLog(MULTI_REPORT_PATH, `Writing to input jsons => ${fileName}.json`, path)
         // TODO: uncomment this
         await writeFile(`${getReportPath()}input_jsons/${fileName}.json`, pathsJson)
-
         await generatePDFMultiReport('multiIssueReport', fileName, availablePdfsPaths, fromWorker)
         return { report: `${fileName}.pdf` }
       }
@@ -194,21 +192,42 @@ const multiIssuesReport = async (path, fromWorker = false) => {
   }
 }
 
+/**
+ * List all the tex file generated so far which is then used to generate a single tex file.
+ */
 const getTexsSequence = async (path, fromWorker) => {
   const nation = path.split('/')[0]
   const nationPaths = await pathsByNation(nation)
   delete nationPaths.Alias
 
   const childrens = get(nationPaths, path.replace(/\//g, '.'))
+  const childrenNodes = Object.keys(childrens)
 
-  const childrenKeys = difference(Object.keys(childrens), ['metadata', 'parent'])
+  //extract children of industries only
+  let industriesChildrens = []
+  childrenNodes.forEach(child => {
+    if (child === "industries") {
+      industriesChildrens = Object.keys(childrens[child])
+    }
+  })
 
+  childrenNodes.shift() // remove industries key
+  const allNodes = [...industriesChildrens, ...childrenNodes]
+  const childrenKeys = difference(allNodes, ['metadata', 'parent'])
   const texsSequence = []
+
   childrenKeys.forEach(childPath => {
-    const childData = childrens[childPath]
+    let childData = childrens[childPath]
+    //If childPath is a child of industries then we treat them differently
+    if (industriesChildrens.includes(childPath)) {
+      childData = childrens["industries"][childPath]
+      childPath = `industries-${childPath}`
+    }
+
     const childFile = `${path}/${childPath}`.replace(/\//g, '-')
     const singleFile = `${singleIssueReportPath(fromWorker)}/${childFile}.tex`
     const multiFile = `${multiIssueReportPath(fromWorker)}/${childFile}_full.tex`
+
     if (get(childData, 'leaf') && fs.existsSync(singleFile)) {
       texsSequence.push(singleFile)
     } else if ((get(childData, 'metadata.umbrella') || get(childData, 'parent')) && fs.existsSync(multiFile)) {
@@ -227,6 +246,8 @@ const getTexsSequence = async (path, fromWorker) => {
 
 /**
  * Generate mixed report after merging umbrella node and the children nodes.
+ * It is generally invoked when generating reports for "industries","economic-crisis","tax","healthcare","pharma" and other umbrella nodes in future.
+ * But we donot need to generate reports for industries as this is parent node not actually an umbrella.
  * It uses mixedReport.tex and generates a pdf.
  */
 const multiIssuesFullReport = async (path, fromWorker = false) => {
@@ -238,7 +259,6 @@ const multiIssuesFullReport = async (path, fromWorker = false) => {
     if (fromWorker || !reportExists) {
       await multiIssuesReport(path, fromWorker)
       const texsSequence = await getTexsSequence(path, fromWorker)
-
       // create full umbrealla report
       await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
       return { report: `${fullFileName}.pdf` }
@@ -268,7 +288,6 @@ const nationReport = async (fromWorker = false, nation = 'USA') => {
     if (fromWorker || !reportExists) {
       await multiIssuesReport(nation, fromWorker)
       const texsSequence = await getTexsSequence(nation, fromWorker)
-
       // create full nation report
       await mergePdfLatex(fullFileName, texsSequence, fromWorker, getAppRoute(false))
       return { report: `${fullFileName}.pdf` }
