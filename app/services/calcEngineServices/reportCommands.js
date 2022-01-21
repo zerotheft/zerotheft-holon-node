@@ -842,6 +842,9 @@ const generateNoVotePDFReport = async (noteBookName, fileName, path, holon, allP
   return await generateNoVoteLatexPDF(pdfData, fileName, fromWorker)
 }
 
+/**
+ * Prepares pdf data for multi issue report when there is not any proposals and votes.
+ */
 const generateNoVoteMultiReportData = async (fileName, path, holon, subPaths, availablePdfsPaths) => {
   const pathData = path.split('/')
   const nation = pathData[0]
@@ -1045,7 +1048,6 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
     availablePdfsPaths
   )
   pdfData.sourcesOfTheft = sourcesOfTheft
-  console.log('getPathVoteTotals report')
 
   const vt = getPathVoteTotals(summaryTotals, path)
   let limitedLinesArray = []
@@ -1135,6 +1137,9 @@ const generateMultiReportData = async (fileName, availablePdfsPaths, fromWorker)
 
 const escapeSpecialChars = text => text.replace(/&/g, '\\&').replace(/%/g, '\\%')
 
+/**
+ * This method is used to generate a row for `Sources of Theft` table
+ */
 const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availablePdfsPaths) => {
   const legit = tots.legit ? 'legit' : ''
   let votepct = tots.votes > 0 ? tots.for / tots.votes : 0
@@ -1161,11 +1166,11 @@ const rowDisp = (prob, tots, indent, totalTheft, fullPath, nation, multi, availa
     fullPath = pathMatch[1]
   }
   const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (fullPath !== nation ? `${nation}/` : '') + fullPath
-
+  const viewMoreLink = `${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'}`
   return `\\textbf{${'\\quad '.repeat(indent)}${escapeSpecialChars(prob)}} &
     \\cellcolor{${voteyn === 'Theft' ? 'tableTheftBg' : 'tableNoTheftBg'
     }} \\color{white} \\centering \\textbf{${voteyn}  ${voteyn === 'Theft' ? `${(votepct * 100).toFixed(2)}\\%` : ''}} &
-    \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
+    \\centering ${prob !== "Industries" ? viewMoreLink : '-'} &
     ${notes} \\\\ \n`
 }
 
@@ -1192,6 +1197,11 @@ const walkSubPath = (prefix, paths, indent, subPathTotals, sumTotals, nation, av
   return disp
 }
 
+/**
+ * This method prepares a pdf data for `Source of theft` section.
+ * `Source oft theft` section is bascially a indexing of all the paths in the report.
+ * It consists of general overview of how much theft happened in each path with a link (View Report) for detail report.
+ */
 const prepareSourcesOfTheft = (
   path,
   sumTotals,
@@ -1213,7 +1223,6 @@ const prepareSourcesOfTheft = (
     true,
     availablePdfsPaths
   )
-
   // now walk all the sub-paths from this path
   const firstPath = path === nation ? '' : `${path}/`
   disp += walkSubPath(firstPath, subPaths, 1, subPathTotals, sumTotals, nation, availablePdfsPaths)
@@ -1221,13 +1230,15 @@ const prepareSourcesOfTheft = (
   return disp
 }
 
+/**
+ * This method prepares row for `Sources of theft` table for No vote end nodes only
+ */
 const rowDispNoVote = (prob, indent, nation, multi, fullPath, availablePdfsPaths) => {
   const pathMatch = fullPath.match(/^\/?([^*]+)/)
   if (pathMatch) {
     fullPath = pathMatch[1]
   }
   const filePath = (multi ? 'multiIssueReport/' : 'ztReport/') + (fullPath !== nation ? `${nation}/` : '') + fullPath
-
   return `\\textbf{${'\\quad '.repeat(indent)}${escapeSpecialChars(prob)}} &
     &
     \\centering ${availablePdfsPaths.includes(filePath) ? `\\hyperlink{${filePath}}{View Report}` : 'View Report'} &
@@ -1255,6 +1266,9 @@ const walkSubPathNoVote = (prefix, paths, indent, nation, availablePdfsPaths) =>
   return disp
 }
 
+/**
+ * Pepares `Sources of Theft` for No vote report.
+ * */
 const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPaths) => {
   // insert the area total as the first line
   let disp = rowDispNoVote(
@@ -1265,7 +1279,6 @@ const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPa
     fullPath,
     availablePdfsPaths
   )
-
   // now walk all the sub-paths from this path
   const firstPath = fullPath === nation ? '' : `${fullPath}/`
   disp += walkSubPathNoVote(firstPath, subPaths, 1, nation, availablePdfsPaths)
@@ -1273,6 +1286,11 @@ const prepareSourcesOfTheftNoVote = (fullPath, nation, subPaths, availablePdfsPa
   return disp
 }
 
+/**
+ * This method generates the PDF report from tex template.
+ * This will first get ready the data required for the PDF generation in `pdfData`
+ * Then uses `pdfData` and generates the PDF report publishing all data.
+ */
 const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths, fromWorker) => {
   const pdfData = await generateMultiReportData(fileName, availablePdfsPaths, fromWorker)
   return await generateLatexMultiPDF(pdfData, fileName, fromWorker)
@@ -1285,11 +1303,18 @@ const generatePDFMultiReport = async (noteBookName, fileName, availablePdfsPaths
 const mergePdfLatex = async (fileName, texsSequence, fromWorker, holonUrl) =>
   new Promise((resolve, reject) => {
     let mergedTex = ''
+    let disclaimerIncluded = false
     texsSequence.forEach(texFile => {
       if (!fs.existsSync(texFile)) return
       const texContent = fs.readFileSync(texFile, 'utf8')
-      const texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
-
+      let texBody = texContent.match(/% headsectionstart[\s\S]+% headsectionend([\s\S]+)\\end{document}/)[1]
+      if (texBody.match(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/)) {
+        if (disclaimerIncluded) {
+          texBody = texBody.replace(/%disclaimerFooterStart[\s\S]+%disclaimerFooterEnd/, '')
+        } else {
+          disclaimerIncluded = true
+        }
+      }
       mergedTex += `\\newpage
             ${texBody}`
     })
