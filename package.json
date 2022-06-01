@@ -75,7 +75,7 @@
     "redis": "^3.0.2",
     "scrapedin": "^1.0.21",
     "serve-index": "^1.9.1",
-    "sharp": "^0.29.3",
+    "sharp": "^0.30.5",
     "split-file": "^2.2.1",
     "svgdom-css": "^0.1.5",
     "yaml": "^1.10.0"
